@@ -1,0 +1,8 @@
+{
+  "name": "clairewatsontmf",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "devDependencies": {
+    "puppeteer-core": "^25.1.0"
+  }
+}
