@@ -1,0 +1,103 @@
+{
+  "name": "ODA Game — State Store (Save & Load)",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4000-8000-aaaaaaaaaaaa",
+      "name": "Webhook — Save",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 260],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "oda-game-save",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-4000-8000-aaaaaaaaaaaa",
+      "name": "Save State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 260],
+      "parameters": {
+        "jsCode": "// Persistent store shared across all executions of this workflow\nconst store = $getWorkflowStaticData('global');\nif (!store.gameStates) store.gameStates = {};\n\n// n8n puts POST body in .body for webhook nodes\nconst body = $input.first().json.body ?? $input.first().json;\nconst { email, name, belt, tokens, beltCorrect, beltAnswered, queue, consecutive, done } = body;\n\nif (!email) throw new Error('email is required');\n\nstore.gameStates[email] = {\n  name,\n  belt,\n  tokens,\n  beltCorrect,\n  beltAnswered,\n  queue,\n  consecutive,\n  done,\n  savedAt: new Date().toISOString()\n};\n\nreturn [{ json: { success: true, email } }];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0003-4000-8000-aaaaaaaaaaaa",
+      "name": "Respond — Save",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 260],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-4000-8000-aaaaaaaaaaaa",
+      "name": "Webhook — Load",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 460],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "oda-game-load",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-4000-8000-aaaaaaaaaaaa",
+      "name": "Load State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 460],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst body = $input.first().json.body ?? $input.first().json;\nconst { email } = body;\n\nif (!email) return [{ json: { found: false, error: 'email required' } }];\n\nconst state = (store.gameStates || {})[email];\nif (!state) return [{ json: { found: false } }];\n\nreturn [{ json: { found: true, ...state } }];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0006-4000-8000-aaaaaaaaaaaa",
+      "name": "Respond — Load",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 460],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Save": {
+      "main": [
+        [{ "node": "Save State", "type": "main", "index": 0 }]
+      ]
+    },
+    "Save State": {
+      "main": [
+        [{ "node": "Respond — Save", "type": "main", "index": 0 }]
+      ]
+    },
+    "Webhook — Load": {
+      "main": [
+        [{ "node": "Load State", "type": "main", "index": 0 }]
+      ]
+    },
+    "Load State": {
+      "main": [
+        [{ "node": "Respond — Load", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "name": "ODA Game — Dropout Reminder Email",
+  "nodes": [
+    {
+      "id": "b2c3d4e5-0001-4000-8000-bbbbbbbbbbbb",
+      "name": "Webhook — Dropout",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "oda-game-dropout",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0002-4000-8000-bbbbbbbbbbbb",
+      "name": "Send Reminder Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [460, 360],
+      "parameters": {
+        "fromEmail": "claire@tmforum.org",
+        "toEmail": "={{ $json.body.email ?? $json.email }}",
+        "subject": "=You've earned {{ $json.body.tokens ?? $json.tokens }} ODA tokens — finish your {{ $json.body.belt ?? $json.belt }} Belt!",
+        "emailFormat": "html",
+        "html": "=<div style=\"font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0D0B4D; color: #ffffff; border-radius: 8px; overflow: hidden;\">\n  <div style=\"background: #D91241; padding: 32px 40px;\">\n    <p style=\"margin: 0; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.7);\">TM Forum ODA Game</p>\n    <h1 style=\"margin: 8px 0 0; font-size: 28px; font-weight: 700;\">Your {{ $json.body.belt ?? $json.belt }} Belt is waiting</h1>\n  </div>\n  <div style=\"padding: 40px;\">\n    <p style=\"color: rgba(255,255,255,0.85); font-size: 16px; line-height: 1.6; margin-top: 0;\">Hi {{ $json.body.name ?? $json.name }},</p>\n    <p style=\"color: rgba(255,255,255,0.75); font-size: 15px; line-height: 1.7;\">You've been working through the <strong style=\"color: #fff;\">{{ $json.body.topic ?? $json.topic }}</strong> challenge and have already earned <strong style=\"color: #F5C518;\">{{ $json.body.tokens ?? $json.tokens }} tokens</strong>.</p>\n    <p style=\"color: rgba(255,255,255,0.75); font-size: 15px; line-height: 1.7;\">Don't leave your progress on the table — your answers are saved and the game picks up exactly where you left off.</p>\n    <div style=\"text-align: center; margin: 36px 0;\">\n      <a href=\"https://clairewatson.vercel.app\" style=\"display: inline-block; background: #D91241; color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 4px; font-size: 15px; font-weight: 600; letter-spacing: 0.04em;\">Continue the ODA Game →</a>\n    </div>\n    <p style=\"color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.6;\">The TM Forum ODA Game tests your knowledge across five domains — from ODA Fundamentals through to AI-Native &amp; Autonomous Networks. Completing each belt earns you recognition as a TM Forum ODA practitioner.</p>\n  </div>\n  <div style=\"background: rgba(0,0,0,0.3); padding: 20px 40px; text-align: center;\">\n    <p style=\"margin: 0; color: rgba(255,255,255,0.35); font-size: 11px;\">You received this because you started the ODA Game at clairewatson.vercel.app.<br>This email was sent by Claire Watson's TM Forum ODA team.</p>\n  </div>\n</div>",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_YOUR_SMTP_CREDENTIAL_ID",
+          "name": "SMTP — attach your existing email credential here"
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-0003-4000-8000-bbbbbbbbbbbb",
+      "name": "Respond — Dropout",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Dropout": {
+      "main": [
+        [{ "node": "Send Reminder Email", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Reminder Email": {
+      "main": [
+        [{ "node": "Respond — Dropout", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
