@@ -581,8 +581,14 @@ function serveQuestion() {
   const belt = BELTS[S.belt];
   if (S.beltAnswered >= belt.total) { checkBeltEnd(); return; }
 
-  const qi = S.queue[S.beltAnswered];
-  const q  = Qs[qi];
+  let qi = S.queue[S.beltAnswered];
+  let q  = Qs[qi];
+  if (q == null) {
+    // Queue is out of sync with beltAnswered — rebuild and start fresh
+    initBelt();
+    qi = S.queue[0];
+    q  = Qs[qi];
+  }
 
   $('og-q-meta').textContent = `Question ${S.beltAnswered + 1} of ${belt.total} · ${belt.name} Belt`;
   $('og-q-text').textContent  = q.q;
