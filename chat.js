@@ -60,6 +60,14 @@
       transition: color 0.15s;
     }
     #oda-chat-close:hover { color: #fff; }
+    #oda-contact-shortcut {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.8); border-radius: 20px;
+      padding: 4px 11px; font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+      cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #oda-contact-shortcut:hover { background: rgba(217,18,65,0.35); color: #fff; border-color: rgba(217,18,65,0.5); }
 
     #oda-chat-body {
       flex: 1; overflow-y: auto; padding: 16px;
@@ -193,6 +201,7 @@
         <div class="hd-name">Claire's Team</div>
         <div class="hd-sub">Claire Watson · TM Forum</div>
       </div>
+      <button id="oda-contact-shortcut">Contact Claire</button>
       <button id="oda-chat-close">×</button>
     </div>
     <div id="oda-chat-body"></div>
@@ -395,6 +404,7 @@
   };
 
   modal.querySelector('#oda-chat-close').onclick = () => modal.classList.remove('open');
+  modal.querySelector('#oda-contact-shortcut').onclick = showContactForm;
 
   form.onsubmit = async (e) => {
     e.preventDefault();
