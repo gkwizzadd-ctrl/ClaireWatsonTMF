@@ -426,11 +426,16 @@
     const org   = modal.querySelector('#oda-cf-org').value.trim();
     const msg   = modal.querySelector('#oda-cf-msg').value.trim();
     if (!name || !email) { alert('Please enter your name and email.'); return; }
+
+    const transcript = chatHistory.length
+      ? chatHistory.map(m => (m.role === 'user' ? 'Prospect' : 'Claire\'s Team') + ':\n' + m.content).join('\n\n')
+      : '(No conversation recorded before form submission)';
+
     try {
       await fetch(FORM_WH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, organisation: org, message: msg, source: 'ClaireWatsonTMF' })
+        body: JSON.stringify({ name, email, organisation: org, message: msg, source: 'ClaireWatsonTMF', conversationTranscript: transcript })
       });
       cfPanel.innerHTML = '<p style="color:#0D0B4D;font-size:14px;text-align:center;padding:20px">✓ Message sent. Claire will be in touch shortly.</p>';
     } catch {
