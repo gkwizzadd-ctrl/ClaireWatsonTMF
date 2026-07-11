@@ -1,29 +1,19 @@
 /* ODA Expert Chat Widget — Claire Watson TMF */
 (function () {
-  const CHAT_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/ai-agent';
+  const CHAT_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/claire-agent';
   const FORM_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/custom-contact';
   const SESSION = 'cw-' + Math.random().toString(36).slice(2, 10);
 
   const TOPICS = [
-    { label: 'What is ODA?',        value: 'Give me an overview of the TM Forum Open Digital Architecture.' },
-    { label: 'BSS/OSS Transformation', value: 'How does ODA help modernise legacy BSS and OSS systems?' },
-    { label: 'Open APIs',           value: 'Explain TM Forum Open APIs and how they enable interoperability.' },
-    { label: 'AI-Native Operations',value: 'How does ODA enable AI-native and autonomous network operations?' },
-    { label: 'eTOM Framework',      value: 'Explain the eTOM business process framework and how it fits within ODA.' },
-    { label: 'Contact Claire',      value: '__contact__' },
+    { icon: '🏛️', label: 'What is ODA?',              desc: 'Overview of the Open Digital Architecture',          value: 'Give me a concise overview of the TM Forum Open Digital Architecture and why it matters for telecoms.' },
+    { icon: '⚙️', label: 'BSS/OSS Modernisation',     desc: 'Replacing legacy stacks with composable architecture', value: 'How does TM Forum ODA help modernise legacy BSS and OSS systems?' },
+    { icon: '🗺️', label: 'ODA Transformation Roadmap',desc: 'Planning your adoption journey step by step',         value: 'How do I build an ODA transformation roadmap from maturity assessment through to full adoption?' },
+    { icon: '🔗', label: 'Open APIs',                 desc: 'Zero-touch interoperability across your ecosystem',    value: 'Explain TM Forum Open APIs and how they enable interoperability and zero-touch integration.' },
+    { icon: '🤖', label: 'AI-Native Operations',      desc: 'Autonomous networks and AI orchestration',            value: 'How does ODA enable AI-native and autonomous network operations?' },
+    { icon: '✉️', label: 'Contact Claire',            desc: 'Get in touch with Claire\'s team directly',           value: '__contact__' },
   ];
 
-  const SYSTEM_CONTEXT = `You are an expert assistant for Claire Watson, Engagement Manager at TM Forum.
-You help telecom professionals understand and adopt the TM Forum Open Digital Architecture (ODA).
-Draw on TM Forum frameworks including:
-- ODA components and canvas
-- eTOM (Business Process Framework)
-- SID (Information Framework)
-- TM Forum Open APIs
-- ODA transformation governance and maturity models
-- AI-native operations and autonomous networks
-- Composable IT and Ecosystems mission
-Provide practical, authoritative guidance grounded in TM Forum standards. Keep responses focused and actionable.`;
+  const SYSTEM_CONTEXT = `You are Claire's team at TM Forum. You speak exclusively about TM Forum's Open Digital Architecture. Every answer must draw only from TM Forum standards: the ODA canvas and components, eTOM Business Process Framework, SID Information Framework, TM Forum Open APIs, ODA maturity models, and AI-native network operations. If asked about any specific vendor platform or product, redirect the conversation back to the relevant TM Forum standard. Keep every response to 2 sentences maximum. No bullet points, no lists, no headers — plain prose only. If more detail is needed, invite the user to contact Claire directly.`;
 
   const CSS = `
     #oda-chat-btn {
@@ -80,14 +70,25 @@ Provide practical, authoritative guidance grounded in TM Forum standards. Keep r
     .oda-msg.bot { background: #F4F5FA; color: #0D0B4D; align-self: flex-start; border-bottom-left-radius: 4px; }
     .oda-msg.user { background: linear-gradient(135deg, #0D0B4D, #2E0C4B); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
 
-    #oda-topics { padding: 0 16px 12px; display: flex; flex-wrap: wrap; gap: 7px; }
+    #oda-topics { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 5px; }
     .oda-topic {
-      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-      padding: 6px 12px; border-radius: 20px; cursor: pointer;
-      border: 1px solid rgba(13,11,77,0.2); color: #0D0B4D;
-      background: #fff; transition: all 0.15s; letter-spacing: 0.03em;
+      font-family: 'DM Sans', sans-serif; width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; cursor: pointer; text-align: left;
+      background: #fff; border: 1px solid rgba(13,11,77,0.1);
+      border-left: 3px solid transparent; border-radius: 6px;
+      transition: border-left-color 0.15s, background 0.15s;
     }
-    .oda-topic:hover { background: #0D0B4D; color: #fff; border-color: #0D0B4D; }
+    .oda-topic:hover { border-left-color: #D91241; background: rgba(217,18,65,0.03); }
+    .oda-topic-icon {
+      width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px;
+      background: rgba(217,18,65,0.08); display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+    .oda-topic-text { flex: 1; }
+    .oda-topic-label { display: block; font-size: 12.5px; font-weight: 600; color: #0D0B4D; line-height: 1.2; }
+    .oda-topic-desc  { display: block; font-size: 10.5px; color: #9699A5; margin-top: 2px; line-height: 1.2; }
+    .oda-topic-arr   { color: rgba(13,11,77,0.2); font-size: 12px; flex-shrink: 0; transition: transform 0.15s, color 0.15s; }
+    .oda-topic:hover .oda-topic-arr { color: #D91241; transform: translateX(2px); }
 
     #oda-chat-form { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(13,11,77,0.08); }
     #oda-chat-input {
@@ -122,6 +123,56 @@ Provide practical, authoritative guidance grounded in TM Forum standards. Keep r
     }
     #oda-cf-submit:hover { opacity: 0.85; }
     .oda-cf-back { color: #0D0B4D; font-size: 12px; cursor: pointer; text-decoration: underline; text-align: center; }
+
+    .oda-followup { align-self: flex-start; max-width: 100%; margin-top: 6px; }
+    .oda-followup-lbl {
+      font-family: 'DM Mono', monospace; font-size: 9.5px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #9699A5; display: block; margin-bottom: 6px;
+    }
+    .oda-followup-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .oda-followup-chip {
+      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+      padding: 5px 12px; border-radius: 20px; cursor: pointer;
+      border: 1px solid rgba(13,11,77,0.15); color: #0D0B4D;
+      background: #fff; transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .oda-followup-chip:hover { background: #D91241; color: #fff; border-color: #D91241; }
+
+    .oda-nudge {
+      margin-top: 10px; padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(13,11,77,0.04), rgba(217,18,65,0.04));
+      border: 1px solid rgba(217,18,65,0.2); border-radius: 8px;
+      font-size: 12.5px; color: #0D0B4D; line-height: 1.45;
+    }
+    .oda-nudge-btn {
+      display: inline-block; margin-top: 8px;
+      background: linear-gradient(135deg, #0D0B4D, #D91241);
+      color: #fff; border: none; border-radius: 6px;
+      padding: 7px 16px; font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      letter-spacing: 0.03em; transition: opacity 0.15s;
+    }
+    .oda-nudge-btn:hover { opacity: 0.85; }
+
+    /* AI response option chips */
+    .oda-option-wrap { margin-top: 8px; }
+    .oda-option-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+    .oda-option-chip {
+      font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
+      padding: 5px 12px; border-radius: 20px; cursor: pointer;
+      border: 1px solid rgba(13,11,77,0.15); color: #0D0B4D;
+      background: #fff; transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .oda-option-chip:hover { background: rgba(217,18,65,0.08); border-color: #D91241; }
+    .oda-option-chip.selected { background: linear-gradient(135deg, #0D0B4D, #D91241); color: #fff; border-color: #0D0B4D; }
+    .oda-option-confirm {
+      background: linear-gradient(135deg, #0D0B4D, #D91241);
+      color: #fff; border: none; border-radius: 8px;
+      padding: 6px 16px; font-family: 'DM Sans', sans-serif;
+      font-size: 11.5px; font-weight: 600; cursor: pointer;
+      letter-spacing: 0.03em; transition: opacity 0.15s;
+    }
+    .oda-option-confirm:hover { opacity: 0.85; }
   `;
 
   const style = document.createElement('style');
@@ -171,6 +222,19 @@ Provide practical, authoritative guidance grounded in TM Forum standards. Keep r
   const chatArea= modal.querySelector('#oda-chat-form');
 
   let chatHistory = [];
+  let responseCount = 0;
+  let contactPromptShown = false;
+  let usedTopics = new Set();
+
+  function parseAITags(text) {
+    const m = text.match(/`?\[(OPTIONS|MULTI):\s*([^\]]+)\]`?/i);
+    if (!m) return { clean: text, type: null, options: [] };
+    return {
+      clean:   text.replace(m[0], '').replace(/\n{3,}/g, '\n\n').trim(),
+      type:    m[1].toLowerCase() === 'multi' ? 'multi' : 'options',
+      options: m[2].split('|').map(s => s.trim()).filter(Boolean)
+    };
+  }
 
   function addMsg(text, role) {
     const div = document.createElement('div');
@@ -180,15 +244,95 @@ Provide practical, authoritative guidance grounded in TM Forum standards. Keep r
     body.scrollTop = body.scrollHeight;
   }
 
+  function renderChips(parsed) {
+    if (!parsed.type || !parsed.options.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'oda-option-wrap';
+    const chipsDiv = document.createElement('div');
+    chipsDiv.className = 'oda-option-chips';
+
+    if (parsed.type === 'options') {
+      parsed.options.forEach(o => {
+        const chip = document.createElement('button');
+        chip.className = 'oda-option-chip';
+        chip.textContent = o;
+        chip.onclick = () => { wrap.remove(); sendMessage(o); };
+        chipsDiv.appendChild(chip);
+      });
+      wrap.appendChild(chipsDiv);
+    } else {
+      const selected = new Set();
+      parsed.options.forEach(o => {
+        const chip = document.createElement('button');
+        chip.className = 'oda-option-chip';
+        chip.textContent = o;
+        chip.onclick = () => {
+          if (selected.has(o)) { selected.delete(o); chip.classList.remove('selected'); }
+          else                 { selected.add(o);    chip.classList.add('selected'); }
+        };
+        chipsDiv.appendChild(chip);
+      });
+      const confirm = document.createElement('button');
+      confirm.className = 'oda-option-confirm';
+      confirm.textContent = 'Confirm →';
+      confirm.onclick = () => {
+        if (!selected.size) return;
+        wrap.remove();
+        sendMessage([...selected].join(', '));
+      };
+      wrap.appendChild(chipsDiv);
+      wrap.appendChild(confirm);
+    }
+
+    body.appendChild(wrap);
+    body.scrollTop = body.scrollHeight;
+  }
+
   function showTopics() {
     topicsEl.innerHTML = '';
     TOPICS.forEach(t => {
       const b = document.createElement('button');
       b.className = 'oda-topic';
-      b.textContent = t.label;
+      b.innerHTML = `
+        <div class="oda-topic-icon">${t.icon}</div>
+        <div class="oda-topic-text">
+          <span class="oda-topic-label">${t.label}</span>
+          <span class="oda-topic-desc">${t.desc}</span>
+        </div>
+        <span class="oda-topic-arr">→</span>`;
       b.onclick = () => handleTopic(t);
       topicsEl.appendChild(b);
     });
+  }
+
+  function showFollowUpChips(excludeLabel) {
+    const remaining = TOPICS.filter(t => t.value !== '__contact__' && !usedTopics.has(t.label));
+    if (remaining.length === 0) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'oda-followup';
+    wrap.innerHTML = `<span class="oda-followup-lbl">Explore another topic</span><div class="oda-followup-chips"></div>`;
+    const chips = wrap.querySelector('.oda-followup-chips');
+    remaining.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'oda-followup-chip';
+      btn.textContent = t.label;
+      btn.onclick = () => { wrap.remove(); handleTopic(t); };
+      chips.appendChild(btn);
+    });
+    body.appendChild(wrap);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function showContactNudge() {
+    const div = document.createElement('div');
+    div.className = 'oda-msg bot';
+    div.innerHTML = `<div class="oda-nudge">
+      Looks like you're digging into this — would you like to speak with Claire directly?
+      <br><button class="oda-nudge-btn" id="oda-nudge-btn">Get in touch with Claire →</button>
+    </div>`;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    div.querySelector('#oda-nudge-btn').onclick = showContactForm;
   }
 
   function showContactForm() {
@@ -206,6 +350,7 @@ Provide practical, authoritative guidance grounded in TM Forum standards. Keep r
   async function handleTopic(t) {
     if (t.value === '__contact__') { showContactForm(); return; }
     topicsEl.innerHTML = '';
+    usedTopics.add(t.label);
     await sendMessage(t.value);
   }
 
@@ -222,11 +367,19 @@ Provide practical, authoritative guidance grounded in TM Forum standards. Keep r
       const res = await fetch(CHAT_WH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, sessionId: SESSION })
+        body: JSON.stringify({ message: SYSTEM_CONTEXT + '\n\nUser: ' + text, sessionId: SESSION })
       });
       const data = await res.json();
-      const reply = data.output || data.message || data.response || 'Thank you for your question. Claire will be in touch shortly.';
-      thinking.textContent = reply;
+      const raw = data.output || data.message || data.response || 'Thank you for your question. Claire will be in touch shortly.';
+      const parsed = parseAITags(raw);
+      thinking.textContent = parsed.clean;
+      renderChips(parsed);
+      responseCount++;
+      if (!parsed.type) setTimeout(showFollowUpChips, 400);
+      if (responseCount === 2 && !contactPromptShown) {
+        contactPromptShown = true;
+        setTimeout(showContactNudge, 800);
+      }
     } catch {
       thinking.textContent = 'Sorry, I\'m having trouble connecting right now. Please try the contact form.';
     }
