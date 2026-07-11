@@ -528,7 +528,10 @@ footer {
       <p class="hero-sub r d2">
         Claire Watson helps communication service providers unlock the full potential of the TM Forum Open Digital Architecture — translating complex standards into practical transformation roadmaps that simplify operations and accelerate growth.
       </p>
-      <a href="#services" class="hero-link r d3">Explore ODA expertise <span class="arr">→</span></a>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;" class="r d3">
+        <a href="#services" class="hero-link">Explore ODA expertise <span class="arr">→</span></a>
+        <button onclick="ODAGame.open()" style="background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🎯 The ODA Game</button>
+      </div>
     </div>
   </div>
 
@@ -727,6 +730,7 @@ footer {
 </div>
 
 <script src="chat.js"></script>
+<script src="oda-game.js"></script>
 <script>
   /* Nav scroll */
   const nav = document.getElementById('nav');
