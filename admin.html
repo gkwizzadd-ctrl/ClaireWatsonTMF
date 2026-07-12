@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Claire Watson Site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  background: #0D0B4D;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: #fff;
+  padding: 40px 24px;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; opacity: .03; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 20%, rgba(217,18,65,.1) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 10% 80%, rgba(46,12,75,.5) 0%, transparent 60%);
+}
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 420px; }
+
+/* Brand */
+.brand { text-align: center; margin-bottom: 36px; }
+.brand-dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, #D91241, #2E0C4B); margin: 0 auto 14px; }
+.brand-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500; color: #fff; letter-spacing: .01em; }
+.brand-sub { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-top: 5px; }
+
+/* Card */
+.card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 32px 28px; }
+.card-label { font-family: 'DM Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: 22px; }
+.card-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; color: #fff; margin-bottom: 20px; line-height: 1.2; }
+
+/* Form */
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 11px; font-family: 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 6px; }
+.field input {
+  width: 100%; padding: 11px 14px;
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(255,255,255,.12); border-radius: 8px;
+  color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: border-color .2s;
+}
+.field input:focus { border-color: rgba(217,18,65,.6); }
+.field input.err { border-color: #ef4444; }
+
+.msg { font-size: 12.5px; font-family: 'DM Mono', monospace; letter-spacing: .02em; margin-bottom: 12px; display: none; }
+.msg.error { color: #ef4444; }
+.msg.success { color: #22c55e; }
+
+.btn {
+  width: 100%; padding: 13px; margin-top: 4px;
+  background: #D91241; border: none; border-radius: 8px;
+  color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .2s; letter-spacing: .01em;
+}
+.btn:hover { background: #b80f35; }
+.btn:disabled { background: rgba(217,18,65,.4); cursor: default; }
+.btn.secondary { background: rgba(255,255,255,.08); }
+.btn.secondary:hover { background: rgba(255,255,255,.14); }
+
+.divider { border: none; border-top: 1px solid rgba(255,255,255,.07); margin: 20px 0; }
+.back { display: block; text-align: center; margin-top: 20px; font-size: 12.5px; font-family: 'DM Mono', monospace; letter-spacing: .06em; color: rgba(255,255,255,.3); text-decoration: none; transition: color .2s; }
+.back:hover { color: rgba(255,255,255,.6); }
+
+/* Steps */
+.step { display: none; }
+.step.active { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <div class="brand-name">Claire Watson</div>
+    <div class="brand-sub">Site Administration</div>
+  </div>
+
+  <div class="card">
+
+    <!-- Step 1: Verify identity -->
+    <div class="step active" id="step1">
+      <div class="card-label">Admin Access</div>
+      <div class="card-title">Verify your identity</div>
+      <div class="field">
+        <label>Current Password</label>
+        <input type="password" id="current-pw" placeholder="Enter current password" autocomplete="current-password"/>
+      </div>
+      <div class="msg error" id="step1-err"></div>
+      <button class="btn" id="step1-btn">Verify →</button>
+    </div>
+
+    <!-- Step 2: Set new password -->
+    <div class="step" id="step2">
+      <div class="card-label">Password Management</div>
+      <div class="card-title">Set a new password</div>
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" id="new-pw" placeholder="Enter new password" autocomplete="new-password"/>
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirm-pw" placeholder="Confirm new password" autocomplete="new-password"/>
+      </div>
+      <div class="msg error" id="step2-err"></div>
+      <div class="msg success" id="step2-ok">Password updated successfully.</div>
+      <button class="btn" id="step2-btn">Update Password</button>
+      <hr class="divider">
+      <button class="btn secondary" id="step2-back">← Change account</button>
+    </div>
+
+  </div>
+
+  <a href="/" class="back">← Back to site</a>
+</div>
+
+<script>
+(function () {
+  var PW_CHECK  = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-check';
+  var PW_UPDATE = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-update';
+  var verifiedHash = '';
+
+  async function sha256(msg) {
+    var buf  = new TextEncoder().encode(msg);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(function(el){ el.classList.remove('active'); });
+    document.getElementById('step' + n).classList.add('active');
+  }
+
+  /* ── Step 1: verify current password ── */
+  var s1btn = document.getElementById('step1-btn');
+  var s1err = document.getElementById('step1-err');
+
+  s1btn.addEventListener('click', async function() {
+    var pw = document.getElementById('current-pw').value;
+    if (!pw) { document.getElementById('current-pw').focus(); return; }
+    s1btn.textContent = 'Verifying…'; s1btn.disabled = true;
+    s1err.style.display = 'none';
+    try {
+      var hash = await sha256(pw);
+      var r = await fetch(PW_CHECK, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({hash:hash}) });
+      var d = await r.json();
+      if (d.valid) {
+        verifiedHash = hash;
+        showStep(2);
+        document.getElementById('new-pw').focus();
+      } else {
+        s1err.textContent = 'Incorrect password.';
+        s1err.style.display = 'block';
+        document.getElementById('current-pw').value = '';
+        document.getElementById('current-pw').focus();
+        s1btn.textContent = 'Verify →'; s1btn.disabled = false;
+      }
+    } catch(e) {
+      s1err.textContent = 'Connection error — please try again.';
+      s1err.style.display = 'block';
+      s1btn.textContent = 'Verify →'; s1btn.disabled = false;
+    }
+  });
+  document.getElementById('current-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') s1btn.click(); });
+
+  /* ── Step 2: update password ── */
+  var s2btn = document.getElementById('step2-btn');
+  var s2err = document.getElementById('step2-err');
+  var s2ok  = document.getElementById('step2-ok');
+
+  s2btn.addEventListener('click', async function() {
+    var np = document.getElementById('new-pw').value;
+    var cp = document.getElementById('confirm-pw').value;
+    s2err.style.display = 'none'; s2ok.style.display = 'none';
+
+    if (!np || np.length < 8) {
+      s2err.textContent = 'Password must be at least 8 characters.';
+      s2err.style.display = 'block'; return;
+    }
+    if (np !== cp) {
+      s2err.textContent = 'Passwords do not match.';
+      s2err.style.display = 'block'; return;
+    }
+    s2btn.textContent = 'Updating…'; s2btn.disabled = true;
+    try {
+      var newHash = await sha256(np);
+      var r = await fetch(PW_UPDATE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({currentHash:verifiedHash, newHash:newHash}) });
+      var d = await r.json();
+      if (d.success) {
+        s2ok.style.display = 'block';
+        document.getElementById('new-pw').value = '';
+        document.getElementById('confirm-pw').value = '';
+        // Clear session so next visit requires new password
+        sessionStorage.removeItem('cwsite-auth');
+        s2btn.textContent = 'Update Password'; s2btn.disabled = false;
+      } else {
+        s2err.textContent = 'Update failed — please try again.';
+        s2err.style.display = 'block';
+        s2btn.textContent = 'Update Password'; s2btn.disabled = false;
+      }
+    } catch(e) {
+      s2err.textContent = 'Connection error — please try again.';
+      s2err.style.display = 'block';
+      s2btn.textContent = 'Update Password'; s2btn.disabled = false;
+    }
+  });
+
+  document.getElementById('step2-back').addEventListener('click', function(){
+    verifiedHash = '';
+    document.getElementById('current-pw').value = '';
+    showStep(1);
+    document.getElementById('current-pw').focus();
+  });
+
+  document.getElementById('new-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('confirm-pw').focus(); });
+  document.getElementById('confirm-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') s2btn.click(); });
+
+  // Auto-focus
+  document.getElementById('current-pw').focus();
+})();
+</script>
+</body>
+</html>
