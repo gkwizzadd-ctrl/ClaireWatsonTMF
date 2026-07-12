@@ -227,7 +227,7 @@ async function sendAchievement(beltIdx) {
   if (!S.email) return;
   const b = BELTS[beltIdx];
   try { fetch(ACH_WH, {method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({email:S.email, name:S.name, belt:b.name, beltEmoji:b.emoji, beltColor:b.color, tokens:S.tokens, topic:b.topic})}); } catch(e){}
+    body:JSON.stringify({email:S.email, name:S.name, belt:b.name, beltEmoji:b.emoji, beltColor:b.color, beltTxt:b.txt, tokens:S.tokens, topic:b.topic})}); } catch(e){}
 }
 
 /* ── CSS ───────────────────────────────────────────────── */
@@ -267,7 +267,8 @@ css.textContent = `
     font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700;
     letter-spacing:.08em; text-transform:uppercase;
     box-shadow:0 2px 12px rgba(var(--belt-glow),0.5);
-    transition:background 0.6s, color 0.6s, box-shadow 0.6s;
+    border:1.5px solid rgba(var(--belt-glow),0.5);
+    transition:background 0.6s, color 0.6s, box-shadow 0.6s, border-color 0.6s;
   }
   #odagame-belt-badge .belt-dot {
     width:8px; height:8px; border-radius:50%; background:currentColor; opacity:0.6;
@@ -496,7 +497,7 @@ overlay.innerHTML = `
     <input class="og-input" id="og-email" type="email" placeholder="Your email address" autocomplete="email"/>
     <button class="og-btn-primary" id="og-start-btn">Start the Game →</button>
     <div class="og-belt-preview">
-      ${BELTS.map(b=>`<div class="og-belt-pip" style="background:${b.color}20;color:${b.color};border:1px solid ${b.color}40">${b.emoji} ${b.name}</div>`).join('')}
+      ${BELTS.map(b=>`<div class="og-belt-pip" style="background:rgba(${b.glow},0.12);color:${b.txt==='#0D0B4D'?b.color:b.txt};border:1px solid rgba(${b.glow},0.35)">${b.emoji} ${b.name}</div>`).join('')}
     </div>
   </div>
 
