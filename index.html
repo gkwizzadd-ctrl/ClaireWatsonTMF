@@ -378,6 +378,91 @@ body::before {
   color: rgba(255,255,255,0.9);
 }
 
+/* ── Portrait column wrapper (portrait + bulb button) ── */
+.hero-portrait-col {
+  flex-shrink: 0;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 22px;
+}
+
+/* ── Lightbulb thought button ── */
+@keyframes bulb-pulse {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(255,195,50,0.2)) drop-shadow(0 0 8px rgba(255,195,50,0.08)); opacity: 0.8; }
+  50%       { filter: drop-shadow(0 0 8px rgba(255,195,50,0.6)) drop-shadow(0 0 20px rgba(255,195,50,0.2)); opacity: 1; }
+}
+.bulb-btn {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  padding: 6px 14px;
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+.bulb-btn:hover { transform: translateY(-3px); }
+.bulb-btn:active { transform: translateY(0) scale(0.97); }
+
+.bulb-svg {
+  width: 30px; height: 38px;
+  animation: bulb-pulse 2.8s ease-in-out infinite;
+  transition: filter 0.25s;
+}
+.bulb-btn:hover .bulb-svg {
+  animation: none;
+  filter: drop-shadow(0 0 10px rgba(255,195,50,0.8)) drop-shadow(0 0 28px rgba(255,195,50,0.3));
+}
+.bulb-label {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(255,255,255,0.32);
+  text-align: center; line-height: 1.65;
+  transition: color 0.25s;
+}
+.bulb-btn:hover .bulb-label { color: rgba(255,195,50,0.65); }
+
+/* ── Musical Instruments modal ── */
+#bulb-modal {
+  position: fixed; inset: 0; z-index: 9996;
+  background: rgba(5,4,36,0.93); backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+#bulb-modal.open { opacity: 1; pointer-events: all; }
+
+.bulb-modal-inner {
+  position: relative; max-width: 800px; width: 90%;
+  background: var(--ink);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(217,18,65,0.06);
+}
+.bulb-modal-close {
+  position: absolute; top: 10px; right: 10px; z-index: 10;
+  width: 30px; height: 30px;
+  background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%; color: rgba(255,255,255,0.6);
+  font-size: 17px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.bulb-modal-close:hover { background: var(--crimson); color: #fff; border-color: var(--crimson); }
+
+#bulb-video { width: 100%; display: block; max-height: 58vh; background: #000; }
+
+.bulb-caption {
+  padding: 18px 28px 22px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  background: linear-gradient(135deg, rgba(11,9,58,0.98), rgba(7,5,40,1));
+}
+.bulb-caption-rule { width: 28px; height: 1px; background: var(--crimson); margin-bottom: 12px; }
+.bulb-caption-quote {
+  font-family: var(--serif); font-size: clamp(14px, 2vw, 18px);
+  font-weight: 500; font-style: italic; line-height: 1.45;
+  color: rgba(255,255,255,0.8); margin-bottom: 9px; letter-spacing: -0.01em;
+}
+.bulb-caption-quote strong { font-style: normal; font-weight: 600; color: #fff; }
+.bulb-caption-sub {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+}
+.bulb-caption-sub em { font-style: normal; color: rgba(217,18,65,0.85); }
+
 /* Credential strip */
 .cred-strip {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -830,25 +915,46 @@ footer {
       </div>
     </div>
 
-    <div class="hero-portrait-wrap r d2" id="portrait-wrap">
-      <div class="hero-portrait" id="portrait-frame">
-        <img id="portrait-img" src="images/ClaireWatson.jpg" alt="Claire Watson — TM Forum ODA Specialist">
-        <video id="portrait-video" src="videos/Claire video.mp4" playsinline preload="none"></video>
-        <div class="portrait-play-hint" id="portrait-play-hint">
-          <div class="portrait-play-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="9,6.5 19,12 9,17.5" fill="rgba(255,255,255,0.92)"/>
-            </svg>
+    <div class="hero-portrait-col">
+
+      <div class="hero-portrait-wrap r d2" id="portrait-wrap">
+        <div class="hero-portrait" id="portrait-frame">
+          <img id="portrait-img" src="images/ClaireWatson.jpg" alt="Claire Watson — TM Forum ODA Specialist">
+          <video id="portrait-video" src="videos/Claire video.mp4" playsinline preload="none"></video>
+          <div class="portrait-play-hint" id="portrait-play-hint">
+            <div class="portrait-play-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="9,6.5 19,12 9,17.5" fill="rgba(255,255,255,0.92)"/>
+              </svg>
+            </div>
+            <span class="portrait-play-label">Watch intro</span>
           </div>
-          <span class="portrait-play-label">Watch intro</span>
+          <div class="portrait-end" id="portrait-end">
+            <span class="portrait-end-eyebrow">Watch again?</span>
+            <button class="portrait-end-btn" id="portrait-replay">↺ Replay</button>
+            <button class="portrait-end-btn portrait-end-btn--exit" id="portrait-exit">✕ Exit</button>
+          </div>
+          <div class="portrait-progress" id="portrait-progress"></div>
         </div>
-        <div class="portrait-end" id="portrait-end">
-          <span class="portrait-end-eyebrow">Watch again?</span>
-          <button class="portrait-end-btn" id="portrait-replay">↺ Replay</button>
-          <button class="portrait-end-btn portrait-end-btn--exit" id="portrait-exit">✕ Exit</button>
-        </div>
-        <div class="portrait-progress" id="portrait-progress"></div>
       </div>
+
+      <button class="bulb-btn r d3" onclick="openBulb()">
+        <svg class="bulb-svg" viewBox="0 0 28 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Globe -->
+          <path d="M14 2C8.477 2 4 6.477 4 12c0 3.9 2.1 7.3 5.25 9.18l.75.47V24h8v-2.35l.75-.47C21.9 19.3 24 15.9 24 12 24 6.477 19.523 2 14 2z"
+                fill="rgba(255,195,50,0.13)" stroke="rgba(255,195,50,0.82)" stroke-width="1.25" stroke-linejoin="round"/>
+          <!-- Base rings -->
+          <line x1="9.5" y1="27" x2="18.5" y2="27" stroke="rgba(255,195,50,0.65)" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="10.5" y1="30" x2="17.5" y2="30" stroke="rgba(255,195,50,0.48)" stroke-width="1.25" stroke-linecap="round"/>
+          <line x1="11.5" y1="33" x2="16.5" y2="33" stroke="rgba(255,195,50,0.32)" stroke-width="1.25" stroke-linecap="round"/>
+          <!-- Inner glow -->
+          <ellipse cx="14" cy="12.5" rx="3.5" ry="3.5" fill="rgba(255,195,50,0.2)"/>
+          <!-- Filament -->
+          <path d="M11 13 L12.5 10 L14 13 L15.5 10 L17 13" stroke="rgba(255,195,50,0.85)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="bulb-label">Claire's Thought<br>of the Month</span>
+      </button>
+
     </div>
 
   </div>
@@ -1047,6 +1153,23 @@ footer {
   </div>
 </div>
 
+<!-- Bulb / Thought of the Month modal -->
+<div id="bulb-modal">
+  <div class="bulb-modal-inner">
+    <button class="bulb-modal-close" onclick="closeBulb()">×</button>
+    <video id="bulb-video" controls>
+      <source src="videos/Musical instruments coming together.mp4" type="video/mp4">
+    </video>
+    <div class="bulb-caption">
+      <div class="bulb-caption-rule"></div>
+      <p class="bulb-caption-quote">
+        "The <strong>WHOLE</strong> is far <strong>GREATER</strong> than the <strong>SUM</strong> of the Parts" — Aristotle
+      </p>
+      <p class="bulb-caption-sub">The essence of the TM Forum — <em>"Collaboration"</em></p>
+    </div>
+  </div>
+</div>
+
 <script src="chat.js"></script>
 <script src="oda-game.js"></script>
 <script>
@@ -1064,6 +1187,20 @@ footer {
     hbg.setAttribute('aria-expanded', open);
   });
   function closeMobile() { mobileNav.classList.remove('open'); hbg.setAttribute('aria-expanded', false); }
+
+  /* Bulb / Thought of the Month modal */
+  function openBulb() {
+    document.getElementById('bulb-modal').classList.add('open');
+    document.getElementById('bulb-video').play();
+  }
+  function closeBulb() {
+    const v = document.getElementById('bulb-video');
+    v.pause(); v.currentTime = 0;
+    document.getElementById('bulb-modal').classList.remove('open');
+  }
+  document.getElementById('bulb-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('bulb-modal')) closeBulb();
+  });
 
   /* Demo modal */
   function openDemo() {
