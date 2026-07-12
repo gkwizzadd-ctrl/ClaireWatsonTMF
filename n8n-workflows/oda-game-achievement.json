@@ -1,0 +1,70 @@
+{
+  "name": "ODA Game — Belt Achievement Email",
+  "nodes": [
+    {
+      "id": "c3d4e5f6-0001-4000-8000-cccccccccccc",
+      "name": "Webhook — Achievement",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "oda-game-achievement",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "c3d4e5f6-0002-4000-8000-cccccccccccc",
+      "name": "Send Achievement Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ ($json.body ?? $json).email }}",
+        "subject": "=🎉 You've earned your {{ ($json.body ?? $json).belt }} Belt — TM Forum ODA Game",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0D0B4D;color:#ffffff;border-radius:8px;overflow:hidden;\">\n\n  <!-- Header -->\n  <div style=\"background:#D91241;padding:32px 40px;\">\n    <p style=\"margin:0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);\">TM Forum ODA Game</p>\n    <h1 style=\"margin:8px 0 0;font-size:28px;font-weight:700;\">Belt Achieved!</h1>\n  </div>\n\n  <!-- Body -->\n  <div style=\"padding:40px;\">\n    <p style=\"color:rgba(255,255,255,0.85);font-size:16px;line-height:1.6;margin-top:0;\">Hi {{ ($json.body ?? $json).name }},</p>\n    <p style=\"color:rgba(255,255,255,0.75);font-size:15px;line-height:1.7;\">Congratulations — you've just earned your:</p>\n\n    <!-- Belt Badge -->\n    <div style=\"text-align:center;margin:32px 0;\">\n      <div style=\"display:inline-block;width:120px;height:120px;border-radius:60px;background:{{ ($json.body ?? $json).beltColor }};line-height:120px;font-size:56px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.4);\">{{ ($json.body ?? $json).beltEmoji }}</div>\n      <div style=\"margin-top:14px;font-size:26px;font-weight:700;color:{{ ($json.body ?? $json).beltColor }};font-family:'Segoe UI',Arial,sans-serif;text-transform:uppercase;letter-spacing:0.1em;\">{{ ($json.body ?? $json).belt }} Belt</div>\n      <div style=\"margin-top:6px;font-size:13px;color:rgba(255,255,255,0.45);font-family:'Segoe UI',Arial,sans-serif;\">{{ ($json.body ?? $json).tokens }} tokens earned · {{ ($json.body ?? $json).topic }}</div>\n    </div>\n\n    <p style=\"color:rgba(255,255,255,0.75);font-size:15px;line-height:1.7;\">You're demonstrating a real command of the TM Forum Open Digital Architecture. Keep going — there are more belts to earn and deeper knowledge to unlock.</p>\n\n    <div style=\"text-align:center;margin:32px 0;\">\n      <a href=\"https://clairewatson.vercel.app\" style=\"display:inline-block;background:#D91241;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:4px;font-size:15px;font-weight:600;letter-spacing:0.04em;\">Continue the ODA Game →</a>\n    </div>\n\n    <p style=\"color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6;\">If you'd like to talk about applying ODA principles in your organisation, I'd love to connect.</p>\n\n    <p style=\"color:rgba(255,255,255,0.7);font-size:14px;margin-top:24px;\">Best,<br><strong>Claire Watson</strong><br><span style=\"color:rgba(255,255,255,0.4);font-size:12px;\">Engagement Manager, TM Forum</span></p>\n  </div>\n\n  <!-- Footer -->\n  <div style=\"background:rgba(0,0,0,0.3);padding:20px 40px;text-align:center;\">\n    <p style=\"margin:0;color:rgba(255,255,255,0.35);font-size:11px;\">You received this because you played the ODA Game at clairewatson.vercel.app.</p>\n  </div>\n\n</div>",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account2"
+        }
+      }
+    },
+    {
+      "id": "c3d4e5f6-0003-4000-8000-cccccccccccc",
+      "name": "Respond — Achievement",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Achievement": {
+      "main": [
+        [{ "node": "Send Achievement Email", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Achievement Email": {
+      "main": [
+        [{ "node": "Respond — Achievement", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

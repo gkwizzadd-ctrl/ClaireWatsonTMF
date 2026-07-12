@@ -8,6 +8,7 @@ const CLAIRE_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/claire-agent';
 const SAVE_WH   = 'https://n8n.srv1739004.hstgr.cloud/webhook/oda-game-save';
 const LOAD_WH   = 'https://n8n.srv1739004.hstgr.cloud/webhook/oda-game-load';
 const DROP_WH   = 'https://n8n.srv1739004.hstgr.cloud/webhook/oda-game-dropout';
+const ACH_WH    = 'https://n8n.srv1739004.hstgr.cloud/webhook/oda-game-achievement';
 const LS_KEY    = 'oda-game-v1';
 
 /* ── Belt Config ───────────────────────────────────────── */
@@ -222,6 +223,12 @@ async function sendDropout() {
   try { await fetch(DROP_WH, {method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email:S.email, name:S.name, belt:b.name, tokens:S.tokens, topic:b.topic})}); } catch(e){}
 }
+async function sendAchievement(beltIdx) {
+  if (!S.email) return;
+  const b = BELTS[beltIdx];
+  try { fetch(ACH_WH, {method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:S.email, name:S.name, belt:b.name, beltEmoji:b.emoji, beltColor:b.color, tokens:S.tokens, topic:b.topic})}); } catch(e){}
+}
 
 /* ── CSS ───────────────────────────────────────────────── */
 const css = document.createElement('style');
@@ -282,6 +289,12 @@ css.textContent = `
     transition:transform 0.15s cubic-bezier(.34,1.56,.64,1);
   }
   #odagame-token-count.pop { transform:scale(1.4); }
+  #odagame-reset {
+    background:none; border:none; color:rgba(255,255,255,0.22);
+    font-size:16px; cursor:pointer; padding:4px; line-height:1;
+    transition:color 0.15s; flex-shrink:0;
+  }
+  #odagame-reset:hover { color:rgba(255,255,255,0.6); }
   #odagame-close {
     background:none; border:none; color:rgba(255,255,255,0.35);
     font-size:22px; cursor:pointer; padding:4px; line-height:1;
@@ -464,6 +477,7 @@ overlay.innerHTML = `
     <div id="odagame-belt-badge"><span class="belt-dot"></span><span id="og-belt-name">White Belt</span></div>
     <div id="odagame-title">The ODA Game <span>· TM Forum</span></div>
     <div id="odagame-tokens">⬡ <span id="odagame-token-count">0</span></div>
+    <button id="odagame-reset" aria-label="Restart game" title="Start over">↺</button>
     <button id="odagame-close" aria-label="Close">×</button>
   </div>
 
@@ -651,6 +665,7 @@ function checkBeltEnd() {
       S.done = true;
       saveLocal();
       saveRemote();
+      sendAchievement(S.belt);
       setBeltVars(S.belt);
       showScreen('og-screen-done');
     } else {
@@ -663,6 +678,7 @@ function checkBeltEnd() {
 }
 
 function showPromotion() {
+  sendAchievement(S.belt);
   const newBeltIdx = S.belt + 1;
   const newBelt = BELTS[newBeltIdx];
 
@@ -728,6 +744,20 @@ function close() {
 /* ── Event Listeners ───────────────────────────────────── */
 $('odagame-close').addEventListener('click', close);
 overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+$('odagame-reset').addEventListener('click', () => {
+  if (!confirm('Reset all progress and start over?')) return;
+  const oldEmail = S.email;
+  S = { email:'', name:'', belt:0, tokens:0, beltCorrect:0, beltAnswered:0, queue:[], consecutive:0, done:false };
+  try { localStorage.removeItem(LS_KEY); } catch(e) {}
+  if (oldEmail) {
+    fetch(SAVE_WH, {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...S, email:oldEmail})}).catch(()=>{});
+  }
+  setBeltVars(0);
+  updateHeader();
+  showScreen('og-screen-email');
+});
 
 $('og-start-btn').addEventListener('click', async () => {
   const name  = $('og-name').value.trim();
