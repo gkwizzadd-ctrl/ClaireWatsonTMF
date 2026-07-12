@@ -189,6 +189,57 @@ body::before {
 .hero-link .arr { transition: transform 0.2s; }
 .hero-link:hover .arr { transform: translateX(4px); }
 
+/* Hero two-column layout */
+#hero .container { display: flex; align-items: center; gap: 72px; }
+.hero-inner { flex: 1; max-width: 600px; }
+
+/* Portrait */
+.hero-portrait-wrap {
+  flex-shrink: 0;
+  position: relative;
+}
+.hero-portrait-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1px solid rgba(217,18,65,0.22);
+  pointer-events: none;
+}
+.hero-portrait {
+  width: 270px; height: 320px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 0 1.5px rgba(217,18,65,0.2), 0 24px 64px rgba(0,0,0,0.55);
+}
+.hero-portrait img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center 8%;
+  display: block;
+  filter: brightness(0.92) contrast(1.05);
+}
+.hero-portrait::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  /* Vignette fades white background to navy */
+  background: radial-gradient(ellipse at 50% 38%, transparent 32%, rgba(13,11,77,0.88) 72%);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  #hero .container { flex-direction: column-reverse; gap: 28px; text-align: center; }
+  .hero-portrait { width: 160px; height: 190px; }
+  .hero-portrait-wrap::before { inset: -8px; }
+  .hero-inner { max-width: 100%; }
+  .hero-eye, .hero-sub { text-align: center; }
+}
+@media (max-width: 600px) {
+  .hero-portrait { width: 130px; height: 155px; }
+}
+
 /* Credential strip */
 .cred-strip {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -640,6 +691,13 @@ footer {
         <button onclick="ODAGame.open()" style="background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🎯 The ODA Game</button>
       </div>
     </div>
+
+    <div class="hero-portrait-wrap r d2">
+      <div class="hero-portrait">
+        <img src="images/ClaireWatson.jpg" alt="Claire Watson — TM Forum ODA Specialist">
+      </div>
+    </div>
+
   </div>
 
   <div class="cred-strip">
