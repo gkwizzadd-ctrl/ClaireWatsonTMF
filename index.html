@@ -205,6 +205,7 @@ body::before {
   border-radius: 50%;
   border: 1px solid rgba(217,18,65,0.22);
   pointer-events: none;
+  animation: portrait-aura 3s ease-in-out infinite;
 }
 .hero-portrait {
   width: 270px; height: 320px;
@@ -219,6 +220,7 @@ body::before {
   object-position: center 8%;
   display: block;
   filter: brightness(0.92) contrast(1.05);
+  transition: opacity 0.6s ease;
 }
 .hero-portrait::after {
   content: '';
@@ -227,6 +229,7 @@ body::before {
   /* Vignette fades white background to navy */
   background: radial-gradient(ellipse at 50% 38%, transparent 32%, rgba(13,11,77,0.88) 72%);
   pointer-events: none;
+  z-index: 2;
 }
 
 @media (max-width: 900px) {
@@ -238,6 +241,141 @@ body::before {
 }
 @media (max-width: 600px) {
   .hero-portrait { width: 130px; height: 155px; }
+}
+
+/* ── Portrait inline video player ── */
+@keyframes portrait-aura {
+  0%, 100% { opacity: 0.22; }
+  50%       { opacity: 0.7;  }
+}
+@keyframes portrait-ping {
+  0%   { opacity: 0.3; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(1.22); }
+}
+
+/* Outer sonar ring */
+.hero-portrait-wrap::after {
+  content: '';
+  position: absolute; inset: -18px;
+  border-radius: 50%;
+  border: 1px solid rgba(217,18,65,0.28);
+  animation: portrait-ping 3.6s ease-out infinite 1.6s;
+  pointer-events: none;
+}
+
+/* Silence rings during playback */
+.hero-portrait-wrap.vp-playing::before,
+.hero-portrait-wrap.vp-ended::before  { animation: none; opacity: 0; transition: opacity 0.5s; }
+.hero-portrait-wrap.vp-playing::after,
+.hero-portrait-wrap.vp-ended::after   { animation: none; opacity: 0; transition: opacity 0.5s; }
+
+.hero-portrait-wrap { cursor: pointer; }
+.hero-portrait-wrap.vp-playing { cursor: default; }
+
+/* Hover play hint */
+.portrait-play-hint {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  background: radial-gradient(circle, rgba(13,11,77,0.38) 0%, rgba(13,11,77,0.1) 65%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+.hero-portrait-wrap:hover .portrait-play-hint { opacity: 1; }
+.hero-portrait-wrap.vp-playing .portrait-play-hint,
+.hero-portrait-wrap.vp-ended   .portrait-play-hint { opacity: 0; pointer-events: none; }
+
+.portrait-play-icon {
+  width: 52px; height: 52px;
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  background: rgba(13,11,77,0.2);
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), border-color 0.25s, background 0.25s;
+}
+.portrait-play-hint:hover .portrait-play-icon {
+  transform: scale(1.1);
+  border-color: var(--crimson);
+  background: rgba(217,18,65,0.18);
+}
+.portrait-play-icon svg { width: 16px; height: 16px; margin-left: 3px; }
+
+.portrait-play-label {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(255,255,255,0.5);
+}
+
+/* Video element */
+#portrait-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  opacity: 0;
+  transition: opacity 0.65s ease;
+  z-index: 1;
+}
+.hero-portrait-wrap.vp-playing #portrait-video,
+.hero-portrait-wrap.vp-ended  #portrait-video { opacity: 1; }
+
+/* Photo fades out on play */
+.hero-portrait-wrap.vp-playing #portrait-img,
+.hero-portrait-wrap.vp-ended  #portrait-img  { opacity: 0; }
+
+/* Progress bar — clipped to the oval by parent overflow:hidden */
+.portrait-progress {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--crimson), rgba(217,18,65,0.3));
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.hero-portrait-wrap.vp-playing .portrait-progress { opacity: 1; }
+
+/* End overlay */
+.portrait-end {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  background: rgba(13,11,77,0.86);
+  backdrop-filter: blur(14px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s ease;
+  z-index: 4;
+}
+.hero-portrait-wrap.vp-ended .portrait-end { opacity: 1; pointer-events: all; }
+
+.portrait-end-eyebrow {
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+  margin-bottom: 2px;
+}
+.portrait-end-btn {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.72);
+  padding: 8px 20px; cursor: pointer;
+  min-width: 96px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.portrait-end-btn:hover {
+  border-color: var(--crimson);
+  color: #fff;
+  background: rgba(217,18,65,0.14);
+}
+.portrait-end-btn--exit:hover {
+  border-color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.9);
 }
 
 /* Credential strip */
@@ -692,9 +830,24 @@ footer {
       </div>
     </div>
 
-    <div class="hero-portrait-wrap r d2">
-      <div class="hero-portrait">
-        <img src="images/ClaireWatson.jpg" alt="Claire Watson — TM Forum ODA Specialist">
+    <div class="hero-portrait-wrap r d2" id="portrait-wrap">
+      <div class="hero-portrait" id="portrait-frame">
+        <img id="portrait-img" src="images/ClaireWatson.jpg" alt="Claire Watson — TM Forum ODA Specialist">
+        <video id="portrait-video" src="videos/Spaghetti to lego1.mp4" playsinline preload="none"></video>
+        <div class="portrait-play-hint" id="portrait-play-hint">
+          <div class="portrait-play-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="9,6.5 19,12 9,17.5" fill="rgba(255,255,255,0.92)"/>
+            </svg>
+          </div>
+          <span class="portrait-play-label">Watch intro</span>
+        </div>
+        <div class="portrait-end" id="portrait-end">
+          <span class="portrait-end-eyebrow">Watch again?</span>
+          <button class="portrait-end-btn" id="portrait-replay">↺ Replay</button>
+          <button class="portrait-end-btn portrait-end-btn--exit" id="portrait-exit">✕ Exit</button>
+        </div>
+        <div class="portrait-progress" id="portrait-progress"></div>
       </div>
     </div>
 
@@ -961,6 +1114,45 @@ footer {
   document.querySelectorAll('#hero .r').forEach((el, i) => {
     setTimeout(() => el.classList.add('in'), 100 + i * 120);
   });
+
+  /* Portrait inline video player */
+  (function () {
+    const wrap  = document.getElementById('portrait-wrap');
+    const video = document.getElementById('portrait-video');
+    const hint  = document.getElementById('portrait-play-hint');
+    const prog  = document.getElementById('portrait-progress');
+
+    function vPlay() {
+      wrap.classList.remove('vp-ended');
+      wrap.classList.add('vp-playing');
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
+
+    function vExit() {
+      video.pause();
+      video.currentTime = 0;
+      wrap.classList.remove('vp-playing', 'vp-ended');
+      prog.style.transform = 'scaleX(0)';
+    }
+
+    hint.addEventListener('click', vPlay);
+
+    video.addEventListener('timeupdate', () => {
+      if (video.duration) {
+        prog.style.transform = 'scaleX(' + (video.currentTime / video.duration) + ')';
+      }
+    });
+
+    video.addEventListener('ended', () => {
+      wrap.classList.remove('vp-playing');
+      wrap.classList.add('vp-ended');
+      prog.style.transform = 'scaleX(1)';
+    });
+
+    document.getElementById('portrait-replay').addEventListener('click', vPlay);
+    document.getElementById('portrait-exit').addEventListener('click', vExit);
+  })();
 </script>
 </body>
 </html>
