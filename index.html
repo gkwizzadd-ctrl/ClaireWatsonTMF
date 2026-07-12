@@ -256,6 +256,13 @@ body::before {
   color: var(--ink); margin-bottom: 12px; line-height: 1.2;
 }
 .svc-desc { font-size: 14px; line-height: 1.7; color: #5A5C6E; }
+a.svc-card { text-decoration: none; color: inherit; display: block; cursor: pointer; position: relative; }
+a.svc-card::after {
+  content: '↗'; position: absolute; top: 18px; right: 18px;
+  font-size: 13px; color: var(--crimson); opacity: 0;
+  transition: opacity 0.2s;
+}
+a.svc-card:hover::after { opacity: 1; }
 
 /* Featured 5th card */
 .svc-card.svc-featured {
@@ -657,29 +664,29 @@ footer {
     <h2 class="sec-h2 r d1">ODA expertise across<br>the full transformation lifecycle.</h2>
     <div class="svc-grid">
 
-      <div class="svc-card r">
+      <a class="svc-card r" href="https://www.tmforum.org/open-digital-architecture/business-architecture-framework/" target="_blank" rel="noopener noreferrer">
         <div class="svc-num">01</div>
         <h3 class="svc-title">Business Architecture & eTOM</h3>
         <p class="svc-desc">Applying the TM Forum Business Process Framework (eTOM), capability framework, and value stream framework to align IT strategy with business outcomes and improve cross-team communication.</p>
-      </div>
+      </a>
 
-      <div class="svc-card r d1">
+      <a class="svc-card r d1" href="https://www.tmforum.org/oda/about-oda" target="_blank" rel="noopener noreferrer">
         <div class="svc-num">02</div>
         <h3 class="svc-title">ODA Transformation Strategy</h3>
         <p class="svc-desc">Designing practical ODA adoption roadmaps — from maturity assessment and governance design to phased migration from legacy BSS/OSS architectures. Standards-led, business-grounded.</p>
-      </div>
+      </a>
 
-      <div class="svc-card r d2">
+      <a class="svc-card r d2" href="https://www.tmforum.org/oda/open-apis" target="_blank" rel="noopener noreferrer">
         <div class="svc-num">03</div>
         <h3 class="svc-title">Open API Strategy</h3>
         <p class="svc-desc">Guiding CSPs through TM Forum Open API adoption to achieve zero-touch interoperability, reduce integration complexity, and build composable, future-proof IT ecosystems.</p>
-      </div>
+      </a>
 
-      <div class="svc-card r d3">
+      <a class="svc-card r d3" href="https://www.tmforum.org/ai-operations/" target="_blank" rel="noopener noreferrer">
         <div class="svc-num">04</div>
         <h3 class="svc-title">AI-Native Operations</h3>
         <p class="svc-desc">Helping operators leverage the ODA Canvas and AI-native execution environment to enable autonomous networks, AI-orchestrated workflows, and zero-touch operations at scale.</p>
-      </div>
+      </a>
 
       <div class="svc-card svc-featured r d4">
         <div style="padding-top:4px">
