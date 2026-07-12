@@ -128,7 +128,7 @@ body::before {
   min-height: 100vh; display: flex; align-items: center;
   background: var(--ink);
   position: relative; overflow: hidden;
-  padding: 120px 0 80px;
+  padding: 120px 0 120px;
 }
 
 /* Layered gradient atmosphere */
@@ -246,16 +246,17 @@ body::before {
   border-top: 1px solid rgba(255,255,255,0.06);
   backdrop-filter: blur(8px);
   background: rgba(13,11,77,0.5);
-  padding: 18px 0; z-index: 2;
+  padding: 14px 0; z-index: 2;
+  overflow: hidden;
 }
 .cred-inner {
   max-width: 1120px; margin: 0 auto; padding: 0 32px;
-  display: flex; align-items: center; gap: 40px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 20px; flex-wrap: nowrap;
 }
 .cred-item {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em;
   text-transform: uppercase; color: rgba(255,255,255,0.38);
-  white-space: nowrap;
+  white-space: nowrap; flex-shrink: 0;
 }
 .cred-divider { width: 1px; height: 16px; background: rgba(255,255,255,0.12); flex-shrink: 0; }
 
