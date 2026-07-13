@@ -1438,6 +1438,27 @@ footer {
     if (e.target === this) closePlanModal();
   });
 
+  /* Restore engagement plan prompt if user already submitted the form */
+  (function restorePlanPrompt() {
+    try {
+      const saved = localStorage.getItem('tmf-plan-basic');
+      if (!saved) return;
+      const d = JSON.parse(saved);
+      if (!d || !d.name) return;
+      const prompt = document.getElementById('cf-plan-prompt');
+      prompt.innerHTML = `
+        <button class="plan-prompt-btn" onclick="openPlanModal()">
+          <span class="plan-prompt-icon">📋</span>
+          <span class="plan-prompt-text">
+            <div class="plan-prompt-head">Your engagement plan is ready</div>
+            <div class="plan-prompt-sub">Welcome back, ${d.name}. Answer 7 quick questions and Claire will prepare your personal 6-month ODA roadmap.</div>
+          </span>
+          <span class="plan-prompt-arrow">›</span>
+        </button>`;
+      prompt.style.display = 'block';
+    } catch (e) {}
+  })();
+
   /* Scroll reveal */
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
