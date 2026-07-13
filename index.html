@@ -665,6 +665,104 @@ a.svc-card:hover::after { opacity: 1; }
   align-self: flex-start;
 }
 .cf-submit:hover { opacity: 0.88; transform: translateY(-2px); }
+.cf-field option { background: #0D0B4D; color: #fff; }
+
+/* ── Engagement plan prompt button ── */
+.plan-prompt-btn {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(0,48,135,0.25), rgba(0,96,184,0.15));
+  border: 1px solid rgba(0,128,204,0.35); border-radius: 6px;
+  cursor: pointer; text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+  animation: plan-pop 0.4s cubic-bezier(.34,1.56,.64,1);
+}
+.plan-prompt-btn:hover { background: linear-gradient(135deg, rgba(0,48,135,0.35), rgba(0,96,184,0.25)); border-color: rgba(0,128,204,0.55); }
+.plan-prompt-icon { font-size: 22px; flex-shrink: 0; }
+.plan-prompt-text { flex: 1; }
+.plan-prompt-head {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(130,180,255,0.85); margin-bottom: 2px;
+}
+.plan-prompt-sub { font-size: 12px; color: rgba(255,255,255,0.65); line-height: 1.4; }
+.plan-prompt-arrow { color: rgba(130,180,255,0.6); font-size: 18px; flex-shrink: 0; }
+@keyframes plan-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Questionnaire modal ── */
+#plan-modal {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(5,4,36,0.88); display: none; align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(8px);
+}
+#plan-modal.open { display: flex; }
+.plan-modal-box {
+  background: #0D0B4D; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; width: 100%; max-width: 600px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+.plan-modal-head {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+}
+.plan-modal-head h3 {
+  font-family: var(--serif); font-size: 26px; font-weight: 500;
+  color: #fff; margin-bottom: 6px;
+}
+.plan-modal-head p {
+  font-size: 12.5px; color: rgba(255,255,255,0.5); line-height: 1.5;
+}
+.plan-modal-close {
+  position: absolute; top: 20px; right: 24px;
+  background: none; border: none; color: rgba(255,255,255,0.4);
+  font-size: 22px; cursor: pointer; line-height: 1;
+  transition: color 0.15s;
+}
+.plan-modal-close:hover { color: #fff; }
+
+.plan-modal-body { padding: 24px 32px; }
+
+.pq { margin-bottom: 22px; }
+.pq-label {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 5px;
+}
+.pq-text { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; margin-bottom: 10px; }
+.pq-scale { display: flex; gap: 8px; }
+.pq-btn {
+  flex: 1; padding: 8px 4px; text-align: center;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; color: rgba(255,255,255,0.45);
+  font-family: var(--mono); font-size: 12px; cursor: pointer;
+  transition: all 0.15s;
+}
+.pq-btn:hover { background: rgba(0,128,204,0.2); border-color: rgba(0,128,204,0.4); color: #fff; }
+.pq-btn.sel { background: rgba(0,48,135,0.6); border-color: rgba(0,128,204,0.7); color: #fff; font-weight: 500; }
+.pq-ends {
+  display: flex; justify-content: space-between; margin-top: 4px;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.28);
+}
+
+.plan-modal-foot {
+  padding: 16px 32px 28px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+#plan-generate {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #003087, #0060B8);
+  border: none; border-radius: 6px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #fff; cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s cubic-bezier(.34,1.56,.64,1);
+}
+#plan-generate:hover { opacity: 0.9; transform: translateY(-2px); }
+#plan-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 /* ── Footer ── */
 footer {
@@ -1118,9 +1216,19 @@ footer {
         <input class="cf-field" type="text"  id="cf-name"  placeholder="Your name" required>
         <input class="cf-field" type="email" id="cf-email" placeholder="Email address" required>
         <input class="cf-field" type="text"  id="cf-org"   placeholder="Organisation">
-        <textarea class="cf-field" id="cf-msg" rows="4" placeholder="How can I help you with your ODA journey?"></textarea>
+        <div style="display:flex;gap:12px">
+          <input class="cf-field" type="text" id="cf-jobtitle" placeholder="Job title" required style="flex:1">
+          <select class="cf-field" id="cf-type" required style="flex:1">
+            <option value="" disabled selected>Company type</option>
+            <option value="operator">Telecom Operator (CSP)</option>
+            <option value="vendor">Technology Vendor</option>
+            <option value="other">Other / Not sure</option>
+          </select>
+        </div>
+        <textarea class="cf-field" id="cf-msg" rows="3" placeholder="How can I help you with your ODA journey?"></textarea>
         <button class="cf-submit" type="submit">Send message →</button>
         <div id="cf-status" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;display:none"></div>
+        <div id="cf-plan-prompt" style="display:none;margin-top:4px"></div>
       </form>
     </div>
   </div>
@@ -1166,6 +1274,21 @@ footer {
         "The <strong>WHOLE</strong> is far <strong>GREATER</strong> than the <strong>SUM</strong> of the Parts" — Aristotle
       </p>
       <p class="bulb-caption-sub">The essence of the TM Forum — <em>"Collaboration"</em></p>
+    </div>
+  </div>
+</div>
+
+<!-- TM Forum Engagement Plan Questionnaire Modal -->
+<div id="plan-modal">
+  <div class="plan-modal-box">
+    <div class="plan-modal-head">
+      <button class="plan-modal-close" onclick="closePlanModal()">×</button>
+      <h3>Personalise Your Engagement Plan</h3>
+      <p>Score each step 1–5 to help Claire prioritise your 6-month ODA roadmap. Takes about 2 minutes.</p>
+    </div>
+    <div class="plan-modal-body" id="plan-questions"></div>
+    <div class="plan-modal-foot">
+      <button id="plan-generate" disabled onclick="generatePlan()">Generate My Personal Plan →</button>
     </div>
   </div>
 </div>
@@ -1219,27 +1342,101 @@ footer {
   /* Contact form */
   async function submitContact(e) {
     e.preventDefault();
-    const status = document.getElementById('cf-status');
+    const status  = document.getElementById('cf-status');
+    const name    = document.getElementById('cf-name').value.trim();
+    const email   = document.getElementById('cf-email').value.trim();
+    const org     = document.getElementById('cf-org').value.trim();
+    const jobtitle = document.getElementById('cf-jobtitle').value.trim();
+    const type    = document.getElementById('cf-type').value;
+    const msg     = document.getElementById('cf-msg').value.trim();
+
     status.style.display = 'block';
     status.textContent = 'Sending…';
     try {
       await fetch('https://n8n.srv1739004.hstgr.cloud/webhook/custom-contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:         document.getElementById('cf-name').value,
-          email:        document.getElementById('cf-email').value,
-          organisation: document.getElementById('cf-org').value,
-          message:      document.getElementById('cf-msg').value,
-          source:       'ClaireWatsonTMF'
-        })
+        body: JSON.stringify({ name, email, organisation: org, jobTitle: jobtitle, companyType: type, message: msg, source: 'ClaireWatsonTMF' })
       });
       status.textContent = '✓ Message sent — Claire will be in touch shortly.';
+
+      /* Store form data for engagement plan */
+      const now = new Date();
+      const planBase = { name, email, company: org || 'Your Organisation', jobTitle: jobtitle, companyType: type, generatedDate: now.toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) };
+      localStorage.setItem('tmf-plan-basic', JSON.stringify(planBase));
+
       document.getElementById('contact-form').reset();
+
+      /* Show engagement plan prompt */
+      const prompt = document.getElementById('cf-plan-prompt');
+      prompt.innerHTML = `
+        <button class="plan-prompt-btn" onclick="openPlanModal()">
+          <span class="plan-prompt-icon">📋</span>
+          <span class="plan-prompt-text">
+            <div class="plan-prompt-head">New — Personalised for you</div>
+            <div class="plan-prompt-sub">Would you like a personal TM Forum Engagement Plan? Answer 7 quick questions and Claire will prepare your 6-month ODA roadmap.</div>
+          </span>
+          <span class="plan-prompt-arrow">›</span>
+        </button>`;
+      prompt.style.display = 'block';
     } catch {
       status.textContent = 'Error sending. Please email directly.';
     }
   }
+
+  /* ── Engagement plan questionnaire ── */
+  const PLAN_Qs = [
+    { step: 1, q: 'How mature is your current ODA / OSS architecture against TM Forum ODA principles?',           lo: 'Just starting out', hi: 'Fully ODA-aligned' },
+    { step: 2, q: 'How urgent is adopting ODA across your organisation right now?',                               lo: 'Exploring options', hi: 'Critical priority' },
+    { step: 3, q: 'How much ODA / Open API training does your team need over the next 6 months?',                 lo: '1–2 people', hi: 'Full team upskill' },
+    { step: 4, q: 'How ready are you to join a live TM Forum Catalyst project or SODA collaboration?',           lo: 'Observer only', hi: 'Ready to lead' },
+    { step: 5, q: 'How far along is your ODA implementation today?',                                              lo: 'Not yet started', hi: 'Already in production' },
+    { step: 6, q: 'How keen are you to showcase your progress at a TM Forum event (e.g. DTW)?',                  lo: 'Not yet ready', hi: 'Ready for DTW stage' },
+    { step: 7, q: 'How likely are you to expand your TM Forum engagement beyond the initial 6 months?',          lo: 'Unlikely', hi: 'Definitely expanding' }
+  ];
+
+  const planScores = [0,0,0,0,0,0,0];
+
+  function openPlanModal() {
+    const qs = document.getElementById('plan-questions');
+    qs.innerHTML = PLAN_Qs.map((q, i) => `
+      <div class="pq">
+        <div class="pq-label">Step ${q.step} of 7</div>
+        <div class="pq-text">${q.q}</div>
+        <div class="pq-scale" id="pq-${i}">
+          ${[1,2,3,4,5].map(n => `<button class="pq-btn" data-idx="${i}" data-val="${n}" onclick="pickScore(this,${i},${n})">${n}</button>`).join('')}
+        </div>
+        <div class="pq-ends"><span>${q.lo}</span><span>${q.hi}</span></div>
+      </div>`).join('');
+    document.getElementById('plan-modal').classList.add('open');
+    planScores.fill(0);
+    document.getElementById('plan-generate').disabled = true;
+  }
+
+  function closePlanModal() {
+    document.getElementById('plan-modal').classList.remove('open');
+  }
+
+  function pickScore(btn, idx, val) {
+    document.querySelectorAll(`#pq-${idx} .pq-btn`).forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    planScores[idx] = val;
+    const allScored = planScores.every(s => s > 0);
+    document.getElementById('plan-generate').disabled = !allScored;
+  }
+
+  function generatePlan() {
+    const base = JSON.parse(localStorage.getItem('tmf-plan-basic') || '{}');
+    const planData = Object.assign({}, base, { scores: [...planScores] });
+    localStorage.setItem('tmf-plan-data', JSON.stringify(planData));
+    closePlanModal();
+    window.open('engagement-plan.html', '_blank');
+  }
+
+  /* Close plan modal on backdrop click */
+  document.getElementById('plan-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePlanModal();
+  });
 
   /* Scroll reveal */
   const io = new IntersectionObserver((entries) => {

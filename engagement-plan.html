@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TM Forum Engagement Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --tmf-blue:  #003087;
+  --tmf-mid:   #0060B8;
+  --tmf-light: #0080CC;
+  --tmf-cyan:  #00B8D9;
+  --claire:    #D91241;
+  --ink:       #0D0B4D;
+  --body:      #2C3148;
+  --muted:     #6B7280;
+  --rule:      #E2E6F0;
+  --bg:        #F7F9FC;
+  --white:     #FFFFFF;
+  --serif:     'Cormorant Garamond', Georgia, serif;
+  --sans:      'DM Sans', 'Segoe UI', sans-serif;
+  --mono:      'DM Mono', 'Courier New', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
+
+/* ── Actions bar (not printed) ── */
+#actions {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: var(--tmf-blue);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 54px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+#actions .atitle {
+  color: rgba(255,255,255,0.85); font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+#actions .abtns { display: flex; gap: 10px; }
+#actions button {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22);
+  color: #fff; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 7px 18px; cursor: pointer;
+  transition: background 0.18s;
+}
+#actions button:hover { background: rgba(255,255,255,0.2); }
+#actions button.primary { background: var(--claire); border-color: var(--claire); }
+#actions button.primary:hover { background: #b80f35; }
+
+/* ── Page layout ── */
+#plan-root { padding: 70px 0 40px; }
+
+.page {
+  width: 210mm; min-height: 280mm;
+  background: var(--white);
+  margin: 0 auto 20px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+
+/* ── COVER PAGE ── */
+.cover-top-bar {
+  background: var(--tmf-blue); padding: 32px 44px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cover-top-bar .brand-text {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6);
+}
+.cover-top-bar .brand-text strong {
+  display: block; color: #fff; font-size: 19px; letter-spacing: 0.06em;
+  font-weight: 500; margin-top: 3px;
+}
+.cover-top-bar .brand-badge {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 500; color: #fff;
+}
+
+.cover-content {
+  display: flex; gap: 32px; padding: 38px 44px 24px; align-items: flex-start; flex: 1;
+}
+.cover-portrait {
+  flex-shrink: 0; width: 96px; height: 113px;
+  border-radius: 50%; overflow: hidden;
+  border: 2px solid var(--tmf-blue);
+  box-shadow: 0 8px 28px rgba(0,48,135,0.25);
+}
+.cover-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 8%; }
+
+.cover-right { flex: 1; }
+.cover-tag {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--claire); margin-bottom: 10px;
+}
+.cover-title {
+  font-family: var(--serif); font-size: 38px; font-weight: 500;
+  line-height: 1.08; color: var(--tmf-blue); letter-spacing: -0.02em; margin-bottom: 10px;
+}
+.cover-subtitle {
+  font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 20px;
+}
+.cover-pullquote {
+  border-left: 3px solid var(--tmf-blue); padding: 11px 16px;
+  font-family: var(--serif); font-size: 14px; font-style: italic;
+  color: var(--body); line-height: 1.65; background: var(--bg);
+  margin-bottom: 6px;
+}
+.cover-by {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+.cover-member-block {
+  margin: 0 44px 24px;
+  background: var(--tmf-blue); padding: 20px 26px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px;
+}
+.cover-field label {
+  display: block; font-family: var(--mono); font-size: 7px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); margin-bottom: 3px;
+}
+.cover-field span {
+  font-family: var(--sans); font-size: 12.5px; color: #fff; font-weight: 500;
+}
+
+.cover-stats {
+  margin: 0 44px 32px; display: flex;
+}
+.cover-stat {
+  flex: 1; text-align: center; padding: 14px 10px;
+  border: 1px solid var(--rule); border-right: none;
+}
+.cover-stat:last-child { border-right: 1px solid var(--rule); }
+.cover-stat-n {
+  font-family: var(--serif); font-size: 30px; font-weight: 600;
+  color: var(--tmf-blue); line-height: 1;
+}
+.cover-stat-l {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--muted); margin-top: 4px;
+}
+
+/* ── OVERVIEW PAGE ── */
+.ov-header {
+  background: linear-gradient(135deg, var(--tmf-blue) 0%, var(--tmf-mid) 100%);
+  padding: 28px 44px 22px;
+}
+.ov-eye {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px;
+}
+.ov-header h2 {
+  font-family: var(--serif); font-size: 30px; font-weight: 500; color: #fff; letter-spacing: -0.01em;
+}
+
+.ov-body { padding: 26px 44px; flex: 1; }
+.ov-intro { font-size: 12.5px; line-height: 1.78; color: var(--body); margin-bottom: 26px; }
+
+.ov-chart-label {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+.step-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+.step-row-label {
+  font-size: 11px; color: var(--body); width: 126px; flex-shrink: 0; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.step-row-track { flex: 1; height: 9px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.step-row-fill { height: 100%; border-radius: 4px; }
+.score-1, .score-2 { background: #B0C4E0; }
+.score-3             { background: #5B9BD5; }
+.score-4             { background: var(--tmf-blue); }
+.score-5             { background: var(--claire); }
+.step-row-num {
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  width: 22px; text-align: right; flex-shrink: 0;
+}
+
+.ov-legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 18px; }
+.ov-legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.06em; color: var(--muted);
+}
+.leg-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+/* ── STEP PAGES ── */
+.step-header {
+  padding: 18px 44px 16px;
+  border-bottom: 3px solid var(--tmf-blue);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.step-hdr-left { display: flex; align-items: baseline; gap: 16px; }
+.step-eye {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--tmf-light); white-space: nowrap;
+}
+.step-nm {
+  font-family: var(--serif); font-size: 28px; font-weight: 500;
+  color: var(--tmf-blue); letter-spacing: -0.01em;
+}
+.step-hdr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.score-dots { display: flex; gap: 5px; }
+.sdot {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--rule); border: 1px solid #C5CDD8;
+}
+.sdot.on { background: var(--tmf-blue); border-color: var(--tmf-blue); }
+.sdot.on.hi { background: var(--claire); border-color: var(--claire); }
+.pri-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pri-accel { background: rgba(217,18,65,0.1); color: var(--claire); border: 1px solid rgba(217,18,65,0.22); }
+.pri-std   { background: rgba(0,48,135,0.08); color: var(--tmf-blue); border: 1px solid rgba(0,48,135,0.18); }
+.pri-light { background: var(--bg); color: var(--muted); border: 1px solid var(--rule); }
+
+.step-body { padding: 18px 44px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+/* Timeline */
+.tl-label {
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+}
+.tl { display: flex; }
+.tl-cell {
+  flex: 1; text-align: center; padding: 7px 2px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  border: 1px solid var(--rule); border-right: none; color: var(--muted);
+  line-height: 1;
+}
+.tl-cell:last-child { border-right: 1px solid var(--rule); }
+.tl-cell.act { background: var(--tmf-blue); color: #fff; border-color: var(--tmf-blue); font-weight: 500; }
+.tl-cell.act + .tl-cell.act { border-left-color: rgba(255,255,255,0.25); }
+
+/* Content grid */
+.step-grid { display: grid; grid-template-columns: 1fr 188px; gap: 22px; flex: 1; }
+
+.step-obj {
+  background: var(--bg); border-left: 3px solid var(--tmf-cyan);
+  padding: 12px 15px; margin-bottom: 14px;
+}
+.step-obj-eye {
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--tmf-light); margin-bottom: 5px;
+}
+.step-obj p { font-size: 12.5px; line-height: 1.62; color: var(--body); }
+
+.acts-eye {
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 9px;
+}
+.acts { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.acts li {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; line-height: 1.55; color: var(--body);
+}
+.acts li::before {
+  content: '▸'; color: var(--tmf-blue); flex-shrink: 0; margin-top: 1px; font-size: 10px;
+}
+
+/* Specialist card */
+.spec-card {
+  background: var(--tmf-blue); padding: 15px; margin-bottom: 10px; height: fit-content;
+}
+.spec-eye {
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 9px;
+}
+.spec-name {
+  font-family: var(--serif); font-size: 15px; font-weight: 500;
+  color: #fff; line-height: 1.2; margin-bottom: 2px;
+}
+.spec-title {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 10px;
+}
+.spec-org {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tmf-cyan);
+}
+
+/* Claire's role footer */
+.claire-bar {
+  border-top: 1px solid var(--rule); padding-top: 12px; margin-top: auto;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.claire-avt { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+.claire-avt img { width: 100%; height: 100%; object-fit: cover; object-position: center 8%; }
+.claire-txt { font-size: 11px; line-height: 1.55; color: var(--muted); font-style: italic; }
+.claire-nm {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.1em;
+  color: var(--tmf-blue); margin-top: 3px; font-style: normal;
+}
+
+/* Page footer */
+.pg-footer {
+  padding: 9px 44px; border-top: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.pg-footer span {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.07em; color: var(--muted);
+}
+
+/* Print */
+@media print {
+  body { background: white; }
+  #actions { display: none !important; }
+  #plan-root { padding-top: 0; }
+  .page {
+    box-shadow: none; margin: 0; width: 100%;
+    min-height: 0; page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+}
+@media (max-width: 760px) {
+  .page { width: 100%; }
+  .step-grid, .cover-content { grid-template-columns: 1fr; flex-direction: column; }
+  .cover-member-block { grid-template-columns: 1fr; }
+  .cover-portrait { align-self: center; }
+}
+</style>
+</head>
+<body>
+
+<div id="actions">
+  <span class="atitle">TM Forum · Personal Engagement Plan</span>
+  <div class="abtns">
+    <button class="primary" onclick="window.print()">↓ Save as PDF</button>
+    <button onclick="window.close()">✕ Close</button>
+  </div>
+</div>
+
+<div id="plan-root">
+  <div id="no-data" style="display:none;max-width:460px;margin:80px auto;background:#fff;padding:48px;text-align:center;font-family:'DM Sans',sans-serif;">
+    <p style="color:#6B7280;font-size:14px;margin-bottom:24px;">No plan data found. Please complete the engagement questionnaire on the Claire Watson site first.</p>
+    <button onclick="window.close()" style="background:#003087;color:#fff;border:none;padding:11px 26px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;">Close</button>
+  </div>
+</div>
+
+<script>
+const D = (() => {
+  try { return JSON.parse(localStorage.getItem('tmf-plan-data')); } catch { return null; }
+})();
+
+if (!D || !D.name) {
+  document.getElementById('no-data').style.display = 'block';
+} else {
+  buildPlan();
+}
+
+// ── Step definitions ──────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    n:1, name:'Discover & Assess', short:'Discover',
+    months:[0],
+    clairesRole:'Facilitates the assessment, compiles the findings and proposes your initial priority focus area.',
+    op:{
+      obj:'Baseline your current architecture, digital transformation goals and pain points against the ODA framework.',
+      acts:['Kick-off discovery call with Claire Watson','Complete the ODA maturity self-assessment questionnaire','Review your IT/network architecture vs. ODA Functional Domains','Identify quick-win use cases (e.g. NTN, fibre rollout, AI-Ops)']
+    },
+    vd:{
+      obj:'Understand your product portfolio, ODA-alignment ambitions and target operator segments.',
+      acts:['Kick-off discovery call with Claire Watson','Open API / ODA Component readiness review','Map your product suite to relevant ODA Functional Domains','Identify certification and market positioning opportunities']
+    },
+    specs:[{name:'George Glass',title:'Chief Technology Officer',org:'TM Forum'}]
+  },
+  {
+    n:2, name:'Align & Prioritise', short:'Align',
+    months:[0,1],
+    clairesRole:'Runs the prioritisation workshop and finalises your scored 6-month roadmap.',
+    op:{
+      obj:'Agree your top 3 priority use cases and the ODA assets that will support them.',
+      acts:['Priority-scoring workshop using the chatbox questionnaire','Map priorities to relevant Open APIs & Components','Draft the 6-month roadmap with clear milestones','Obtain sign-off from your internal sponsor']
+    },
+    vd:{
+      obj:'Agree your top 3 go-to-market priorities and the certifications or assets needed to support them.',
+      acts:['Priority-scoring workshop using the chatbox questionnaire','Map priorities to Open API certification targets','Draft the 6-month roadmap with clear milestones','Obtain sign-off from your internal sponsor']
+    },
+    specs:[{name:'Andy Tiller',title:'VP Strategy & Membership',org:'TM Forum'}]
+  },
+  {
+    n:3, name:'Learn & Certify', short:'Learn',
+    months:[1,2],
+    clairesRole:'Coordinates training enrolment, tracks completion milestones and connects you with the right certification pathway.',
+    op:{
+      obj:'Upskill key staff on ODA principles and equip them to lead internal transformation.',
+      acts:['Enrol your team on TM Forum Academy ODA learning paths','Complete Architecture Framework & Open API foundational courses','Nominate ODA champions within your organisation','Track training completion milestones against the roadmap']
+    },
+    vd:{
+      obj:'Achieve Open API certification to strengthen your credibility with operator customers.',
+      acts:['Enrol your product team on Open API Conformance training','Prepare for Open API Certification (Bronze / Silver / Gold / Platinum)','Nominate ODA champions within your organisation','Complete TM Forum Academy ODA modules relevant to your product domain']
+    },
+    specs:[{name:"Mike O'Sullivan",title:'ODA Specialist',org:'TM Forum'}]
+  },
+  {
+    n:4, name:'Engage & Co-create', short:'Co-create',
+    months:[1,2,3],
+    clairesRole:'Introduces you to relevant Catalyst project leads and SODA working group contacts.',
+    op:{
+      obj:'Bring your real-world use case into a Catalyst project or SODA collaboration.',
+      acts:['Identify a relevant Catalyst project — or propose a new one','Join SODA (Scaling ODA) initiative working sessions','Contribute requirements from real deployment experience','Network with peer operators facing similar transformation challenges']
+    },
+    vd:{
+      obj:'Showcase your solution inside a Catalyst project alongside operator champions.',
+      acts:['Join or sponsor a relevant Catalyst project','Contribute components to the SODA (Scaling ODA) initiative','Pair with an operator member for a compelling joint proof point','Attend Catalyst working group sessions to build peer relationships']
+    },
+    specs:[{name:'Aaron Patel-Boardman',title:'Catalyst Programme Lead',org:'TM Forum'}]
+  },
+  {
+    n:5, name:'Build & Integrate', short:'Build',
+    months:[2,3,4],
+    clairesRole:'Monitors progress against roadmap milestones and unblocks any issues that arise.',
+    op:{
+      obj:'Integrate selected ODA Components and Open APIs into your live or pilot environment.',
+      acts:['Deploy relevant ODA Canvas / Component Map assets','Pilot Open API integration across 1–2 priority use cases','Track technical progress against the 6-month roadmap','Report on early outcomes and adjust priorities if needed']
+    },
+    vd:{
+      obj:'Embed ODA compliance and Open API conformance into your product roadmap.',
+      acts:['Align your product release plan to Open API specifications','Complete conformance testing for priority APIs','Track technical progress against the 6-month roadmap','Prepare your Open API conformance certification submission']
+    },
+    specs:[{name:'George Glass',title:'Chief Technology Officer',org:'TM Forum'},{name:"Mike O'Sullivan",title:'ODA Specialist',org:'TM Forum'}]
+  },
+  {
+    n:6, name:'Showcase & Validate', short:'Showcase',
+    months:[3,4,5],
+    clairesRole:'Facilitates event submission, PR opportunities and working group introductions.',
+    op:{
+      obj:'Present your transformation story at a TM Forum event or in a co-authored case study.',
+      acts:['Submit a speaking proposal for DTW or a regional TM Forum event','Co-author a case study with the TM Forum content team','Gather peer validation from other operator members','Share results within TM Forum working groups and the SODA community']
+    },
+    vd:{
+      obj:'Go public with your ODA conformance achievements and Catalyst project contributions.',
+      acts:['Present at DTW Innovation Showcase or a regional event','Co-author a case study with the TM Forum PR team','Gather operator endorsements for your conformant solutions','Feature in the TM Forum Marketplace partner spotlight']
+    },
+    specs:[{name:'Andy Tiller',title:'VP Strategy & Membership',org:'TM Forum'},{name:"Joan O'Brien",title:'Member Success Lead',org:'TM Forum'}]
+  },
+  {
+    n:7, name:'Renew & Grow', short:'Renew',
+    months:[4,5],
+    clairesRole:'Leads the renewal discussion, presents the next-phase roadmap, and ensures continuity of value.',
+    op:{
+      obj:'Review your 6-month journey, cement the wins, and agree the next phase of your ODA transformation.',
+      acts:['6-month review session with Claire Watson','Measure ROI against the initial baseline assessment','Renewal proposal with a next-phase roadmap','Explore expansion into new TM Forum working groups or leadership roles']
+    },
+    vd:{
+      obj:'Review your ODA progress, drive renewal, and plan your next phase of TM Forum engagement.',
+      acts:['6-month review session with Claire Watson','Certification portfolio review and expansion planning','Renewal proposal with enhanced partnership opportunities','Explore TM Forum advisory group or leadership participation']
+    },
+    specs:[{name:"Joan O'Brien",title:'Member Success Lead',org:'TM Forum'}]
+  }
+];
+
+const MLBLs = ['M1','M2','M3','M4','M5','M6'];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function scoreClass(s) {
+  return s >= 5 ? 'score-5' : s >= 4 ? 'score-4' : s >= 3 ? 'score-3' : 'score-1';
+}
+
+function scoreDots(s) {
+  return Array.from({length:5}, (_,i) => {
+    const on = i < s;
+    return `<div class="sdot ${on ? (s>=4?'on hi':'on') : ''}"></div>`;
+  }).join('');
+}
+
+function priBadge(s) {
+  if (s >= 4) return `<span class="pri-badge pri-accel">● Prioritise &amp; Accelerate</span>`;
+  if (s >= 3) return `<span class="pri-badge pri-std">● Standard Pace</span>`;
+  return `<span class="pri-badge pri-light">● Lighter Touch</span>`;
+}
+
+function timeline(active) {
+  return MLBLs.map((m,i) =>
+    `<div class="tl-cell ${active.includes(i)?'act':''}">${m}</div>`
+  ).join('');
+}
+
+function specCards(specs) {
+  return specs.map(sp => `
+    <div class="spec-card">
+      <div class="spec-eye">Specialist to engage</div>
+      <div class="spec-name">${sp.name}</div>
+      <div class="spec-title">${sp.title}</div>
+      <div class="spec-org">${sp.org}</div>
+    </div>`).join('');
+}
+
+function pgFooter(n, pid) {
+  return `
+  <div class="pg-footer">
+    <span>TM Forum Engagement Plan &middot; ${escH(D.company)} &middot; ${escH(D.generatedDate)}</span>
+    <span>Page ${n} of 9 &middot; ${pid}</span>
+  </div>`;
+}
+
+function escH(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Build plan ────────────────────────────────────────────────────────────────
+function buildPlan() {
+  const isOp = D.companyType !== 'vendor';
+  const track = isOp ? 'Telecom Operator' : 'Technology Vendor';
+  const scores = Array.isArray(D.scores) ? D.scores : [3,3,3,3,3,3,3];
+  const yr = new Date().getFullYear();
+  const pid = 'TMF-' + yr + '-' + String(D.name||'').replace(/\s/g,'').substring(0,3).toUpperCase() + Math.floor(1000+Math.random()*9000);
+
+  const root = document.getElementById('plan-root');
+  const pages = [];
+
+  // ── Page 1: Cover ──────────────────────────────────────────────────────────
+  pages.push(`
+  <div class="page">
+    <div class="cover-top-bar">
+      <div class="brand-text">TM Forum<strong>Engagement Plan</strong></div>
+      <div class="brand-badge">TM</div>
+    </div>
+    <div class="cover-content">
+      <div class="cover-portrait"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
+      <div class="cover-right">
+        <div class="cover-tag">Your 7-Step &middot; 6-Month Roadmap</div>
+        <div class="cover-title">Maximising<br>Your ODA<br>Membership</div>
+        <div class="cover-subtitle">Personalised for <strong>${escH(D.name)}</strong> at ${escH(D.company)} &mdash; ${track} Track</div>
+        <div class="cover-pullquote">"Welcome to TM Forum. My role over the next six months is to make sure you get the greatest possible return on your membership — through training, Catalyst collaboration, ODA assets and the right introductions. This plan is your roadmap."</div>
+        <div class="cover-by">Claire Watson &middot; Engagement Manager &middot; TM Forum</div>
+      </div>
+    </div>
+    <div class="cover-member-block">
+      <div class="cover-field"><label>Prepared for</label><span>${escH(D.name)}</span></div>
+      <div class="cover-field"><label>Company</label><span>${escH(D.company)}</span></div>
+      <div class="cover-field"><label>Role</label><span>${escH(D.jobTitle||'Member')}</span></div>
+      <div class="cover-field"><label>Membership track</label><span>${track}</span></div>
+      <div class="cover-field"><label>Plan reference</label><span>${pid}</span></div>
+      <div class="cover-field"><label>Date prepared</label><span>${escH(D.generatedDate)}</span></div>
+    </div>
+    <div class="cover-stats">
+      <div class="cover-stat"><div class="cover-stat-n">7</div><div class="cover-stat-l">Steps</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">6</div><div class="cover-stat-l">Months</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">1–5</div><div class="cover-stat-l">Priority per step</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">5</div><div class="cover-stat-l">TMF specialists</div></div>
+    </div>
+    ${pgFooter(1, pid)}
+  </div>`);
+
+  // ── Page 2: Overview ───────────────────────────────────────────────────────
+  const bars = STEPS.map((st,i) => {
+    const s = scores[i]||3;
+    return `
+    <div class="step-row">
+      <div class="step-row-label">Step ${st.n}: ${st.short}</div>
+      <div class="step-row-track"><div class="step-row-fill ${scoreClass(s)}" style="width:${s*20}%"></div></div>
+      <div class="step-row-num">${s}/5</div>
+    </div>`;
+  }).join('');
+
+  pages.push(`
+  <div class="page">
+    <div class="ov-header">
+      <div class="ov-eye">How this plan works</div>
+      <h2>Your Priority Roadmap at a Glance</h2>
+    </div>
+    <div class="ov-body">
+      <p class="ov-intro">This plan is structured like a set of effectiveness habits — 7 sequential steps, one page each, designed to make both you and your TM Forum Engagement Manager genuinely productive over a six-month period.<br><br>
+      Each step has been scored 1–5 based on your questionnaire answers. Steps scoring <strong>4–5 will be prioritised and accelerated</strong>. Steps scoring 1–2 will be held at a lighter touch, freeing capacity for your highest-value activities. Claire Watson will adjust pacing in real time as the engagement evolves.</p>
+      <div class="ov-chart-label">Your step priority scores — ${track} Track</div>
+      ${bars}
+      <div class="ov-legend">
+        <div class="ov-legend-item"><div class="leg-swatch" style="background:#B0C4E0"></div>Lighter touch (1–2)</div>
+        <div class="ov-legend-item"><div class="leg-swatch" style="background:#5B9BD5"></div>Standard pace (3)</div>
+        <div class="ov-legend-item"><div class="leg-swatch" style="background:var(--tmf-blue)"></div>Active focus (4)</div>
+        <div class="ov-legend-item"><div class="leg-swatch" style="background:var(--claire)"></div>Accelerate (5)</div>
+      </div>
+    </div>
+    ${pgFooter(2, pid)}
+  </div>`);
+
+  // ── Pages 3–9: Steps 1–7 ──────────────────────────────────────────────────
+  STEPS.forEach((st, i) => {
+    const s = scores[i] || 3;
+    const c = isOp ? st.op : st.vd;
+    pages.push(`
+    <div class="page">
+      <div class="step-header">
+        <div class="step-hdr-left">
+          <div class="step-eye">Step ${st.n} of 7</div>
+          <div class="step-nm">${st.name}</div>
+        </div>
+        <div class="step-hdr-right">
+          <div class="score-dots">${scoreDots(s)}</div>
+          ${priBadge(s)}
+        </div>
+      </div>
+      <div class="step-body">
+        <div>
+          <div class="tl-label">Timeframe within 6-month plan</div>
+          <div class="tl">${timeline(st.months)}</div>
+        </div>
+        <div class="step-grid">
+          <div>
+            <div class="step-obj">
+              <div class="step-obj-eye">Objective &middot; ${track}</div>
+              <p>${escH(c.obj)}</p>
+            </div>
+            <div class="acts-eye">Key Activities</div>
+            <ul class="acts">
+              ${c.acts.map(a=>`<li>${escH(a)}</li>`).join('')}
+            </ul>
+          </div>
+          <div>${specCards(st.specs)}</div>
+        </div>
+        <div class="claire-bar">
+          <div class="claire-avt"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
+          <div>
+            <div class="claire-txt">${escH(st.clairesRole)}</div>
+            <div class="claire-nm">Claire Watson &middot; Engagement Manager &middot; TM Forum</div>
+          </div>
+        </div>
+      </div>
+      ${pgFooter(i + 3, pid)}
+    </div>`);
+  });
+
+  root.innerHTML = pages.join('');
+}
+</script>
+</body>
+</html>
