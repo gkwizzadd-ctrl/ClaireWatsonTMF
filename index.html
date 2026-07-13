@@ -75,6 +75,14 @@ body::before {
 }
 .nav-links a:hover { color: #fff; }
 .nav-links a:hover::after { transform: scaleX(1); }
+.nav-private {
+  color: rgba(217,18,65,0.8) !important;
+  border: 1px solid rgba(217,18,65,0.28);
+  padding: 5px 13px; border-radius: 20px;
+  font-size: 11px !important; letter-spacing: 0.09em !important;
+}
+.nav-private:hover { color: var(--crimson) !important; border-color: rgba(217,18,65,0.55) !important; background: rgba(217,18,65,0.06); }
+.nav-private::after { display: none !important; }
 
 .nav-brand {
   display: flex; align-items: center; gap: 10px;
@@ -974,6 +982,7 @@ footer {
     <li><a href="#about">About</a></li>
     <li><a href="#testimonials-home">Testimonials</a></li>
     <li><a href="#contact">Contact</a></li>
+    <li><a href="claires-stuff.html" class="nav-private">🔒 Claire's Stuff</a></li>
   </ul>
   <a href="#hero" class="nav-brand">
     <div class="nav-dot"></div>
@@ -993,6 +1002,7 @@ footer {
   <a href="#about"     onclick="closeMobile()">About</a>
   <a href="#testimonials-home" onclick="closeMobile()">Testimonials</a>
   <a href="#contact"   onclick="closeMobile()">Contact</a>
+  <a href="claires-stuff.html" style="color:rgba(217,18,65,0.85)">🔒 Claire's Stuff</a>
 </div>
 
 <!-- Hero -->

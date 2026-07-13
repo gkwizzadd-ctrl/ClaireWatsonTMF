@@ -101,23 +101,52 @@ body::after {
       <button class="btn" id="step1-btn">Verify →</button>
     </div>
 
-    <!-- Step 2: Set new password -->
-    <div class="step" id="step2">
+    <!-- Step 1b: Choose which password to manage -->
+    <div class="step" id="step1b">
       <div class="card-label">Password Management</div>
+      <div class="card-title">Which password?</div>
+      <button class="btn" id="step1b-site" style="margin-bottom:10px">🌐 Main Site Password</button>
+      <button class="btn" id="step1b-claire" style="background:rgba(0,48,135,0.7)">🔒 Claire's Stuff Password</button>
+      <hr class="divider">
+      <button class="btn secondary" id="step1b-back">← Back</button>
+    </div>
+
+    <!-- Step 2a: Update main site password -->
+    <div class="step" id="step2a">
+      <div class="card-label">Main Site Password</div>
       <div class="card-title">Set a new password</div>
       <div class="field">
         <label>New Password</label>
-        <input type="password" id="new-pw" placeholder="Enter new password" autocomplete="new-password"/>
+        <input type="password" id="new-pw-a" placeholder="Enter new password" autocomplete="new-password"/>
       </div>
       <div class="field">
         <label>Confirm New Password</label>
-        <input type="password" id="confirm-pw" placeholder="Confirm new password" autocomplete="new-password"/>
+        <input type="password" id="confirm-pw-a" placeholder="Confirm new password" autocomplete="new-password"/>
       </div>
-      <div class="msg error" id="step2-err"></div>
-      <div class="msg success" id="step2-ok">Password updated successfully.</div>
-      <button class="btn" id="step2-btn">Update Password</button>
+      <div class="msg error" id="step2a-err"></div>
+      <div class="msg success" id="step2a-ok">Main site password updated.</div>
+      <button class="btn" id="step2a-btn">Update Password</button>
       <hr class="divider">
-      <button class="btn secondary" id="step2-back">← Change account</button>
+      <button class="btn secondary" id="step2a-back">← Back</button>
+    </div>
+
+    <!-- Step 2b: Update Claire's Stuff password -->
+    <div class="step" id="step2b">
+      <div class="card-label">Claire's Stuff Password</div>
+      <div class="card-title">Set a new password</div>
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" id="new-pw-b" placeholder="Enter new password" autocomplete="new-password"/>
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirm-pw-b" placeholder="Confirm new password" autocomplete="new-password"/>
+      </div>
+      <div class="msg error" id="step2b-err"></div>
+      <div class="msg success" id="step2b-ok">Claire's Stuff password updated.</div>
+      <button class="btn" id="step2b-btn" style="background:rgba(0,48,135,0.85)">Update Password</button>
+      <hr class="divider">
+      <button class="btn secondary" id="step2b-back">← Back</button>
     </div>
 
   </div>
@@ -127,8 +156,10 @@ body::after {
 
 <script>
 (function () {
-  var PW_CHECK  = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-check';
-  var PW_UPDATE = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-update';
+  var PW_CHECK         = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-check';
+  var PW_UPDATE        = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-update';
+  var CS_PW_CHECK      = 'https://n8n.srv1739004.hstgr.cloud/webhook/claires-stuff-pw-check';
+  var CS_PW_UPDATE     = 'https://n8n.srv1739004.hstgr.cloud/webhook/claires-stuff-pw-update';
   var verifiedHash = '';
 
   async function sha256(msg) {
@@ -157,8 +188,7 @@ body::after {
       var d = await r.json();
       if (d.valid) {
         verifiedHash = hash;
-        showStep(2);
-        document.getElementById('new-pw').focus();
+        showStep('1b');
       } else {
         s1err.textContent = 'Incorrect password.';
         s1err.style.display = 'block';
@@ -174,57 +204,57 @@ body::after {
   });
   document.getElementById('current-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') s1btn.click(); });
 
-  /* ── Step 2: update password ── */
-  var s2btn = document.getElementById('step2-btn');
-  var s2err = document.getElementById('step2-err');
-  var s2ok  = document.getElementById('step2-ok');
+  /* ── Step 1b: choose which password ── */
+  document.getElementById('step1b-site').addEventListener('click', function(){
+    showStep('2a'); document.getElementById('new-pw-a').focus();
+  });
+  document.getElementById('step1b-claire').addEventListener('click', function(){
+    showStep('2b'); document.getElementById('new-pw-b').focus();
+  });
+  document.getElementById('step1b-back').addEventListener('click', function(){
+    verifiedHash = ''; document.getElementById('current-pw').value = '';
+    showStep(1); document.getElementById('current-pw').focus();
+  });
 
-  s2btn.addEventListener('click', async function() {
-    var np = document.getElementById('new-pw').value;
-    var cp = document.getElementById('confirm-pw').value;
-    s2err.style.display = 'none'; s2ok.style.display = 'none';
-
-    if (!np || np.length < 8) {
-      s2err.textContent = 'Password must be at least 8 characters.';
-      s2err.style.display = 'block'; return;
-    }
-    if (np !== cp) {
-      s2err.textContent = 'Passwords do not match.';
-      s2err.style.display = 'block'; return;
-    }
-    s2btn.textContent = 'Updating…'; s2btn.disabled = true;
+  /* ── Step 2a: update main site password ── */
+  async function doUpdate(newPwId, confirmPwId, errId, okId, btnId, updateUrl, sessionKey, label) {
+    var np = document.getElementById(newPwId).value;
+    var cp = document.getElementById(confirmPwId).value;
+    var err = document.getElementById(errId);
+    var ok  = document.getElementById(okId);
+    var btn = document.getElementById(btnId);
+    err.style.display = 'none'; ok.style.display = 'none';
+    if (!np || np.length < 8) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; return; }
+    if (np !== cp) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+    btn.textContent = 'Updating…'; btn.disabled = true;
     try {
       var newHash = await sha256(np);
-      var r = await fetch(PW_UPDATE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({currentHash:verifiedHash, newHash:newHash}) });
+      var r = await fetch(updateUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({currentHash:verifiedHash, newHash:newHash}) });
       var d = await r.json();
       if (d.success) {
-        s2ok.style.display = 'block';
-        document.getElementById('new-pw').value = '';
-        document.getElementById('confirm-pw').value = '';
-        // Clear session so next visit requires new password
-        sessionStorage.removeItem('cwsite-auth');
-        s2btn.textContent = 'Update Password'; s2btn.disabled = false;
-      } else {
-        s2err.textContent = 'Update failed — please try again.';
-        s2err.style.display = 'block';
-        s2btn.textContent = 'Update Password'; s2btn.disabled = false;
-      }
-    } catch(e) {
-      s2err.textContent = 'Connection error — please try again.';
-      s2err.style.display = 'block';
-      s2btn.textContent = 'Update Password'; s2btn.disabled = false;
-    }
-  });
+        ok.style.display = 'block';
+        document.getElementById(newPwId).value = '';
+        document.getElementById(confirmPwId).value = '';
+        if (sessionKey) sessionStorage.removeItem(sessionKey);
+      } else { err.textContent = 'Update failed — please try again.'; err.style.display = 'block'; }
+    } catch(e) { err.textContent = 'Connection error — please try again.'; err.style.display = 'block'; }
+    btn.textContent = label; btn.disabled = false;
+  }
 
-  document.getElementById('step2-back').addEventListener('click', function(){
-    verifiedHash = '';
-    document.getElementById('current-pw').value = '';
-    showStep(1);
-    document.getElementById('current-pw').focus();
+  document.getElementById('step2a-btn').addEventListener('click', function(){
+    doUpdate('new-pw-a','confirm-pw-a','step2a-err','step2a-ok','step2a-btn', PW_UPDATE, 'cwsite-auth', 'Update Password');
   });
+  document.getElementById('step2a-back').addEventListener('click', function(){ showStep('1b'); });
+  document.getElementById('new-pw-a').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('confirm-pw-a').focus(); });
+  document.getElementById('confirm-pw-a').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('step2a-btn').click(); });
 
-  document.getElementById('new-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('confirm-pw').focus(); });
-  document.getElementById('confirm-pw').addEventListener('keydown', function(e){ if(e.key==='Enter') s2btn.click(); });
+  /* ── Step 2b: update Claire's Stuff password ── */
+  document.getElementById('step2b-btn').addEventListener('click', function(){
+    doUpdate('new-pw-b','confirm-pw-b','step2b-err','step2b-ok','step2b-btn', CS_PW_UPDATE, 'cwclaires-auth', 'Update Password');
+  });
+  document.getElementById('step2b-back').addEventListener('click', function(){ showStep('1b'); });
+  document.getElementById('new-pw-b').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('confirm-pw-b').focus(); });
+  document.getElementById('confirm-pw-b').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('step2b-btn').click(); });
 
   // Auto-focus
   document.getElementById('current-pw').focus();

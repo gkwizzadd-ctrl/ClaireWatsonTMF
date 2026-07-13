@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claire's Stuff — Membership Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #0D0B4D; --crimson: #D91241; --tmf: #003087;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+/* ── Gate (full-screen, shown until authenticated) ── */
+#gate {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0D0B4D;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 24px;
+  transition: opacity 0.4s;
+}
+#gate::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+#gate::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 80% 20%, rgba(217,18,65,.1) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 10% 80%, rgba(46,12,75,.5) 0%, transparent 60%);
+}
+.gate-wrap { position: relative; z-index: 1; width: 100%; max-width: 380px; text-align: center; }
+.gate-dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg,#D91241,#2E0C4B); margin: 0 auto 14px; }
+.gate-name { font-family: var(--serif); font-size: 22px; font-weight: 500; color: #fff; }
+.gate-sub  { font-family: var(--mono); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-top: 5px; margin-bottom: 28px; }
+.gate-card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 28px 24px; }
+.gate-label { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: 16px; }
+.gate-input {
+  width: 100%; padding: 11px 14px; margin-bottom: 10px;
+  background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.12); border-radius: 8px;
+  color: #fff; font-family: var(--sans); font-size: 14px; outline: none;
+  transition: border-color .2s;
+}
+.gate-input:focus { border-color: rgba(217,18,65,.6); }
+.gate-btn {
+  width: 100%; padding: 13px; background: var(--crimson); border: none; border-radius: 8px;
+  color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .2s;
+}
+.gate-btn:hover { background: #b80f35; }
+.gate-btn:disabled { background: rgba(217,18,65,.4); cursor: default; }
+.gate-err { font-family: var(--mono); font-size: 11px; color: #ef4444; margin-bottom: 10px; display: none; }
+.gate-back { display: block; margin-top: 18px; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: rgba(255,255,255,.3); text-decoration: none; transition: color .2s; }
+.gate-back:hover { color: rgba(255,255,255,.6); }
+
+/* ── Dashboard (hidden until authenticated) ── */
+#dashboard { display: none; min-height: 100vh; background: #0A091E; }
+
+/* Topbar */
+.db-topbar {
+  background: #0D0B4D; border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: 0 32px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.db-topbar-left { display: flex; align-items: center; gap: 14px; }
+.db-topbar-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--crimson); flex-shrink: 0; }
+.db-topbar-title { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+.db-topbar-right { display: flex; align-items: center; gap: 18px; }
+.db-site-link {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255,255,255,.35); text-decoration: none; transition: color .2s;
+}
+.db-site-link:hover { color: rgba(255,255,255,.7); }
+.db-logout {
+  background: rgba(217,18,65,.12); border: 1px solid rgba(217,18,65,.25); border-radius: 6px;
+  color: rgba(217,18,65,.8); font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 6px 14px; cursor: pointer; transition: all .2s;
+}
+.db-logout:hover { background: rgba(217,18,65,.2); color: var(--crimson); }
+
+/* Main layout */
+.db-body { padding: 36px 32px; max-width: 1200px; margin: 0 auto; }
+
+/* Page header */
+.db-header { margin-bottom: 32px; }
+.db-header-eye { font-family: var(--mono); font-size: 8.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 6px; }
+.db-header h1 { font-family: var(--serif); font-size: 36px; font-weight: 500; color: #fff; letter-spacing: -.01em; }
+.db-header-sub { font-size: 13px; color: rgba(255,255,255,.4); margin-top: 4px; }
+
+/* Stat tiles */
+.db-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+.db-stat {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px; padding: 20px 22px;
+}
+.db-stat-n { font-family: var(--serif); font-size: 36px; font-weight: 600; color: #fff; line-height: 1; }
+.db-stat-l { font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-top: 6px; }
+.db-stat-delta { font-family: var(--mono); font-size: 9px; color: rgba(80,200,120,.7); margin-top: 3px; }
+
+/* Section headers */
+.db-section { margin-bottom: 28px; }
+.db-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.db-section-title { font-family: var(--mono); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.45); }
+
+/* Two-col layout */
+.db-cols { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+/* Pipeline table */
+.db-table { width: 100%; border-collapse: collapse; }
+.db-table th {
+  font-family: var(--mono); font-size: 7.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.3); padding: 0 14px 10px; text-align: left; font-weight: 400;
+}
+.db-table td {
+  padding: 12px 14px; font-size: 12.5px; color: rgba(255,255,255,.7);
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.db-table tr:hover td { background: rgba(255,255,255,.02); }
+.db-table .tag {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .06em;
+}
+.tag-op  { background: rgba(0,48,135,.3); color: rgba(130,180,255,.8); border: 1px solid rgba(0,48,135,.4); }
+.tag-vd  { background: rgba(217,18,65,.12); color: rgba(255,130,130,.8); border: 1px solid rgba(217,18,65,.25); }
+.tag-new { background: rgba(80,200,120,.1); color: rgba(80,200,120,.8); border: 1px solid rgba(80,200,120,.2); }
+
+/* Panel cards */
+.db-card {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px; padding: 20px;
+}
+.db-card h3 {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: rgba(255,255,255,.35); margin-bottom: 14px;
+}
+
+/* Quick links */
+.quick-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+  text-decoration: none; color: rgba(255,255,255,.65); font-size: 12.5px;
+  transition: color .15s;
+}
+.quick-link:last-child { border-bottom: none; }
+.quick-link:hover { color: #fff; }
+.quick-link-icon { font-size: 14px; flex-shrink: 0; width: 20px; text-align: center; }
+
+/* Contacts */
+.contact-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.contact-item:last-child { border-bottom: none; }
+.contact-avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(0,48,135,.5); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; color: rgba(130,180,255,.8); flex-shrink: 0; margin-top: 1px; }
+.contact-name { font-size: 12.5px; color: rgba(255,255,255,.8); font-weight: 500; }
+.contact-role { font-family: var(--mono); font-size: 8.5px; color: rgba(255,255,255,.3); letter-spacing: .04em; margin-top: 2px; }
+
+/* Notes textarea */
+.db-notes {
+  width: 100%; min-height: 90px; padding: 12px 14px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px; color: rgba(255,255,255,.7); font-family: var(--sans); font-size: 13px;
+  resize: vertical; outline: none; transition: border-color .2s; line-height: 1.6;
+}
+.db-notes:focus { border-color: rgba(217,18,65,.4); }
+.db-notes-save {
+  margin-top: 8px; padding: 7px 18px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 6px; color: rgba(255,255,255,.6); font-family: var(--mono);
+  font-size: 9px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+  transition: all .15s;
+}
+.db-notes-save:hover { background: rgba(255,255,255,.12); color: #fff; }
+.db-notes-saved { font-family: var(--mono); font-size: 9px; color: rgba(80,200,120,.7); display: none; margin-left: 8px; }
+
+@media (max-width: 900px) {
+  .db-stats { grid-template-columns: 1fr 1fr; }
+  .db-cols { grid-template-columns: 1fr; }
+  .db-body { padding: 24px 16px; }
+  .db-topbar { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── PASSWORD GATE ─────────────────────────────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-wrap">
+    <div class="gate-dot"></div>
+    <div class="gate-name">Claire Watson</div>
+    <div class="gate-sub">Membership Management · Private Access</div>
+    <div class="gate-card">
+      <div class="gate-label">🔒 Claire's Stuff — Restricted</div>
+      <div class="gate-err" id="gate-err">Incorrect password.</div>
+      <input class="gate-input" type="password" id="gate-pw" placeholder="Enter access password" autocomplete="current-password">
+      <button class="gate-btn" id="gate-btn">Access →</button>
+    </div>
+    <a href="/" class="gate-back">← Back to site</a>
+  </div>
+</div>
+
+<!-- ── MEMBERSHIP MANAGEMENT DASHBOARD ──────────────────────────────────────── -->
+<div id="dashboard">
+
+  <div class="db-topbar">
+    <div class="db-topbar-left">
+      <div class="db-topbar-dot"></div>
+      <span class="db-topbar-title">Membership Management Domain</span>
+    </div>
+    <div class="db-topbar-right">
+      <a href="/" class="db-site-link">← Back to site</a>
+      <button class="db-logout" onclick="logout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="db-body">
+
+    <div class="db-header">
+      <div class="db-header-eye">Private · TM Forum</div>
+      <h1>Claire's Stuff</h1>
+      <div class="db-header-sub">Membership Management Domain — your private workspace</div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="db-stats">
+      <div class="db-stat">
+        <div class="db-stat-n" id="stat-plans">—</div>
+        <div class="db-stat-l">Engagement Plans Generated</div>
+        <div class="db-stat-delta">on this device</div>
+      </div>
+      <div class="db-stat">
+        <div class="db-stat-n">7</div>
+        <div class="db-stat-l">Steps per Plan</div>
+        <div class="db-stat-delta">6-month roadmap</div>
+      </div>
+      <div class="db-stat">
+        <div class="db-stat-n">5</div>
+        <div class="db-stat-l">TMF Specialists</div>
+        <div class="db-stat-delta">in your network</div>
+      </div>
+      <div class="db-stat">
+        <div class="db-stat-n">2</div>
+        <div class="db-stat-l">Tracks Available</div>
+        <div class="db-stat-delta">Operator · Vendor</div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="db-cols">
+
+      <!-- Left: pipeline + notes -->
+      <div>
+
+        <!-- Recent contact submissions -->
+        <div class="db-section db-card">
+          <div class="db-section-head">
+            <span class="db-section-title">Recent Engagement Plan Submissions</span>
+          </div>
+          <div id="recent-plans-body">
+            <table class="db-table" id="plans-table" style="display:none">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Company</th>
+                  <th>Track</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="plans-tbody"></tbody>
+            </table>
+            <div id="no-plans" style="font-size:12.5px;color:rgba(255,255,255,.3);padding:8px 0;">
+              No engagement plans have been generated on this device yet. Plans generated by members via the questionnaire will appear here.
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="db-section db-card" style="margin-top:16px">
+          <div class="db-section-head">
+            <span class="db-section-title">My Notes</span>
+          </div>
+          <textarea class="db-notes" id="db-notes-ta" placeholder="Add your notes here — saved locally in this browser…"></textarea>
+          <div style="display:flex;align-items:center">
+            <button class="db-notes-save" onclick="saveNotes()">Save</button>
+            <span class="db-notes-saved" id="notes-saved">✓ Saved</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: quick links + contacts -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- TM Forum quick links -->
+        <div class="db-card">
+          <h3>TM Forum Quick Links</h3>
+          <a class="quick-link" href="https://www.tmforum.org/oda/" target="_blank"><span class="quick-link-icon">🏗</span>ODA Hub</a>
+          <a class="quick-link" href="https://www.tmforum.org/open-apis/" target="_blank"><span class="quick-link-icon">🔗</span>Open APIs</a>
+          <a class="quick-link" href="https://academy.tmforum.org" target="_blank"><span class="quick-link-icon">🎓</span>TM Forum Academy</a>
+          <a class="quick-link" href="https://www.tmforum.org/catalysts/" target="_blank"><span class="quick-link-icon">⚗️</span>Catalyst Projects</a>
+          <a class="quick-link" href="https://www.tmforum.org/soda/" target="_blank"><span class="quick-link-icon">📐</span>SODA</a>
+          <a class="quick-link" href="https://dtw.tmforum.org" target="_blank"><span class="quick-link-icon">🌍</span>Digital Transformation World</a>
+          <a class="quick-link" href="https://www.tmforum.org/membership/" target="_blank"><span class="quick-link-icon">🏛</span>Membership Portal</a>
+        </div>
+
+        <!-- Key contacts -->
+        <div class="db-card">
+          <h3>Key TMF Contacts</h3>
+          <div class="contact-item">
+            <div class="contact-avatar">GG</div>
+            <div><div class="contact-name">George Glass</div><div class="contact-role">Chief Technology Officer · TM Forum</div></div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-avatar">MS</div>
+            <div><div class="contact-name">Mike O'Sullivan</div><div class="contact-role">ODA Specialist · TM Forum</div></div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-avatar">AT</div>
+            <div><div class="contact-name">Andy Tiller</div><div class="contact-role">VP Strategy &amp; Membership · TM Forum</div></div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-avatar">AB</div>
+            <div><div class="contact-name">Aaron Patel-Boardman</div><div class="contact-role">Catalyst Programme Lead · TM Forum</div></div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-avatar">JO</div>
+            <div><div class="contact-name">Joan O'Brien</div><div class="contact-role">Member Success Lead · TM Forum</div></div>
+          </div>
+        </div>
+
+        <!-- Admin shortcut -->
+        <div class="db-card" style="text-align:center;padding:16px">
+          <a href="/admin.html" style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);text-decoration:none;transition:color .2s" onmouseover="this.style.color='rgba(255,255,255,.6)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">⚙ Site Administration</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var PW_CHECK = 'https://n8n.srv1739004.hstgr.cloud/webhook/claires-stuff-pw-check';
+  var SESSION_KEY = 'cwclaires-auth';
+
+  /* ── Check session ── */
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    showDashboard();
+  } else {
+    document.getElementById('gate-pw').focus();
+  }
+
+  async function sha256(msg) {
+    var buf  = new TextEncoder().encode(msg);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+
+  /* ── Gate logic ── */
+  var btn = document.getElementById('gate-btn');
+  var err = document.getElementById('gate-err');
+  var inp = document.getElementById('gate-pw');
+
+  btn.addEventListener('click', async function () {
+    var pw = inp.value;
+    if (!pw) { inp.focus(); return; }
+    btn.textContent = 'Checking…'; btn.disabled = true; err.style.display = 'none';
+    try {
+      var hash = await sha256(pw);
+      var r = await fetch(PW_CHECK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hash: hash })
+      });
+      var d = await r.json();
+      if (d.valid) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        document.getElementById('gate').style.opacity = '0';
+        setTimeout(showDashboard, 400);
+      } else {
+        err.style.display = 'block';
+        inp.value = ''; inp.focus();
+        btn.textContent = 'Access →'; btn.disabled = false;
+      }
+    } catch (e) {
+      /* Fallback: client-side hash check if n8n is unreachable */
+      var hash2 = await sha256(pw);
+      /* Default hash of ClubbersWatson??? — update via admin page once n8n webhook is set up */
+      var defaultHash = await sha256('ClubbersWatson???');
+      if (hash2 === defaultHash) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        document.getElementById('gate').style.opacity = '0';
+        setTimeout(showDashboard, 400);
+      } else {
+        err.textContent = 'Incorrect password.';
+        err.style.display = 'block';
+        inp.value = ''; inp.focus();
+        btn.textContent = 'Access →'; btn.disabled = false;
+      }
+    }
+  });
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') btn.click(); });
+
+  /* ── Dashboard ── */
+  function showDashboard() {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadPlans();
+    loadNotes();
+  }
+
+  window.logout = function () {
+    sessionStorage.removeItem(SESSION_KEY);
+    window.location.reload();
+  };
+
+  /* ── Load engagement plans from localStorage ── */
+  function loadPlans() {
+    var data = null;
+    try { data = JSON.parse(localStorage.getItem('tmf-plan-data')); } catch (e) {}
+
+    var count = 0;
+    var rows = '';
+
+    if (data && data.name) {
+      count = 1;
+      var track = data.companyType === 'vendor' ? 'vendor' : 'operator';
+      rows = '<tr>' +
+        '<td>' + esc(data.name) + '</td>' +
+        '<td>' + esc(data.company || '—') + '</td>' +
+        '<td><span class="tag tag-' + track + '">' + (track === 'operator' ? 'Operator' : 'Vendor') + '</span></td>' +
+        '<td style="font-family:var(--mono);font-size:11px">' + esc(data.generatedDate || '—') + '</td>' +
+        '<td><a href="engagement-plan.html" target="_blank" style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:rgba(130,180,255,.7);text-decoration:none">View →</a></td>' +
+        '</tr>';
+    }
+
+    document.getElementById('stat-plans').textContent = count;
+
+    if (count > 0) {
+      document.getElementById('plans-tbody').innerHTML = rows;
+      document.getElementById('plans-table').style.display = 'table';
+      document.getElementById('no-plans').style.display = 'none';
+    }
+  }
+
+  /* ── Notes (persisted in localStorage) ── */
+  function loadNotes() {
+    var saved = localStorage.getItem('cwclaires-notes') || '';
+    document.getElementById('db-notes-ta').value = saved;
+  }
+
+  window.saveNotes = function () {
+    localStorage.setItem('cwclaires-notes', document.getElementById('db-notes-ta').value);
+    var s = document.getElementById('notes-saved');
+    s.style.display = 'inline';
+    setTimeout(function () { s.style.display = 'none'; }, 2000);
+  };
+
+  function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+})();
+</script>
+</body>
+</html>
