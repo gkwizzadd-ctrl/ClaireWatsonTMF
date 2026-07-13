@@ -185,6 +185,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="picker"><select id="picker" onchange="selectMember(this.value)" disabled></select></div>
       </div>
       <div class="tb-date" id="tbdate"></div>
+      <a href="claires-stuff.html" style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);text-decoration:none;transition:color .2s;white-space:nowrap" onmouseover="this.style.color='rgba(255,255,255,.7)'" onmouseout="this.style.color='rgba(255,255,255,.3)'">← My Hub</a>
     </div>
   </div>
 
@@ -198,6 +199,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 </div>
 
 <script>
+// ─── AUTH GUARD ───────────────────────────────────────────────────────
+if (sessionStorage.getItem('cwclaires-auth') !== '1') {
+  window.location.replace('claires-stuff.html');
+}
+
 // ─── CONFIG ───────────────────────────────────────────────────────────
 const DATA_URL = 'https://script.google.com/macros/s/AKfycbzwMUZmPW_n8Edoi5cbtHgIbwbsB5Q5RDGL3rdjkHQHBazGmbTTS20Ym7JfiuhO2VL5/exec';
 const ACCENTS = ['#D91241','#10b981','#3b82f6','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#22d3ee','#a78bfa'];
