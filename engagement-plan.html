@@ -75,11 +75,11 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
   display: block; color: #fff; font-size: 19px; letter-spacing: 0.06em;
   font-weight: 500; margin-top: 3px;
 }
-.cover-top-bar .brand-badge {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 12px; font-weight: 500; color: #fff;
+.cover-top-bar .brand-logo {
+  height: 44px; width: auto; display: block;
+  object-fit: contain;
+  filter: invert(1);
+  mix-blend-mode: screen;
 }
 
 .cover-content {
@@ -533,7 +533,7 @@ function buildPlan() {
   <div class="page">
     <div class="cover-top-bar">
       <div class="brand-text">TM Forum<strong>Engagement Plan</strong></div>
-      <div class="brand-badge">TM</div>
+      <img class="brand-logo" src="images/TMForum logo.png" alt="TM Forum">
     </div>
     <div class="cover-content">
       <div class="cover-portrait"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
