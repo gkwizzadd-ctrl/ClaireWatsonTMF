@@ -2,3 +2,5 @@ node_modules/
 temporary screenshots/
 *.mjs
 .tmp/
+
+.vercel
