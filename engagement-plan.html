@@ -311,6 +311,13 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
 }
 
 /* Print */
+/* Force background colors/images to print in all browsers */
+* {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
 @media print {
   body { background: white; }
   #actions { display: none !important; }
@@ -320,6 +327,15 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
     min-height: 0; page-break-after: always;
   }
   .page:last-child { page-break-after: auto; }
+  /* Ensure all colored elements retain their fill when printed */
+  .cover-top-bar,
+  .cover-member-block,
+  .ov-header,
+  .spec-card,
+  .step-row-fill,
+  .tl-cell.act,
+  .step-obj,
+  .claire-bar { background-color: inherit; }
 }
 @media (max-width: 760px) {
   .page { width: 100%; }
