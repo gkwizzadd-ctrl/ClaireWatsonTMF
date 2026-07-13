@@ -367,12 +367,6 @@ const D = (() => {
   try { return JSON.parse(localStorage.getItem('tmf-plan-data')); } catch { return null; }
 })();
 
-if (!D || !D.name) {
-  document.getElementById('no-data').style.display = 'block';
-} else {
-  buildPlan();
-}
-
 // ── Step definitions ──────────────────────────────────────────────────────────
 const STEPS = [
   {
@@ -647,6 +641,13 @@ function buildPlan() {
   });
 
   root.innerHTML = pages.join('');
+}
+
+// ── Entry point — must run after all const declarations above ─────────────────
+if (!D || !D.name) {
+  document.getElementById('no-data').style.display = 'block';
+} else {
+  buildPlan();
 }
 </script>
 </body>
