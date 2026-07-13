@@ -1,0 +1,118 @@
+{
+  "name": "Claire Watson Site — Contact Form Capture",
+  "nodes": [
+    {
+      "id": "cc0001-0000-4000-8000-cccccccccccc",
+      "name": "Webhook — Contact",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "custom-contact",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "cc0002-0000-4000-8000-cccccccccccc",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 240],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp":               "={{ new Date().toLocaleString('en-GB', {timeZone:'Europe/London'}) }}",
+            "Name":                    "={{ ($json.body ?? $json).name }}",
+            "Email":                   "={{ ($json.body ?? $json).email }}",
+            "Organisation":            "={{ ($json.body ?? $json).organisation }}",
+            "Job Title":               "={{ ($json.body ?? $json).jobTitle }}",
+            "Company Type":            "={{ ($json.body ?? $json).companyType }}",
+            "Message":                 "={{ ($json.body ?? $json).message }}",
+            "Source":                  "={{ ($json.body ?? $json).source }}",
+            "Conversation Transcript": "={{ ($json.body ?? $json).conversationTranscript }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "cc0003-0000-4000-8000-cccccccccccc",
+      "name": "Send Notification Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [460, 480],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "cwatson@tmforum.org, gareth@garethkentish.com",
+        "subject": "=New contact from {{ ($json.body ?? $json).name }} — {{ ($json.body ?? $json).organisation || 'no organisation given' }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0D0B4D;color:#ffffff;border-radius:8px;overflow:hidden\">\n  <div style=\"background:#D91241;padding:28px 36px\">\n    <p style=\"margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7)\">TM Forum ODA · New Contact</p>\n    <h1 style=\"margin:8px 0 0;font-size:24px;font-weight:700\">{{ ($json.body ?? $json).name }}</h1>\n  </div>\n  <div style=\"padding:32px 36px\">\n    <table style=\"width:100%;border-collapse:collapse;font-size:14px\">\n      <tr><td style=\"color:rgba(255,255,255,.5);padding:6px 0;width:140px\">Email</td><td style=\"color:#fff\">{{ ($json.body ?? $json).email }}</td></tr>\n      <tr><td style=\"color:rgba(255,255,255,.5);padding:6px 0\">Organisation</td><td style=\"color:#fff\">{{ ($json.body ?? $json).organisation || '—' }}</td></tr>\n      <tr><td style=\"color:rgba(255,255,255,.5);padding:6px 0\">Job Title</td><td style=\"color:#fff\">{{ ($json.body ?? $json).jobTitle || '—' }}</td></tr>\n      <tr><td style=\"color:rgba(255,255,255,.5);padding:6px 0\">Company Type</td><td style=\"color:#fff\">{{ ($json.body ?? $json).companyType || '—' }}</td></tr>\n      <tr><td style=\"color:rgba(255,255,255,.5);padding:6px 0\">Source</td><td style=\"color:#fff\">{{ ($json.body ?? $json).source || '—' }}</td></tr>\n    </table>\n    <div style=\"margin-top:20px;padding:16px;background:rgba(255,255,255,.06);border-radius:6px;border-left:3px solid #D91241\">\n      <p style=\"margin:0 0 6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)\">Message</p>\n      <p style=\"margin:0;color:rgba(255,255,255,.85);font-size:14px;line-height:1.6\">{{ ($json.body ?? $json).message || '(no message)' }}</p>\n    </div>\n    {{ ($json.body ?? $json).conversationTranscript ? '<div style=\"margin-top:16px;padding:16px;background:rgba(255,255,255,.04);border-radius:6px\"><p style=\"margin:0 0 8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)\">Chat Transcript</p><pre style=\"margin:0;color:rgba(255,255,255,.7);font-size:12px;white-space:pre-wrap;font-family:monospace\">'+($json.body ?? $json).conversationTranscript+'</pre></div>' : '' }}\n  </div>\n  <div style=\"background:rgba(0,0,0,.3);padding:16px 36px;text-align:center\">\n    <p style=\"margin:0;color:rgba(255,255,255,.3);font-size:11px\">Sent from clairewatson.vercel.app</p>\n  </div>\n</div>",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account2"
+        }
+      }
+    },
+    {
+      "id": "cc0004-0000-4000-8000-cccccccccccc",
+      "name": "Respond — OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Contact": {
+      "main": [
+        [
+          { "node": "Append to Google Sheets", "type": "main", "index": 0 },
+          { "node": "Send Notification Email",  "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Append to Google Sheets": {
+      "main": [
+        [{ "node": "Respond — OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Notification Email": {
+      "main": [
+        [{ "node": "Respond — OK", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
