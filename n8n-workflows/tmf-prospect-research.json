@@ -21,7 +21,7 @@
       "typeVersion": 2,
       "position": [460, 360],
       "parameters": {
-        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst company = body.company || '';\nif (!company) throw new Error('No company name provided');\nreturn [\n  { json: { company, query: company + ' telecom digital transformation AI autonomous networks 2024 2025' } },\n  { json: { company, query: company + ' CTO CIO technology leadership team digital' } },\n  { json: { company, query: company + ' 5G BSS OSS network modernization cloud transformation' } }\n];"
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst company = (body.company || '').trim();\nif (!company) throw new Error('No company name provided');\nreturn [\n  { json: { company, query: company + ' telecom digital transformation AI autonomous networks 2024 2025' } },\n  { json: { company, query: company + ' CTO CIO technology leadership team digital strategy' } },\n  { json: { company, query: company + ' 5G BSS OSS network modernization cloud transformation' } }\n];"
       }
     },
     {
@@ -30,6 +30,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [680, 360],
+      "continueOnFail": true,
       "parameters": {
         "method": "POST",
         "url": "https://api.firecrawl.dev/v1/search",
@@ -58,7 +59,7 @@
       "typeVersion": 2,
       "position": [900, 360],
       "parameters": {
-        "jsCode": "const allItems = $input.all();\nconst company = allItems[0].json.company || 'Unknown';\n\n// Combine search results from all 3 searches\nconst allResults = allItems.flatMap(item => {\n  const data = item.json.data || [];\n  return data.slice(0, 4).map(r => ({\n    title: r.title || '',\n    url: r.url || '',\n    description: r.description || '',\n    content: (r.markdown || r.content || '').slice(0, 400)\n  }));\n});\n\nconst searchContext = allResults.map((r, i) =>\n  `[${i+1}] ${r.title}\\n${r.url}\\n${r.description}\\n${r.content}`\n).join('\\n\\n---\\n\\n');\n\nconst systemPrompt = `You are a TM Forum ODA membership prospecting researcher for Claire Watson's team.\\n\\nAnalyse web search results about a telecoms or satellite operator. Return ONLY valid JSON with no markdown wrapper, matching this exact schema:\\n{\\n  \"company\": \"full company name\",\\n  \"slug\": \"kebab-case-slug\",\\n  \"overview\": {\\n    \"hq\": \"City, Country\",\\n    \"size\": \"subscriber count or revenue if found\",\\n    \"ownership\": \"listed / state-owned / private / group subsidiary\",\\n    \"services\": \"mobile, fixed, broadband, satellite, fintech etc\"\\n  },\\n  \"score\": 0,\\n  \"maxScore\": 30,\\n  \"verdict\": \"Strong\",\\n  \"topSignals\": [\"signal 1\", \"signal 2\", \"signal 3\"],\\n  \"primaryMission\": \"Autonomous Networks\",\\n  \"secondaryMission\": null,\\n  \"keyContacts\": [{\"name\": \"Name\", \"title\": \"Title\"}],\\n  \"timingHook\": \"specific reason to reach out now, or null\",\\n  \"summary\": \"3-4 sentence narrative on why this operator is a strong TM Forum ODA prospect\",\\n  \"researchNotes\": \"any data gaps or caveats\"\\n}\\n\\nPrimary mission options: Autonomous Networks | AI & Data | Composable IT & Ecosystems | Business Assurance | Business Process/eTOM\\n\\nScoring (max 30 pts):\\n3 pts each: active AI/automation programme, cloud-native BSS/OSS transformation, multi-OPCO group, 5G rollout in progress, public digital transformation strategy, TM Forum event attendance, ODA-aligned vendors (Ericsson/Nokia/Huawei/Amdocs/Netcracker)\\n2 pts each: revenue growth or market expansion, ESG commitments, B2B or API marketplace ambitions, recent M\\u00e9A or ownership change, regulatory compliance pressure\\n1 pt each: generic digital language, event attendance as delegate, non-ODA vendor relationships\\n\\nVerdict: 15+ = Strong, 8-14 = Moderate, <8 = Weak`;\n\nconst claudeBody = {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 2000,\n  system: systemPrompt,\n  messages: [{\n    role: 'user',\n    content: `Research ${company} based on these web search results:\\n\\n${searchContext}\\n\\nReturn the JSON research brief for ${company}.`\n  }]\n};\n\nreturn [{ json: { company, claudeBody } }];"
+        "jsCode": "// Get company name from the queries node (available even after Firecrawl replaces items)\nconst company = $('Build Search Queries').first().json.company || 'Unknown';\n\n// Collect results from Firecrawl — skip any items that errored (continueOnFail)\nconst allItems = $input.all();\nconst allResults = allItems.flatMap(item => {\n  if (item.json.error) return [];\n  const data = item.json.data || [];\n  return data.slice(0, 4).map(r => ({\n    title: r.title || '',\n    url: r.url || '',\n    description: r.description || '',\n    content: (r.markdown || r.content || '').slice(0, 400)\n  }));\n});\n\nconst searchContext = allResults.length\n  ? allResults.map((r, i) => `[${i+1}] ${r.title}\\n${r.url}\\n${r.description}\\n${r.content}`).join('\\n\\n---\\n\\n')\n  : `No live web results available. Use your training knowledge about ${company} to complete the research.`;\n\nconst systemPrompt = `You are a TM Forum ODA membership prospecting researcher for Claire Watson's team.\\n\\nAnalyse the provided context about a telecoms or satellite operator. Return ONLY valid JSON with no markdown wrapper, matching this exact schema:\\n{\\n  \"company\": \"full company name\",\\n  \"slug\": \"kebab-case-slug\",\\n  \"overview\": {\\n    \"hq\": \"City, Country\",\\n    \"size\": \"subscriber count or revenue if known\",\\n    \"ownership\": \"listed / state-owned / private / group subsidiary\",\\n    \"services\": \"mobile, fixed, broadband, satellite, fintech etc\"\\n  },\\n  \"score\": 0,\\n  \"maxScore\": 30,\\n  \"verdict\": \"Strong\",\\n  \"topSignals\": [\"signal 1\", \"signal 2\", \"signal 3\"],\\n  \"primaryMission\": \"Autonomous Networks\",\\n  \"secondaryMission\": null,\\n  \"keyContacts\": [{\"name\": \"Name\", \"title\": \"Title\"}],\\n  \"timingHook\": \"specific reason to reach out now, or null\",\\n  \"summary\": \"3-4 sentence narrative on why this operator is a strong TM Forum ODA prospect\",\\n  \"researchNotes\": \"note if web search was unavailable and response is from training data\"\\n}\\n\\nPrimary mission options: Autonomous Networks | AI & Data | Composable IT & Ecosystems | Business Assurance | Business Process/eTOM\\n\\nScoring (max 30 pts):\\n3 pts each: active AI/automation programme, cloud-native BSS/OSS transformation, multi-OPCO group, 5G rollout in progress, public digital transformation strategy, TM Forum event attendance, ODA-aligned vendors (Ericsson/Nokia/Huawei/Amdocs/Netcracker)\\n2 pts each: revenue growth or market expansion, ESG commitments, B2B or API marketplace ambitions, recent M&A or ownership change, regulatory compliance pressure\\n1 pt each: generic digital language, event attendance as delegate, non-ODA vendor relationships\\n\\nVerdict: 15+ = Strong, 8-14 = Moderate, <8 = Weak`;\n\nconst claudeBody = {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 2000,\n  system: systemPrompt,\n  messages: [{\n    role: 'user',\n    content: `Research ${company} based on this context:\\n\\n${searchContext}\\n\\nReturn the JSON research brief for ${company}.`\n  }]\n};\n\nreturn [{ json: { company, claudeBody } }];"
       }
     },
     {
@@ -67,6 +68,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1120, 360],
+      "continueOnFail": true,
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
@@ -99,7 +101,7 @@
       "typeVersion": 2,
       "position": [1340, 360],
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst raw = item.content?.[0]?.text || item.choices?.[0]?.message?.content || '';\n\nlet research;\ntry {\n  // Strip any markdown code fences if present\n  const cleaned = raw.replace(/^```json\\s*/i, '').replace(/\\s*```$/,'').trim();\n  research = JSON.parse(cleaned);\n} catch(e) {\n  return [{ json: { success: false, error: 'Failed to parse research: ' + e.message, raw } }];\n}\n\nreturn [{ json: { success: true, research } }];"
+        "jsCode": "const item = $input.first().json;\n\n// If Claude call itself failed (continueOnFail), return a graceful error\nif (item.error) {\n  const company = $('Aggregate & Build Claude Body').first().json.company || 'Unknown';\n  return [{ json: { success: false, error: 'Claude API error: ' + (item.error.message || JSON.stringify(item.error)) } }];\n}\n\nconst raw = item.content?.[0]?.text || item.choices?.[0]?.message?.content || '';\n\nif (!raw) {\n  return [{ json: { success: false, error: 'Empty response from Claude — please try again.' } }];\n}\n\nlet research;\ntry {\n  const cleaned = raw.replace(/^```json\\s*/i, '').replace(/\\s*```$/, '').trim();\n  research = JSON.parse(cleaned);\n} catch(e) {\n  return [{ json: { success: false, error: 'Could not parse research output. Raw: ' + raw.slice(0, 200) } }];\n}\n\nreturn [{ json: { success: true, research } }];"
       }
     },
     {
@@ -123,24 +125,12 @@
     }
   ],
   "connections": {
-    "Webhook — Research": {
-      "main": [[{ "node": "Build Search Queries", "type": "main", "index": 0 }]]
-    },
-    "Build Search Queries": {
-      "main": [[{ "node": "Firecrawl Search", "type": "main", "index": 0 }]]
-    },
-    "Firecrawl Search": {
-      "main": [[{ "node": "Aggregate & Build Claude Body", "type": "main", "index": 0 }]]
-    },
-    "Aggregate & Build Claude Body": {
-      "main": [[{ "node": "Call Claude Haiku", "type": "main", "index": 0 }]]
-    },
-    "Call Claude Haiku": {
-      "main": [[{ "node": "Parse Claude Response", "type": "main", "index": 0 }]]
-    },
-    "Parse Claude Response": {
-      "main": [[{ "node": "Respond — Research", "type": "main", "index": 0 }]]
-    }
+    "Webhook — Research":          { "main": [[{ "node": "Build Search Queries",          "type": "main", "index": 0 }]] },
+    "Build Search Queries":        { "main": [[{ "node": "Firecrawl Search",              "type": "main", "index": 0 }]] },
+    "Firecrawl Search":            { "main": [[{ "node": "Aggregate & Build Claude Body", "type": "main", "index": 0 }]] },
+    "Aggregate & Build Claude Body":{ "main": [[{ "node": "Call Claude Haiku",            "type": "main", "index": 0 }]] },
+    "Call Claude Haiku":           { "main": [[{ "node": "Parse Claude Response",         "type": "main", "index": 0 }]] },
+    "Parse Claude Response":       { "main": [[{ "node": "Respond — Research",            "type": "main", "index": 0 }]] }
   },
   "active": false,
   "settings": { "executionOrder": "v1" }
