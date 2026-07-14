@@ -590,7 +590,7 @@ function loadProspects(){
         console.warn('[Prospects] JSON parse failed:', e.message);
         allProspects=[];renderProspects();updateStats();return;
       }
-      console.log('[Prospects] Sheet tabs returned:', Object.keys(data));
+      console.log('[Prospects] Sheet tabs returned: ' + Object.keys(data).join(', '));
       var rows=(data['Prospects']||data['prospects']||[]);
       console.log('[Prospects] Rows found:', rows.length);
       allProspects=rows.filter(function(r){return r['Company']||r['company']});
