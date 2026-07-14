@@ -165,6 +165,56 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .fade{opacity:1;transition:opacity .18s}
 .fade.out{opacity:0}
 
+/* ── Contacts section ───────────────────────────────── */
+.contacts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:10px}
+.ccard{position:relative;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:13px 14px;display:flex;align-items:flex-start;gap:12px;transition:border-color .15s}
+.ccard:hover{border-color:rgba(255,255,255,.15)}
+.ccard-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent-dim),rgba(13,11,77,1));border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0}
+.ccard-name{font-size:13px;font-weight:500;color:#fff;line-height:1.3}
+.ccard-jobtitle{font-family:'DM Mono',monospace;font-size:9px;color:var(--g500);letter-spacing:.04em;margin-top:2px}
+.ccard-email{font-size:11px;margin-top:5px}.ccard-email a{color:var(--g200);text-decoration:none;opacity:.7;transition:opacity .15s}.ccard-email a:hover{opacity:1;color:var(--accent)}
+.ccard-phone{font-size:11px;color:var(--g500);margin-top:2px}
+.ccard-notes{font-size:10.5px;color:var(--g500);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-style:italic;line-height:1.5}
+.ccard-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px;opacity:0;transition:opacity .15s}
+.ccard:hover .ccard-actions{opacity:1}
+.crd-btn{padding:3px 9px;border-radius:5px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.05em;cursor:pointer;border:1px solid;transition:background .15s,color .15s;line-height:1.6}
+.crd-edit{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}.crd-edit:hover{background:rgba(255,255,255,.1);color:#fff}
+.crd-del{background:rgba(217,18,65,.05);border-color:rgba(217,18,65,.18);color:rgba(217,18,65,.55)}.crd-del:hover{background:rgba(217,18,65,.12);color:#f87171}
+.add-row-btn{padding:5px 13px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--g200);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;cursor:pointer;transition:background .15s,border-color .15s}
+.add-row-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+.no-records{text-align:center;padding:22px;color:var(--g500);font-size:12px;font-family:'DM Mono',monospace;letter-spacing:.06em}
+.ccard-confirm{position:absolute;inset:0;border-radius:9px;background:rgba(13,11,77,.95);display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;color:rgba(255,255,255,.7)}
+.ccard-confirm button{padding:4px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;border:1px solid}
+.ccard-confirm .conf-yes{background:rgba(217,18,65,.12);border-color:rgba(217,18,65,.3);color:#f87171}.ccard-confirm .conf-yes:hover{background:rgba(217,18,65,.2)}
+.ccard-confirm .conf-no{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}.ccard-confirm .conf-no:hover{background:rgba(255,255,255,.1)}
+.crud-toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:9px;font-family:'DM Mono',monospace;font-size:11px;z-index:999;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none}
+.crud-toast.show{opacity:1;transform:translateY(0)}
+.crud-toast.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#22c55e}
+.crud-toast.err{background:rgba(217,18,65,.12);border:1px solid rgba(217,18,65,.25);color:#f87171}
+
+/* ── CRUD Modal ─────────────────────────────────────── */
+.crud-overlay{position:fixed;inset:0;background:rgba(5,3,20,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+.crud-overlay.open{opacity:1;pointer-events:all}
+.crud-panel{background:#0D0B4D;border:1px solid rgba(255,255,255,.1);border-radius:14px;width:100%;max-width:460px;box-shadow:0 32px 80px rgba(0,0,0,.65);transform:scale(.97) translateY(10px);transition:transform .26s cubic-bezier(.34,1.46,.64,1)}
+.crud-overlay.open .crud-panel{transform:scale(1) translateY(0)}
+.crud-head{padding:20px 22px 15px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}
+.crud-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:#fff}
+.crud-close{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.crud-close:hover{background:rgba(255,255,255,.1);color:#fff}
+.crud-body{padding:18px 22px 6px;display:flex;flex-direction:column;gap:12px}
+.cfield{display:flex;flex-direction:column;gap:4px}
+.cfield label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.28)}
+.cfield input,.cfield textarea,.cfield select{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:9px 12px;color:rgba(255,255,255,.8);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.cfield input:focus,.cfield textarea:focus,.cfield select:focus{border-color:var(--accent)}
+.cfield select option{background:#0D0B4D}
+.cfield textarea{resize:vertical;min-height:65px;line-height:1.6}
+.cfield-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.crud-foot{display:flex;gap:9px;justify-content:flex-end;padding:16px 22px 20px}
+.crud-cancel{padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.45);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:background .15s}
+.crud-cancel:hover{background:rgba(255,255,255,.05)}
+.crud-save{padding:8px 20px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.crud-save:disabled{opacity:.4;cursor:not-allowed}
+
 @media(max-width:960px){.stats{grid-template-columns:repeat(3,1fr)}.grid2,.grid-equal{grid-template-columns:1fr}}
 @media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}.mname{font-size:26px}.topbar{flex-direction:column;align-items:flex-start}.picker select{width:100%}.picker-wrap{width:100%}}
 </style>
@@ -281,8 +331,9 @@ function buildMembers(data){
       am:row['Account Manager'], status:row['Status'],
       statusCls:row['Status']==='Active'?'st-active':'st-new',
       priority:row['Priority'], extra:row['Bond / Revenue Notes']||'',
+      contacts: contacts,
       stats:[
-        {n:contacts.length,l:'Contacts',c:accent},
+        {n:contacts.filter(c=>c['Deleted']!=='true').length,l:'Contacts',c:accent},
         {n:sessions.length,l:'Sessions',c:'var(--c-data)'},
         {n:catalysts.length,l:'Catalysts',c:'#22c55e'},
         {n:pipeline.length,l:'Pipeline',c:'#f97316'},
@@ -330,6 +381,13 @@ function buildDashboardHTML(){
       </div>
     </div>
     <div class="stats fade" id="stats"></div>
+    <div class="card fade" id="contacts-card" style="margin-bottom:18px">
+      <div class="ch">
+        <span class="ct">Key Contacts</span>
+        <button class="add-row-btn" onclick="openCrud('contact',null)">+ Add Contact</button>
+      </div>
+      <div class="contacts-grid" id="contacts-list"></div>
+    </div>
     <div class="grid2 fade" id="grid-main">
       <div class="card">
         <div class="ch">
@@ -420,6 +478,8 @@ function renderMember(m){
      <div><div class="etit">${e.title}</div><div class="etyp">${e.type}</div><div class="enote">${e.note}</div></div>
      </div>`
   ).join('');
+
+  renderContacts(m);
 }
 
 function selectMember(id){
@@ -519,6 +579,225 @@ async function init(){
 }
 
 init();
+
+// ─── CRUD HELPERS ─────────────────────────────────────────────────────
+const CONTACT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contact-write';
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+
+function showToast(msg,type){
+  const t=document.getElementById('crud-toast');
+  t.textContent=msg;t.className='crud-toast '+type+' show';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ─── CONTACTS RENDER ──────────────────────────────────────────────────
+function renderContacts(m){
+  const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
+  const el=document.getElementById('contacts-list');
+  if(!el)return;
+  if(!live.length){
+    el.innerHTML='<div class="no-records">No contacts yet — click "+ Add Contact" to add one</div>';
+    return;
+  }
+  el.innerHTML=live.map((c,i)=>{
+    const name=c['Name']||c['Contact Name']||'';
+    const title=c['Job Title']||c['Title']||'';
+    const email=c['Email']||'';
+    const phone=c['Phone']||'';
+    const notes=c['Notes']||'';
+    const hasId=!!(c['Record ID']);
+    const init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+    return `<div class="ccard" id="ccard-${i}">
+      <div class="ccard-av">${esc(init)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ccard-name">${esc(name)}</div>
+        ${title?`<div class="ccard-jobtitle">${esc(title)}</div>`:''}
+        ${email?`<div class="ccard-email"><a href="mailto:${esc(email)}">${esc(email)}</a></div>`:''}
+        ${phone?`<div class="ccard-phone">${esc(phone)}</div>`:''}
+        ${notes?`<div class="ccard-notes">${esc(notes)}</div>`:''}
+      </div>
+      ${hasId?`<div class="ccard-actions">
+        <button class="crd-btn crd-edit" onclick="openCrud('contact',${i})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeleteContact(${i})">Delete</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function confirmDeleteContact(i){
+  const card=document.getElementById('ccard-'+i);
+  if(!card)return;
+  // Inline confirm strip
+  const d=document.createElement('div');
+  d.className='ccard-confirm';
+  d.innerHTML=`<span>Delete this contact?</span>
+    <button class="conf-yes" onclick="doDeleteContact(${i})">Delete</button>
+    <button class="conf-no" onclick="this.closest('.ccard-confirm').remove()">Cancel</button>`;
+  card.appendChild(d);
+}
+
+async function doDeleteContact(i){
+  const m=MEMBERS[currentId];
+  const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
+  const c=live[i];
+  if(!c)return;
+  try{
+    await fetch(CONTACT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'delete',contact:c})});
+    const idx=m.contacts.findIndex(x=>x['Record ID']===c['Record ID']);
+    if(idx>=0)m.contacts[idx]['Deleted']='true';
+    refreshContactStats(m);
+    renderContacts(m);
+    showToast('Contact deleted','ok');
+  }catch(e){showToast('Delete failed: '+e.message,'err')}
+}
+
+function refreshContactStats(m){
+  m.stats[0].n=m.contacts.filter(c=>c['Deleted']!=='true').length;
+  document.getElementById('stats').innerHTML=m.stats.map(s=>
+    `<div class="sc"><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`
+  ).join('');
+}
+
+// ─── CRUD MODAL ───────────────────────────────────────────────────────
+let _crudType=null,_crudIdx=null;
+
+const CRUD_CONFIG={
+  contact:{
+    title_add:'Add Contact',title_edit:'Edit Contact',
+    fields:[
+      {id:'cf-name',label:'Name',type:'input',required:true,placeholder:'Full name'},
+      {id:'cf-jobtitle',label:'Job Title',type:'input',placeholder:'e.g. Chief Technology Officer'},
+      {id:'cf-email',label:'Email',type:'input',inputtype:'email',placeholder:'name@company.com'},
+      {id:'cf-phone',label:'Phone',type:'input',placeholder:'+44 7700 900000'},
+      {id:'cf-notes',label:'Notes',type:'textarea',placeholder:'Relationship notes…'},
+    ],
+    getRow(i){
+      const m=MEMBERS[currentId];
+      const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
+      return i!==null?live[i]:null;
+    },
+    fillForm(r){
+      document.getElementById('cf-name').value=r?r['Name']||r['Contact Name']||'':'';
+      document.getElementById('cf-jobtitle').value=r?r['Job Title']||r['Title']||'':'';
+      document.getElementById('cf-email').value=r?r['Email']||'':'';
+      document.getElementById('cf-phone').value=r?r['Phone']||'':'';
+      document.getElementById('cf-notes').value=r?r['Notes']||'':'';
+    },
+    buildPayload(m,existing){
+      const recordId=existing&&existing['Record ID']?existing['Record ID']:genId();
+      return{
+        'Member ID':m.id,
+        'Name':document.getElementById('cf-name').value.trim(),
+        'Job Title':document.getElementById('cf-jobtitle').value.trim(),
+        'Email':document.getElementById('cf-email').value.trim(),
+        'Phone':document.getElementById('cf-phone').value.trim(),
+        'Notes':document.getElementById('cf-notes').value.trim(),
+        'Record ID':recordId,'Deleted':''
+      };
+    },
+    validate(){
+      const v=document.getElementById('cf-name').value.trim();
+      if(!v){document.getElementById('cf-name').focus();return false;}
+      return true;
+    },
+    async save(m,payload,isEdit,existing){
+      const action=isEdit?'update':'add';
+      await fetch(CONTACT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action,contact:payload})});
+      if(!m.contacts)m.contacts=[];
+      if(isEdit){
+        const idx=m.contacts.findIndex(x=>x['Record ID']===(existing['Record ID']));
+        if(idx>=0)m.contacts[idx]=payload;else m.contacts.push(payload);
+      }else{
+        m.contacts.push(payload);
+      }
+      refreshContactStats(m);
+      renderContacts(m);
+    }
+  }
+};
+
+function openCrud(type,idx){
+  _crudType=type;_crudIdx=idx;
+  const cfg=CRUD_CONFIG[type];
+  const existing=cfg.getRow(idx);
+  document.getElementById('crud-modal-title').textContent=existing?cfg.title_edit:cfg.title_add;
+  cfg.fillForm(existing);
+  document.getElementById('contact-crud-modal').classList.add('open');
+  // focus first input
+  const firstInput=document.querySelector('#contact-crud-modal input,#contact-crud-modal textarea');
+  if(firstInput)setTimeout(()=>firstInput.focus(),50);
+}
+
+function closeCrud(){
+  document.getElementById('contact-crud-modal').classList.remove('open');
+  _crudType=null;_crudIdx=null;
+}
+
+async function saveCrud(){
+  const cfg=CRUD_CONFIG[_crudType];
+  if(!cfg.validate())return;
+  const btn=document.getElementById('crud-save-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const m=MEMBERS[currentId];
+    const existing=cfg.getRow(_crudIdx);
+    const payload=cfg.buildPayload(m,existing);
+    await cfg.save(m,payload,_crudIdx!==null,existing);
+    closeCrud();
+    showToast(_crudIdx!==null?'Contact updated':'Contact added','ok');
+  }catch(e){
+    showToast('Save failed: '+e.message,'err');
+  }finally{
+    btn.disabled=false;btn.textContent='Save';
+  }
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCrud()});
 </script>
+<!-- Toast notification -->
+<div id="crud-toast" class="crud-toast"></div>
+
+<!-- Contact CRUD Modal -->
+<div id="contact-crud-modal" class="crud-overlay" onclick="if(event.target===this)closeCrud()">
+  <div class="crud-panel">
+    <div class="crud-head">
+      <span id="crud-modal-title" class="crud-title">Add Contact</span>
+      <button class="crud-close" onclick="closeCrud()">✕</button>
+    </div>
+    <div class="crud-body">
+      <div class="cfield">
+        <label>Name *</label>
+        <input id="cf-name" type="text" placeholder="Full name" onkeydown="if(event.key==='Enter')saveCrud()">
+      </div>
+      <div class="cfield">
+        <label>Job Title</label>
+        <input id="cf-jobtitle" type="text" placeholder="e.g. Chief Technology Officer">
+      </div>
+      <div class="cfield-row">
+        <div class="cfield">
+          <label>Email</label>
+          <input id="cf-email" type="email" placeholder="name@company.com">
+        </div>
+        <div class="cfield">
+          <label>Phone</label>
+          <input id="cf-phone" type="text" placeholder="+44 7700 900000">
+        </div>
+      </div>
+      <div class="cfield">
+        <label>Notes</label>
+        <textarea id="cf-notes" placeholder="Key relationship notes…"></textarea>
+      </div>
+    </div>
+    <div class="crud-foot">
+      <button class="crud-cancel" onclick="closeCrud()">Cancel</button>
+      <button id="crud-save-btn" class="crud-save" onclick="saveCrud()">Save</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
