@@ -667,6 +667,8 @@ var _cacheTime=0;
 var CACHE_TTL=5*60*1000;
 var _clickableProspects=[];
 
+var PROSPECT_SS_KEY='cwclaires-prospects';
+
 function loadProspects(force){
   if(!force&&_prospectsCache&&(Date.now()-_cacheTime<CACHE_TTL)){
     allProspects=_prospectsCache;
@@ -674,9 +676,19 @@ function loadProspects(force){
     updateStats();
     return;
   }
-  // Cache-bust so the browser never serves a stale n8n response
-  fetch(SHEET_URL+'?_='+Date.now(),{redirect:'follow',cache:'no-store'})
-    .then(function(r){return r.text()})
+  // Show stale sessionStorage data instantly while the fresh fetch runs
+  try{
+    var ss=sessionStorage.getItem(PROSPECT_SS_KEY);
+    if(ss&&!force){
+      var cached=JSON.parse(ss);
+      allProspects=cached;renderProspects();updateStats();
+    }
+  }catch(e){}
+
+  var ctrl=new AbortController();
+  var timer=setTimeout(function(){ctrl.abort()},12000);
+  fetch(SHEET_URL+'?_='+Date.now(),{redirect:'follow',cache:'no-store',signal:ctrl.signal})
+    .then(function(r){clearTimeout(timer);return r.text()})
     .then(function(text){
       var data;
       try{data=JSON.parse(text)}catch(e){
@@ -687,10 +699,12 @@ function loadProspects(force){
       if(!allProspects.length&&!Object.keys(data).length){showProspectError();return;}
       _prospectsCache=allProspects;
       _cacheTime=Date.now();
+      try{sessionStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
       renderProspects();
       updateStats();
     })
-    .catch(function(err){
+    .catch(function(){
+      clearTimeout(timer);
       showProspectError();
     });
 }
