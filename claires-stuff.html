@@ -678,7 +678,7 @@ function loadProspects(force){
   }
   // Show stale sessionStorage data instantly while the fresh fetch runs
   try{
-    var ss=sessionStorage.getItem(PROSPECT_SS_KEY);
+    var ss=localStorage.getItem(PROSPECT_SS_KEY);
     if(ss&&!force){
       var cached=JSON.parse(ss);
       allProspects=cached;renderProspects();updateStats();
@@ -706,7 +706,7 @@ function loadProspects(force){
       allProspects=fresh;
       _prospectsCache=allProspects;
       _cacheTime=Date.now();
-      try{sessionStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
+      try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
       renderProspects();
       updateStats();
     })
