@@ -566,6 +566,13 @@ function initDashboard(){
   loadProspects();
 }
 
+/* Re-fetch prospects when browser restores page from back-forward cache */
+window.addEventListener('pageshow',function(e){
+  if(e.persisted && sessionStorage.getItem('cwclaires-auth')==='1'){
+    loadProspects();
+  }
+});
+
 /* ─── ENGAGEMENT PLANS ───────────────────────────────────────── */
 function loadPlans(){
   var data=null;
