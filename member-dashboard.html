@@ -594,7 +594,7 @@ function showToast(msg,type){
 }
 
 // ─── CONTACTS RENDER ──────────────────────────────────────────────────
-const CONTACT_LIMIT=5;
+const CONTACT_LIMIT=4;
 
 function renderContacts(m,showAll){
   const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
@@ -612,7 +612,6 @@ function renderContacts(m,showAll){
     const email=c['Email']||c['Email Address']||'';
     const phone=c['Phone']||c['Mobile']||c['Telephone']||'';
     const notes=c['Notes']||c['Note']||'';
-    const hasId=!!(c['Record ID']);
     const init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?';
     return `<div class="ccard" id="ccard-${i}">
       <div class="ccard-av">${esc(init)}</div>
@@ -623,10 +622,10 @@ function renderContacts(m,showAll){
         ${phone?`<div class="ccard-phone">${esc(phone)}</div>`:''}
         ${notes?`<div class="ccard-notes">${esc(notes)}</div>`:''}
       </div>
-      ${hasId?`<div class="ccard-actions">
+      <div class="ccard-actions">
         <button class="crd-btn crd-edit" onclick="openCrud('contact',${i})">Edit</button>
         <button class="crd-btn crd-del" onclick="confirmDeleteContact(${i})">Delete</button>
-      </div>`:''}
+      </div>
     </div>`;
   }).join('');
   if(hidden>0){
@@ -660,14 +659,21 @@ async function doDeleteContact(i){
   const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
   const c=live[i];
   if(!c)return;
+  const hasId=!!(c['Record ID']);
   try{
-    await fetch(CONTACT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'delete',contact:c})});
-    const idx=m.contacts.findIndex(x=>x['Record ID']===c['Record ID']);
-    if(idx>=0)m.contacts[idx]['Deleted']='true';
+    if(hasId){
+      await fetch(CONTACT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'delete',contact:c})});
+      const idx=m.contacts.findIndex(x=>x['Record ID']===c['Record ID']);
+      if(idx>=0)m.contacts[idx]['Deleted']='true';
+    }else{
+      // No Record ID — remove from local view only
+      const idx=m.contacts.indexOf(c);
+      if(idx>=0)m.contacts.splice(idx,1);
+    }
     refreshContactStats(m);
-    renderContacts(m);
-    showToast('Contact deleted','ok');
+    renderContacts(m,false);
+    showToast(hasId?'Contact deleted':'Removed from view — delete the row in Google Sheet to make it permanent','ok');
   }catch(e){showToast('Delete failed: '+e.message,'err')}
 }
 
@@ -721,18 +727,24 @@ const CRUD_CONFIG={
       return true;
     },
     async save(m,payload,isEdit,existing){
-      const action=isEdit?'update':'add';
+      // If the existing record has no Record ID we can only append a new row
+      const hadRecordId=isEdit&&!!(existing&&existing['Record ID']);
+      const action=hadRecordId?'update':'add';
       await fetch(CONTACT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action,contact:payload})});
       if(!m.contacts)m.contacts=[];
       if(isEdit){
-        const idx=m.contacts.findIndex(x=>x['Record ID']===(existing['Record ID']));
+        // Replace in local array (match by Record ID if available, else by index)
+        const idx=hadRecordId
+          ?m.contacts.findIndex(x=>x['Record ID']===existing['Record ID'])
+          :m.contacts.indexOf(existing);
         if(idx>=0)m.contacts[idx]=payload;else m.contacts.push(payload);
+        if(!hadRecordId)return 'no_id_edit'; // caller shows extra toast
       }else{
         m.contacts.push(payload);
       }
       refreshContactStats(m);
-      renderContacts(m);
+      renderContacts(m,false);
     }
   }
 };
@@ -763,9 +775,14 @@ async function saveCrud(){
     const m=MEMBERS[currentId];
     const existing=cfg.getRow(_crudIdx);
     const payload=cfg.buildPayload(m,existing);
-    await cfg.save(m,payload,_crudIdx!==null,existing);
+    const result=await cfg.save(m,payload,_crudIdx!==null,existing);
     closeCrud();
-    showToast(_crudIdx!==null?'Contact updated':'Contact added','ok');
+    if(result==='no_id_edit'){
+      refreshContactStats(m);renderContacts(m,false);
+      showToast('Saved — a new row was added to the sheet. You can remove the old one manually.','ok');
+    }else{
+      showToast(_crudIdx!==null?'Contact updated':'Contact added','ok');
+    }
   }catch(e){
     showToast('Save failed: '+e.message,'err');
   }finally{
