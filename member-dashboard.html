@@ -594,7 +594,9 @@ function showToast(msg,type){
 }
 
 // ─── CONTACTS RENDER ──────────────────────────────────────────────────
-function renderContacts(m){
+const CONTACT_LIMIT=5;
+
+function renderContacts(m,showAll){
   const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
   const el=document.getElementById('contacts-list');
   if(!el)return;
@@ -602,18 +604,20 @@ function renderContacts(m){
     el.innerHTML='<div class="no-records">No contacts yet — click "+ Add Contact" to add one</div>';
     return;
   }
-  el.innerHTML=live.map((c,i)=>{
-    const name=c['Name']||c['Contact Name']||'';
-    const title=c['Job Title']||c['Title']||'';
-    const email=c['Email']||'';
-    const phone=c['Phone']||'';
-    const notes=c['Notes']||'';
+  const showing=showAll?live:live.slice(0,CONTACT_LIMIT);
+  const hidden=live.length-showing.length;
+  el.innerHTML=showing.map((c,i)=>{
+    const name=c['Name']||c['Contact Name']||c['Full Name']||c['Person']||c['Person(s)']||'';
+    const title=c['Job Title']||c['Title']||c['Position']||c['Role']||c['DMU Role']||'';
+    const email=c['Email']||c['Email Address']||'';
+    const phone=c['Phone']||c['Mobile']||c['Telephone']||'';
+    const notes=c['Notes']||c['Note']||'';
     const hasId=!!(c['Record ID']);
-    const init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+    const init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?';
     return `<div class="ccard" id="ccard-${i}">
       <div class="ccard-av">${esc(init)}</div>
       <div style="flex:1;min-width:0">
-        <div class="ccard-name">${esc(name)}</div>
+        <div class="ccard-name">${esc(name)||'<span style="opacity:.35">Unnamed</span>'}</div>
         ${title?`<div class="ccard-jobtitle">${esc(title)}</div>`:''}
         ${email?`<div class="ccard-email"><a href="mailto:${esc(email)}">${esc(email)}</a></div>`:''}
         ${phone?`<div class="ccard-phone">${esc(phone)}</div>`:''}
@@ -625,6 +629,18 @@ function renderContacts(m){
       </div>`:''}
     </div>`;
   }).join('');
+  if(hidden>0){
+    el.innerHTML+=`<div style="grid-column:1/-1;text-align:center;padding:6px 0 2px">
+      <button class="add-row-btn" onclick="renderContacts(MEMBERS[currentId],true)">
+        Show ${hidden} more contact${hidden!==1?'s':''}
+      </button>
+    </div>`;
+  }
+  if(showAll&&live.length>CONTACT_LIMIT){
+    el.innerHTML+=`<div style="grid-column:1/-1;text-align:center;padding:6px 0 2px">
+      <button class="add-row-btn" onclick="renderContacts(MEMBERS[currentId],false)">Show fewer</button>
+    </div>`;
+  }
 }
 
 function confirmDeleteContact(i){
