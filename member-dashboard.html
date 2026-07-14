@@ -334,7 +334,7 @@ function buildMembers(data){
       contacts: contacts,
       stats:[
         {n:contacts.filter(c=>c['Deleted']!=='true').length,l:'Contacts',c:accent},
-        {n:sessions.length,l:'Sessions',c:'var(--c-data)'},
+        {n:sessions.filter(s=>s['Deleted']!=='true').length,l:'Sessions',c:'var(--c-data)'},
         {n:catalysts.length,l:'Catalysts',c:'#22c55e'},
         {n:pipeline.length,l:'Pipeline',c:'#f97316'},
         {n:matRows.length||6,l:'Domains',c:'#C9A84C'},
@@ -347,6 +347,7 @@ function buildMembers(data){
         color:getDomainColor(r['Domain'])
       })),
       dmu:dmu.map(r=>({role:r['DMU Role'],cls:DMU_CLS[r['DMU Role']]||'r-user',people:r['Person(s)'],note:r['Notes']})),
+      rawSessions:sessions,
       sessions:sessions.slice(0,10).map(r=>({
         date:r['Date'],cat:getSessionCat(r['Category']),label:r['Category'],
         title:r['Topic / Title'],who:r['Axian Attendees']||'',
@@ -449,17 +450,7 @@ function renderMember(m){
      <div><div class="dp">${d.people}</div><div class="dn">${d.note}</div></div></div>`
   ).join('');
 
-  const sl=m.sessions.length;
-  document.getElementById('sessions-lbl').innerHTML=
-    `Recent Engagement Sessions <span>(${sl} session${sl!==1?'s':''})</span>`;
-  document.getElementById('sessions').innerHTML=m.sessions.map(s=>
-    `<div class="scard ${s.cat}">
-      <div class="stop"><span class="scat">${s.label}</span><span class="sdate">${s.date}</span></div>
-      <div class="stitle">${s.title}</div>
-      <div class="satt">Attendees: ${s.who}</div>
-      <div class="sout">${s.out}</div>
-    </div>`
-  ).join('');
+  renderSessions(m);
 
   document.getElementById('cats').innerHTML=m.catalysts.map(c=>
     `<div class="ci"><div class="cid">${c.id||'—'}</div>
@@ -582,6 +573,7 @@ init();
 
 // ─── CRUD HELPERS ─────────────────────────────────────────────────────
 const CONTACT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contact-write';
+const SESSION_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-session-write';
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -678,10 +670,81 @@ async function doDeleteContact(i){
 }
 
 function refreshContactStats(m){
-  m.stats[0].n=m.contacts.filter(c=>c['Deleted']!=='true').length;
+  m.stats[0].n=(m.contacts||[]).filter(c=>c['Deleted']!=='true').length;
   document.getElementById('stats').innerHTML=m.stats.map(s=>
     `<div class="sc"><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`
   ).join('');
+}
+
+function refreshSessionStats(m){
+  m.stats[1].n=(m.rawSessions||[]).filter(s=>s['Deleted']!=='true').length;
+  document.getElementById('stats').innerHTML=m.stats.map(s=>
+    `<div class="sc"><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`
+  ).join('');
+}
+
+function renderSessions(m){
+  const live=(m.rawSessions||[]).filter(s=>s['Deleted']!=='true');
+  const lbl=document.getElementById('sessions-lbl');
+  const el=document.getElementById('sessions');
+  if(!el)return;
+  const sl=live.length;
+  if(lbl)lbl.innerHTML=`Recent Engagement Sessions <span>(${sl} session${sl!==1?'s':''})</span>`+
+    `<button class="add-row-btn" onclick="openCrud('session',null)" style="margin-left:10px;font-size:9px;text-transform:none;letter-spacing:normal">+ Add Session</button>`;
+  if(!live.length){
+    el.innerHTML='<div style="padding:18px 0;opacity:.55;font-size:13px">No sessions yet — click "+ Add Session" to add one.</div>';
+    return;
+  }
+  el.innerHTML=live.map((s,i)=>{
+    const cat=getSessionCat(s['Category']);
+    const title=s['Topic / Title']||s['Title']||'';
+    const who=s['Axian Attendees']||s['Attendees']||'';
+    const out=s['Outcome / Status']||s['Key Notes']||s['Outcome']||'';
+    return `<div class="scard ${cat}" style="position:relative">
+      <div class="ccard-actions">
+        <button class="crd-btn crd-edit" onclick="openCrud('session',${i})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeleteSession(${i})">Delete</button>
+      </div>
+      <div class="stop"><span class="scat">${esc(s['Category']||'')}</span><span class="sdate">${esc(s['Date']||'')}</span></div>
+      <div class="stitle">${esc(title)}</div>
+      ${who?`<div class="satt">Attendees: ${esc(who)}</div>`:''}
+      ${out?`<div class="sout">${esc(out)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function confirmDeleteSession(i){
+  const cards=document.querySelectorAll('#sessions .scard');
+  const card=cards[i];
+  if(!card)return;
+  const d=document.createElement('div');
+  d.className='ccard-confirm';
+  d.innerHTML=`<span>Delete this session?</span>
+    <button class="conf-yes" onclick="doDeleteSession(${i})">Delete</button>
+    <button class="conf-no" onclick="this.closest('.ccard-confirm').remove()">Cancel</button>`;
+  card.appendChild(d);
+}
+
+async function doDeleteSession(i){
+  const m=MEMBERS[currentId];
+  const live=(m.rawSessions||[]).filter(s=>s['Deleted']!=='true');
+  const s=live[i];
+  if(!s)return;
+  const hasId=!!(s['Record ID']);
+  try{
+    if(hasId){
+      await fetch(SESSION_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'delete',session:s})});
+      const idx=m.rawSessions.findIndex(x=>x['Record ID']===s['Record ID']);
+      if(idx>=0)m.rawSessions[idx]['Deleted']='true';
+    }else{
+      const idx=m.rawSessions.indexOf(s);
+      if(idx>=0)m.rawSessions.splice(idx,1);
+    }
+    refreshSessionStats(m);
+    renderSessions(m);
+    showToast(hasId?'Session deleted':'Removed from view — delete the row in Google Sheet to make it permanent','ok');
+  }catch(e){showToast('Delete failed: '+e.message,'err')}
 }
 
 // ─── CRUD MODAL ───────────────────────────────────────────────────────
@@ -689,6 +752,7 @@ let _crudType=null,_crudIdx=null;
 
 const CRUD_CONFIG={
   contact:{
+    label:'Contact',
     title_add:'Add Contact',title_edit:'Edit Contact',
     fields:[
       {id:'cf-name',label:'Name',type:'input',required:true,placeholder:'Full name'},
@@ -734,30 +798,100 @@ const CRUD_CONFIG={
         body:JSON.stringify({action,contact:payload})});
       if(!m.contacts)m.contacts=[];
       if(isEdit){
-        // Replace in local array (match by Record ID if available, else by index)
         const idx=hadRecordId
           ?m.contacts.findIndex(x=>x['Record ID']===existing['Record ID'])
           :m.contacts.indexOf(existing);
         if(idx>=0)m.contacts[idx]=payload;else m.contacts.push(payload);
-        if(!hadRecordId)return 'no_id_edit'; // caller shows extra toast
       }else{
         m.contacts.push(payload);
       }
       refreshContactStats(m);
       renderContacts(m,false);
+      if(isEdit&&!hadRecordId)return 'no_id_edit';
+    }
+  },
+  session:{
+    label:'Session',
+    title_add:'Add Session',title_edit:'Edit Session',
+    fields:[
+      {id:'ss-date',label:'Date',type:'input',inputtype:'date',required:true},
+      {id:'ss-category',label:'Category',type:'select',options:['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite']},
+      {id:'ss-title',label:'Topic / Title',type:'input',required:true,placeholder:'Session topic or title'},
+      {id:'ss-attendees',label:'Attendees',type:'input',placeholder:'Axian attendees present'},
+      {id:'ss-outcome',label:'Outcome / Notes',type:'textarea',placeholder:'Key outcomes and notes…'},
+    ],
+    getRow(i){
+      const m=MEMBERS[currentId];
+      const live=(m.rawSessions||[]).filter(s=>s['Deleted']!=='true');
+      return i!==null?live[i]:null;
+    },
+    fillForm(r){
+      document.getElementById('ss-date').value=r?r['Date']||'':new Date().toISOString().slice(0,10);
+      const catEl=document.getElementById('ss-category');
+      if(catEl)catEl.value=r?r['Category']||'Strategy':'Strategy';
+      document.getElementById('ss-title').value=r?r['Topic / Title']||r['Title']||'':'';
+      document.getElementById('ss-attendees').value=r?r['Axian Attendees']||r['Attendees']||'':'';
+      document.getElementById('ss-outcome').value=r?r['Outcome / Status']||r['Key Notes']||r['Outcome']||'':'';
+    },
+    buildPayload(m,existing){
+      const recordId=existing&&existing['Record ID']?existing['Record ID']:genId();
+      return{
+        'Member ID':m.id,
+        'Date':document.getElementById('ss-date').value,
+        'Category':document.getElementById('ss-category').value,
+        'Topic / Title':document.getElementById('ss-title').value.trim(),
+        'Axian Attendees':document.getElementById('ss-attendees').value.trim(),
+        'Outcome / Status':document.getElementById('ss-outcome').value.trim(),
+        'Record ID':recordId,'Deleted':''
+      };
+    },
+    validate(){
+      const t=document.getElementById('ss-title').value.trim();
+      if(!t){document.getElementById('ss-title').focus();return false;}
+      return true;
+    },
+    async save(m,payload,isEdit,existing){
+      const hadRecordId=isEdit&&!!(existing&&existing['Record ID']);
+      const action=hadRecordId?'update':'add';
+      await fetch(SESSION_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action,session:payload})});
+      if(!m.rawSessions)m.rawSessions=[];
+      if(isEdit){
+        const idx=hadRecordId
+          ?m.rawSessions.findIndex(x=>x['Record ID']===existing['Record ID'])
+          :m.rawSessions.indexOf(existing);
+        if(idx>=0)m.rawSessions[idx]=payload;else m.rawSessions.push(payload);
+      }else{
+        m.rawSessions.unshift(payload);
+      }
+      refreshSessionStats(m);
+      renderSessions(m);
+      if(isEdit&&!hadRecordId)return 'no_id_edit';
     }
   }
 };
+
+function buildCrudField(f){
+  const req=f.required?` <span style="color:var(--accent)">*</span>`:'';
+  const lbl=`<label>${f.label}${req}</label>`;
+  if(f.type==='select'){
+    const opts=(f.options||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+    return `<div class="cfield">${lbl}<select id="${f.id}">${opts}</select></div>`;
+  }
+  if(f.type==='textarea')
+    return `<div class="cfield">${lbl}<textarea id="${f.id}" placeholder="${esc(f.placeholder||'')}"></textarea></div>`;
+  return `<div class="cfield">${lbl}<input id="${f.id}" type="${f.inputtype||'text'}" placeholder="${esc(f.placeholder||'')}"></div>`;
+}
 
 function openCrud(type,idx){
   _crudType=type;_crudIdx=idx;
   const cfg=CRUD_CONFIG[type];
   const existing=cfg.getRow(idx);
   document.getElementById('crud-modal-title').textContent=existing?cfg.title_edit:cfg.title_add;
+  document.getElementById('crud-modal-body').innerHTML=cfg.fields.map(buildCrudField).join('');
   cfg.fillForm(existing);
   document.getElementById('contact-crud-modal').classList.add('open');
-  // focus first input
-  const firstInput=document.querySelector('#contact-crud-modal input,#contact-crud-modal textarea');
+  const firstInput=document.querySelector('#contact-crud-modal input,#contact-crud-modal textarea,#contact-crud-modal select');
   if(firstInput)setTimeout(()=>firstInput.focus(),50);
 }
 
@@ -771,6 +905,7 @@ async function saveCrud(){
   if(!cfg.validate())return;
   const btn=document.getElementById('crud-save-btn');
   btn.disabled=true;btn.textContent='Saving…';
+  const savedType=_crudType,savedIdx=_crudIdx;
   try{
     const m=MEMBERS[currentId];
     const existing=cfg.getRow(_crudIdx);
@@ -778,10 +913,9 @@ async function saveCrud(){
     const result=await cfg.save(m,payload,_crudIdx!==null,existing);
     closeCrud();
     if(result==='no_id_edit'){
-      refreshContactStats(m);renderContacts(m,false);
-      showToast('Saved — a new row was added to the sheet. You can remove the old one manually.','ok');
+      showToast('Saved — a new row was added to the sheet. Remove the old one manually.','ok');
     }else{
-      showToast(_crudIdx!==null?'Contact updated':'Contact added','ok');
+      showToast(savedIdx!==null?`${cfg.label} updated`:`${cfg.label} added`,'ok');
     }
   }catch(e){
     showToast('Save failed: '+e.message,'err');
@@ -802,30 +936,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCrud()});
       <span id="crud-modal-title" class="crud-title">Add Contact</span>
       <button class="crud-close" onclick="closeCrud()">✕</button>
     </div>
-    <div class="crud-body">
-      <div class="cfield">
-        <label>Name *</label>
-        <input id="cf-name" type="text" placeholder="Full name" onkeydown="if(event.key==='Enter')saveCrud()">
-      </div>
-      <div class="cfield">
-        <label>Job Title</label>
-        <input id="cf-jobtitle" type="text" placeholder="e.g. Chief Technology Officer">
-      </div>
-      <div class="cfield-row">
-        <div class="cfield">
-          <label>Email</label>
-          <input id="cf-email" type="email" placeholder="name@company.com">
-        </div>
-        <div class="cfield">
-          <label>Phone</label>
-          <input id="cf-phone" type="text" placeholder="+44 7700 900000">
-        </div>
-      </div>
-      <div class="cfield">
-        <label>Notes</label>
-        <textarea id="cf-notes" placeholder="Key relationship notes…"></textarea>
-      </div>
-    </div>
+    <div id="crud-modal-body" class="crud-body"></div>
     <div class="crud-foot">
       <button class="crud-cancel" onclick="closeCrud()">Cancel</button>
       <button id="crud-save-btn" class="crud-save" onclick="saveCrud()">Save</button>
