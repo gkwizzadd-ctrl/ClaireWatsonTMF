@@ -558,7 +558,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
   }
   window.showDashboard=showDashboard;
 
-  if(sessionStorage.getItem(SESSION_KEY)==='1'){showDashboard();return}
+  if(localStorage.getItem(SESSION_KEY)==='1'){showDashboard();return}
   document.getElementById('gate-pw').focus();
 
   async function sha256(msg){
@@ -589,7 +589,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
   inp.addEventListener('keydown',function(e){if(e.key==='Enter')btn.click()});
 
   function grant(){
-    sessionStorage.setItem('cwclaires-auth','1');
+    localStorage.setItem('cwclaires-auth','1');
     document.getElementById('gate').style.opacity='0';
     setTimeout(showDashboard,400);
   }
@@ -600,7 +600,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
   }
 
   window.logout=function(){
-    sessionStorage.removeItem('cwclaires-auth');
+    localStorage.removeItem('cwclaires-auth');
     window.location.reload();
   };
 })();
@@ -617,7 +617,7 @@ function initDashboard(){
 
 /* Re-fetch prospects when browser restores page from back-forward cache */
 window.addEventListener('pageshow',function(e){
-  if(e.persisted && sessionStorage.getItem('cwclaires-auth')==='1'){
+  if(e.persisted && localStorage.getItem('cwclaires-auth')==='1'){
     loadProspects();
   }
 });

@@ -250,7 +250,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 <script>
 // ─── AUTH GUARD ───────────────────────────────────────────────────────
-if (sessionStorage.getItem('cwclaires-auth') !== '1') {
+if (localStorage.getItem('cwclaires-auth') !== '1') {
   window.location.replace('claires-stuff.html');
 }
 
