@@ -613,28 +613,32 @@ var allProspects=[];
 var activeFilter='all';
 var currentPage=1;
 var PAGE_SIZE=12;
+var _prospectsCache=null;
+var _cacheTime=0;
+var CACHE_TTL=5*60*1000;
 
-function loadProspects(){
+function loadProspects(force){
+  if(!force&&_prospectsCache&&(Date.now()-_cacheTime<CACHE_TTL)){
+    allProspects=_prospectsCache;
+    renderProspects();
+    updateStats();
+    return;
+  }
   fetch(SHEET_URL,{redirect:'follow'})
-    .then(function(r){
-      console.log('[Prospects] HTTP status:', r.status, r.ok);
-      return r.text();
-    })
+    .then(function(r){return r.text()})
     .then(function(text){
-      console.log('[Prospects] Raw response (first 500):', text.slice(0,500));
       var data;
       try{data=JSON.parse(text)}catch(e){
-        console.warn('[Prospects] JSON parse failed:', e.message);
         allProspects=[];renderProspects();updateStats();return;
       }
       var rows=(data.prospects||data['Prospects']||[]);
-      console.log('[Prospects] Rows found:', rows.length);
       allProspects=rows.filter(function(r){return r['Company']||r['company']});
+      _prospectsCache=allProspects;
+      _cacheTime=Date.now();
       renderProspects();
       updateStats();
     })
-    .catch(function(e){
-      console.warn('[Prospects] Fetch failed:', e.message);
+    .catch(function(){
       allProspects=[];
       renderProspects();
       updateStats();
@@ -932,7 +936,7 @@ function saveProspect(){
       st.textContent='✓ Saved — reloading pipeline…';
       st.style.display='block';
       btn.textContent='✓ Saved';
-      setTimeout(function(){loadProspects()},1500);
+      setTimeout(function(){loadProspects(true)},1500);
     })
     .catch(function(e){
       btn.textContent='Save to Prospects';btn.disabled=false;
