@@ -703,11 +703,11 @@ const CRUD_CONFIG={
       return i!==null?live[i]:null;
     },
     fillForm(r){
-      document.getElementById('cf-name').value=r?r['Name']||r['Contact Name']||'':'';
-      document.getElementById('cf-jobtitle').value=r?r['Job Title']||r['Title']||'':'';
-      document.getElementById('cf-email').value=r?r['Email']||'':'';
-      document.getElementById('cf-phone').value=r?r['Phone']||'':'';
-      document.getElementById('cf-notes').value=r?r['Notes']||'':'';
+      document.getElementById('cf-name').value=r?r['Name']||r['Contact Name']||r['Full Name']||r['Person']||r['Person(s)']||'':'';
+      document.getElementById('cf-jobtitle').value=r?r['Job Title']||r['Title']||r['Position']||r['Role']||r['DMU Role']||'':'';
+      document.getElementById('cf-email').value=r?r['Email']||r['Email Address']||'':'';
+      document.getElementById('cf-phone').value=r?r['Phone']||r['Mobile']||r['Telephone']||'':'';
+      document.getElementById('cf-notes').value=r?r['Notes']||r['Note']||'':'';
     },
     buildPayload(m,existing){
       const recordId=existing&&existing['Record ID']?existing['Record ID']:genId();
