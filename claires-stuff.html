@@ -308,6 +308,77 @@
           <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.5">Live member intelligence — radar maturity charts, DMU, sessions, pipeline and catalysts. Reads directly from your Google Sheet.</div>
         </a>
 
+        <!-- Prospect Research Engine -->
+        <div class="db-card" style="border-color:rgba(80,200,120,.2);background:rgba(80,200,120,.04)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(80,200,120,.7)">Prospecting Engine</span>
+          </div>
+          <div style="font-family:var(--serif);font-size:20px;font-weight:500;color:#fff;margin-bottom:4px">Research a Prospect</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:16px">Enter an operator name. Searches the web + analyses TM Forum ODA fit in ~30 seconds.</div>
+          <div style="display:flex;gap:8px">
+            <input id="prospect-input" type="text" placeholder="e.g. Orange Egypt, MTN Group…"
+              style="flex:1;padding:10px 12px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-family:var(--sans);font-size:13px;outline:none;transition:border-color .2s"
+              onfocus="this.style.borderColor='rgba(80,200,120,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+              onkeydown="if(event.key==='Enter')runProspectResearch()">
+            <button onclick="runProspectResearch()" id="prospect-btn"
+              style="padding:10px 18px;background:rgba(80,200,120,.9);border:none;border-radius:8px;color:#0a1a0a;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s"
+              onmouseover="this.style.background='rgba(80,200,120,1)'" onmouseout="this.style.background='rgba(80,200,120,.9)'">Research →</button>
+          </div>
+
+          <!-- Loading state -->
+          <div id="prospect-loading" style="display:none;margin-top:20px;text-align:center;padding:16px 0">
+            <div style="display:inline-block;width:28px;height:28px;border:2px solid rgba(80,200,120,.2);border-top-color:rgba(80,200,120,.8);border-radius:50%;animation:spin .8s linear infinite"></div>
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(80,200,120,.6);margin-top:10px" id="prospect-loading-msg">Searching the web…</div>
+          </div>
+
+          <!-- Results card -->
+          <div id="prospect-result" style="display:none;margin-top:20px">
+            <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:16px">
+
+              <!-- Header row -->
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+                <div>
+                  <div id="pr-company" style="font-family:var(--serif);font-size:22px;font-weight:500;color:#fff"></div>
+                  <div id="pr-hq" style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35);margin-top:2px"></div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  <div id="pr-score-badge" style="font-family:var(--mono);font-size:18px;font-weight:600;color:#fff"></div>
+                  <div id="pr-verdict" style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-top:2px"></div>
+                </div>
+              </div>
+
+              <!-- Mission badge -->
+              <div id="pr-mission" style="display:inline-block;padding:4px 10px;border-radius:20px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:rgba(59,130,246,.15);color:rgba(130,180,255,.8);border:1px solid rgba(59,130,246,.25);margin-bottom:12px"></div>
+
+              <!-- Summary -->
+              <div id="pr-summary" style="font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:12px"></div>
+
+              <!-- Top signals -->
+              <div id="pr-signals" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+
+              <!-- Contacts -->
+              <div id="pr-contacts" style="margin-bottom:12px"></div>
+
+              <!-- Timing hook -->
+              <div id="pr-timing" style="display:none;padding:10px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;font-size:12px;color:rgba(245,158,11,.8);margin-bottom:12px"></div>
+
+              <!-- Action buttons -->
+              <div style="display:flex;gap:8px;margin-top:4px">
+                <button onclick="saveProspect()" id="save-btn"
+                  style="flex:1;padding:9px;background:rgba(80,200,120,.15);border:1px solid rgba(80,200,120,.3);border-radius:7px;color:rgba(80,200,120,.9);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s"
+                  onmouseover="this.style.background='rgba(80,200,120,.25)'" onmouseout="this.style.background='rgba(80,200,120,.15)'">Save to Prospects</button>
+                <button onclick="clearProspect()"
+                  style="padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.4);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .15s"
+                  onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">Clear</button>
+              </div>
+              <div id="save-status" style="font-family:var(--mono);font-size:10px;color:rgba(80,200,120,.7);margin-top:8px;display:none;text-align:center"></div>
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div id="prospect-error" style="display:none;margin-top:16px;padding:10px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;font-family:var(--mono);font-size:10px;color:rgba(239,68,68,.8)"></div>
+        </div>
+
         <!-- TM Forum quick links -->
         <div class="db-card">
           <h3>TM Forum Quick Links</h3>
@@ -475,6 +546,158 @@
 
   function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 })();
+
+// ── Prospect Research Engine ────────────────────────────────────────────────
+var RESEARCH_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-research';
+var SAVE_WH     = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-save';
+var currentResearch = null;
+
+var loadingMessages = [
+  'Searching the web…',
+  'Scanning news and industry sources…',
+  'Identifying key contacts…',
+  'Analysing ODA mission fit…',
+  'Building prospect brief…'
+];
+
+function runProspectResearch() {
+  var company = document.getElementById('prospect-input').value.trim();
+  if (!company) { document.getElementById('prospect-input').focus(); return; }
+
+  currentResearch = null;
+  document.getElementById('prospect-result').style.display = 'none';
+  document.getElementById('prospect-error').style.display = 'none';
+  document.getElementById('save-status').style.display = 'none';
+  document.getElementById('prospect-loading').style.display = 'block';
+  document.getElementById('prospect-btn').disabled = true;
+  document.getElementById('prospect-btn').textContent = 'Researching…';
+
+  // Cycle loading messages
+  var msgEl = document.getElementById('prospect-loading-msg');
+  var msgIdx = 0;
+  var msgTimer = setInterval(function() {
+    msgIdx = (msgIdx + 1) % loadingMessages.length;
+    msgEl.textContent = loadingMessages[msgIdx];
+  }, 6000);
+
+  fetch(RESEARCH_WH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ company: company })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    clearInterval(msgTimer);
+    document.getElementById('prospect-loading').style.display = 'none';
+    document.getElementById('prospect-btn').disabled = false;
+    document.getElementById('prospect-btn').textContent = 'Research →';
+
+    if (!d.success || !d.research) {
+      showProspectError(d.error || 'Research failed — please try again.');
+      return;
+    }
+    currentResearch = d.research;
+    renderProspectResult(d.research);
+  })
+  .catch(function(e) {
+    clearInterval(msgTimer);
+    document.getElementById('prospect-loading').style.display = 'none';
+    document.getElementById('prospect-btn').disabled = false;
+    document.getElementById('prospect-btn').textContent = 'Research →';
+    showProspectError('Connection error: ' + e.message);
+  });
+}
+
+function renderProspectResult(r) {
+  document.getElementById('pr-company').textContent = r.company || '—';
+  document.getElementById('pr-hq').textContent = [r.overview && r.overview.hq, r.overview && r.overview.ownership].filter(Boolean).join(' · ');
+  document.getElementById('pr-score-badge').textContent = r.score + ' / ' + r.maxScore;
+  document.getElementById('pr-summary').textContent = r.summary || '';
+  document.getElementById('pr-mission').textContent = r.primaryMission || '';
+
+  // Verdict colour
+  var vEl = document.getElementById('pr-verdict');
+  vEl.textContent = r.verdict || '';
+  vEl.style.color = r.verdict === 'Strong' ? 'rgba(80,200,120,.8)' : r.verdict === 'Moderate' ? 'rgba(245,158,11,.8)' : 'rgba(239,68,68,.7)';
+
+  // Score colour
+  var sEl = document.getElementById('pr-score-badge');
+  sEl.style.color = r.score >= 15 ? 'rgba(80,200,120,.9)' : r.score >= 8 ? 'rgba(245,158,11,.9)' : 'rgba(239,68,68,.8)';
+
+  // Signals
+  var sigEl = document.getElementById('pr-signals');
+  sigEl.innerHTML = (r.topSignals || []).map(function(s) {
+    return '<span style="padding:3px 9px;border-radius:20px;font-family:var(--mono);font-size:8.5px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.1)">' + esc(s) + '</span>';
+  }).join('');
+
+  // Contacts
+  var cEl = document.getElementById('pr-contacts');
+  if (r.keyContacts && r.keyContacts.length) {
+    cEl.innerHTML = r.keyContacts.map(function(c) {
+      var initials = (c.name || '').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)">' +
+        '<div style="width:26px;height:26px;border-radius:50%;background:rgba(0,48,135,.5);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:rgba(130,180,255,.8);flex-shrink:0">' + esc(initials) + '</div>' +
+        '<div><div style="font-size:12px;color:rgba(255,255,255,.8)">' + esc(c.name) + '</div><div style="font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,.3)">' + esc(c.title) + '</div></div>' +
+        '</div>';
+    }).join('');
+    cEl.style.display = 'block';
+  } else {
+    cEl.innerHTML = '';
+  }
+
+  // Timing hook
+  var tEl = document.getElementById('pr-timing');
+  if (r.timingHook) {
+    tEl.textContent = '⚡ ' + r.timingHook;
+    tEl.style.display = 'block';
+  } else {
+    tEl.style.display = 'none';
+  }
+
+  document.getElementById('save-btn').textContent = 'Save to Prospects';
+  document.getElementById('save-btn').disabled = false;
+  document.getElementById('prospect-result').style.display = 'block';
+}
+
+function saveProspect() {
+  if (!currentResearch) return;
+  var btn = document.getElementById('save-btn');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+
+  fetch(SAVE_WH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ research: currentResearch })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var st = document.getElementById('save-status');
+    st.textContent = '✓ Saved to Prospects sheet';
+    st.style.display = 'block';
+    btn.textContent = '✓ Saved';
+  })
+  .catch(function(e) {
+    btn.textContent = 'Save to Prospects';
+    btn.disabled = false;
+    showProspectError('Save failed: ' + e.message);
+  });
+}
+
+function clearProspect() {
+  currentResearch = null;
+  document.getElementById('prospect-result').style.display = 'none';
+  document.getElementById('prospect-error').style.display = 'none';
+  document.getElementById('save-status').style.display = 'none';
+  document.getElementById('prospect-input').value = '';
+  document.getElementById('prospect-input').focus();
+}
+
+function showProspectError(msg) {
+  var el = document.getElementById('prospect-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
 </script>
 </body>
 </html>

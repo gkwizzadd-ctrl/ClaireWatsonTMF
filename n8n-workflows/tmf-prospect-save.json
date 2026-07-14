@@ -1,0 +1,94 @@
+{
+  "name": "TMF — Save Prospect to Sheet",
+  "nodes": [
+    {
+      "id": "ps0001-0000-4000-8000-000000000001",
+      "name": "Webhook — Save",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-prospect-save",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "ps0001-0000-4000-8000-000000000002",
+      "name": "Append to Prospects Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Prospects",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp":        "={{ new Date().toLocaleString('en-GB', {timeZone:'Europe/London'}) }}",
+            "Company":          "={{ ($json.body ?? $json).research.company }}",
+            "Slug":             "={{ ($json.body ?? $json).research.slug }}",
+            "Score":            "={{ ($json.body ?? $json).research.score }}",
+            "Verdict":          "={{ ($json.body ?? $json).research.verdict }}",
+            "Primary Mission":  "={{ ($json.body ?? $json).research.primaryMission }}",
+            "HQ":               "={{ ($json.body ?? $json).research.overview?.hq }}",
+            "Summary":          "={{ ($json.body ?? $json).research.summary }}",
+            "Top Signals":      "={{ (($json.body ?? $json).research.topSignals || []).join(', ') }}",
+            "Key Contacts":     "={{ (($json.body ?? $json).research.keyContacts || []).map(c => c.name + ' — ' + c.title).join('; ') }}",
+            "Timing Hook":      "={{ ($json.body ?? $json).research.timingHook }}",
+            "Research Notes":   "={{ ($json.body ?? $json).research.researchNotes }}",
+            "Status":           "New"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "ps0001-0000-4000-8000-000000000003",
+      "name": "Respond — Saved",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Save": {
+      "main": [[{ "node": "Append to Prospects Sheet", "type": "main", "index": 0 }]]
+    },
+    "Append to Prospects Sheet": {
+      "main": [[{ "node": "Respond — Saved", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
