@@ -158,6 +158,21 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .contact-av{width:22px;height:22px;border-radius:50%;background:rgba(0,48,135,.6);border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;color:rgba(130,180,255,.9);margin-left:-4px}
 .contact-av:first-child{margin-left:0}
 
+/* Pipeline chart */
+.pipe-chart-wrap{display:flex;align-items:center;gap:20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 20px;margin-bottom:18px}
+.pipe-chart-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.chart-leg-item{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px}
+.chart-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.chart-leg-label{color:rgba(255,255,255,.55);flex:1}
+.chart-leg-val{color:rgba(255,255,255,.8);font-weight:500}
+
+/* Pagination */
+.pipe-pagination{display:flex;align-items:center;justify-content:center;gap:16px;padding:20px 0 4px;margin-top:4px}
+.pag-btn{font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:7px 18px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);cursor:pointer;transition:background .15s,border-color .15s}
+.pag-btn:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22);color:#fff}
+.pag-btn:disabled{opacity:.3;cursor:not-allowed}
+.pag-info{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.04em}
+
 /* Empty + loading */
 .pipe-empty{grid-column:1/-1;text-align:center;padding:60px 20px;border:1px dashed rgba(255,255,255,.1);border-radius:11px}
 .pipe-empty-icon{font-size:32px;margin-bottom:12px;opacity:.4}
@@ -342,6 +357,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <button class="ftab ftab-new" data-filter="new" onclick="setFilter('new')">New</button>
         </div>
 
+        <!-- Pipeline overview chart -->
+        <div class="pipe-chart-wrap" id="pipe-chart-wrap" style="display:none">
+          <canvas id="pipe-chart" width="260" height="130"></canvas>
+          <div class="pipe-chart-legend" id="pipe-chart-legend"></div>
+        </div>
+
         <!-- Loading skeletons -->
         <div class="prospect-grid" id="pipe-loading">
           <div class="skel-card"></div>
@@ -351,6 +372,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
         <!-- Prospect cards -->
         <div class="prospect-grid" id="pipe-grid" style="display:none"></div>
+
+        <!-- Pagination -->
+        <div class="pipe-pagination" id="pipe-pagination" style="display:none">
+          <button class="pag-btn" id="pag-prev" onclick="changePage(-1)">← Prev</button>
+          <span class="pag-info" id="pag-info"></span>
+          <button class="pag-btn" id="pag-next" onclick="changePage(1)">Next →</button>
+        </div>
 
         <!-- (error state removed — failures silently show empty pipeline) -->
       </div>
@@ -576,6 +604,8 @@ window.saveNotes=function(){
 var SHEET_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospects-read';
 var allProspects=[];
 var activeFilter='all';
+var currentPage=1;
+var PAGE_SIZE=12;
 
 function loadProspects(){
   fetch(SHEET_URL,{redirect:'follow'})
@@ -616,10 +646,85 @@ function updateStats(){
 
 function setFilter(f){
   activeFilter=f;
+  currentPage=1;
   document.querySelectorAll('.ftab').forEach(function(el){
     el.classList.toggle('active',el.dataset.filter===f);
   });
   renderProspects();
+}
+
+function changePage(dir){
+  var filtered=allProspects.filter(function(r){
+    if(activeFilter==='all')return true;
+    if(activeFilter==='new')return(r['Status']||'').toLowerCase()==='new';
+    return r['Verdict']===activeFilter;
+  });
+  var totalPages=Math.ceil(filtered.length/PAGE_SIZE)||1;
+  currentPage=Math.max(1,Math.min(totalPages,currentPage+dir));
+  renderProspects();
+}
+
+function drawPipeChart(){
+  var counts={Strong:0,Moderate:0,Weak:0};
+  allProspects.forEach(function(r){
+    var v=(r['Verdict']||'').trim();
+    if(counts[v]!==undefined)counts[v]++;
+  });
+  var total=allProspects.length;
+  if(!total){document.getElementById('pipe-chart-wrap').style.display='none';return;}
+  document.getElementById('pipe-chart-wrap').style.display='flex';
+
+  var canvas=document.getElementById('pipe-chart');
+  var ctx=canvas.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=220*dpr; canvas.height=110*dpr;
+  canvas.style.width='220px'; canvas.style.height='110px';
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,220,110);
+
+  var slices=[
+    {label:'Strong',value:counts.Strong,color:'#50C878'},
+    {label:'Moderate',value:counts.Moderate,color:'#F59E0B'},
+    {label:'Weak',value:counts.Weak,color:'#E53E5A'}
+  ].filter(function(s){return s.value>0});
+
+  var cx=55,cy=55,r=48,rInner=28;
+  var startAngle=-Math.PI/2;
+  slices.forEach(function(s){
+    var sweep=(s.value/total)*2*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,startAngle+sweep);
+    ctx.closePath();
+    ctx.fillStyle=s.color;
+    ctx.fill();
+    startAngle+=sweep;
+  });
+  /* donut hole */
+  ctx.beginPath();
+  ctx.arc(cx,cy,rInner,0,2*Math.PI);
+  ctx.fillStyle='#0A091E';
+  ctx.fill();
+  /* centre text */
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='bold 18px "DM Mono",monospace';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(total,cx,cy-7);
+  ctx.font='10px "DM Sans",sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.fillText('TOTAL',cx,cy+9);
+
+  /* legend */
+  var leg=document.getElementById('pipe-chart-legend');
+  leg.innerHTML=slices.map(function(s){
+    var pct=Math.round((s.value/total)*100);
+    return '<div class="chart-leg-item">'+
+      '<span class="chart-leg-dot" style="background:'+s.color+'"></span>'+
+      '<span class="chart-leg-label">'+s.label+'</span>'+
+      '<span class="chart-leg-val">'+s.value+' <span style="opacity:.5">('+pct+'%)</span></span>'+
+    '</div>';
+  }).join('');
 }
 
 function renderProspects(){
@@ -627,11 +732,16 @@ function renderProspects(){
   var grid=document.getElementById('pipe-grid');
   grid.style.display='grid';
 
+  drawPipeChart();
+
   var filtered=allProspects.filter(function(r){
     if(activeFilter==='all')return true;
     if(activeFilter==='new')return(r['Status']||'').toLowerCase()==='new';
     return r['Verdict']===activeFilter;
   });
+
+  /* sort strongest first */
+  filtered.sort(function(a,b){return(parseFloat(b['Score'])||0)-(parseFloat(a['Score'])||0)});
 
   if(!filtered.length){
     var emptyLabel=activeFilter==='all'
@@ -640,12 +750,30 @@ function renderProspects(){
     grid.innerHTML='<div class="pipe-empty">'+
       '<div class="pipe-empty-icon">◉</div>'+
       '<div class="pipe-empty-h">'+emptyLabel+'</div>'+
-      '<div class="pipe-empty-p">Use the Research Engine → to analyse an operator. Click Save to Prospects and it will appear here. The Prospects tab in your Google Sheet is created automatically on the first save.</div>'+
+      '<div class="pipe-empty-p">Use the Research Engine → to analyse an operator. Click Save to Prospects and it will appear here.</div>'+
       '</div>';
+    document.getElementById('pipe-pagination').style.display='none';
     return;
   }
 
-  grid.innerHTML=filtered.map(function(r,i){return buildCard(r,i)}).join('');
+  var totalPages=Math.ceil(filtered.length/PAGE_SIZE);
+  currentPage=Math.max(1,Math.min(totalPages,currentPage));
+  var start=(currentPage-1)*PAGE_SIZE;
+  var pageRows=filtered.slice(start,start+PAGE_SIZE);
+
+  grid.innerHTML=pageRows.map(function(r,i){return buildCard(r,i)}).join('');
+
+  /* pagination controls */
+  var pagEl=document.getElementById('pipe-pagination');
+  if(totalPages>1){
+    pagEl.style.display='flex';
+    document.getElementById('pag-prev').disabled=(currentPage<=1);
+    document.getElementById('pag-next').disabled=(currentPage>=totalPages);
+    document.getElementById('pag-info').textContent=
+      'Page '+currentPage+' of '+totalPages+' · '+filtered.length+' prospects';
+  }else{
+    pagEl.style.display='none';
+  }
 }
 
 function buildCard(r,i){
