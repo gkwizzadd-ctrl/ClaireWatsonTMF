@@ -1,0 +1,88 @@
+{
+  "name": "TMF — Read Prospects",
+  "nodes": [
+    {
+      "id": "pr-read-0001",
+      "name": "Webhook — Get Prospects",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "tmf-prospects-read",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "pr-read-0002",
+      "name": "Read Prospects Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Prospects",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "pr-read-0003",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 360],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\nreturn [{ json: { success: true, prospects: rows } }];"
+      }
+    },
+    {
+      "id": "pr-read-0004",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Get Prospects": {
+      "main": [[{ "node": "Read Prospects Sheet", "type": "main", "index": 0 }]]
+    },
+    "Read Prospects Sheet": {
+      "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]]
+    },
+    "Format Response": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

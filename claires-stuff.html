@@ -573,7 +573,7 @@ window.saveNotes=function(){
 };
 
 /* ─── PROSPECT PIPELINE ──────────────────────────────────────── */
-var SHEET_URL='https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrFn6JtkR8XDxYSUA7vVo4rJAGLxNdA4zS1dMj-lovI19dpx/exec';
+var SHEET_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospects-read';
 var allProspects=[];
 var activeFilter='all';
 
@@ -590,8 +590,7 @@ function loadProspects(){
         console.warn('[Prospects] JSON parse failed:', e.message);
         allProspects=[];renderProspects();updateStats();return;
       }
-      console.log('[Prospects] Sheet tabs returned: ' + Object.keys(data).join(', '));
-      var rows=(data['Prospects']||data['prospects']||[]);
+      var rows=(data.prospects||data['Prospects']||[]);
       console.log('[Prospects] Rows found:', rows.length);
       allProspects=rows.filter(function(r){return r['Company']||r['company']});
       renderProspects();
