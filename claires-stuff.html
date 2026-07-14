@@ -210,6 +210,24 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pcard{cursor:pointer}
 .pcard:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.35)}
 .pcard{transition:background .15s,border-color .15s,transform .15s,box-shadow .15s}
+.contact-card{cursor:pointer;border-radius:8px;padding:10px 8px;margin:0 -8px;transition:background .15s}
+.contact-card:hover{background:rgba(255,255,255,.05)}
+.contact-card:hover .contact-email-cta{opacity:1}
+.contact-email-cta{font-family:var(--mono);font-size:9px;color:rgba(217,18,65,.7);letter-spacing:.06em;opacity:0;transition:opacity .15s;white-space:nowrap;margin-left:auto;padding-left:8px}
+
+/* ─── EMAIL DRAFT MODAL ──────────────────────────────────────── */
+.emodal-panel{max-width:620px}
+.emodal-remit-box{padding:16px 20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.7}
+.efield-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.28);text-transform:uppercase;margin-bottom:6px}
+.efield-row{display:flex;gap:8px;align-items:center}
+.efield-input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:9px 12px;color:rgba(255,255,255,.72);font-family:var(--mono);font-size:11.5px;outline:none;width:100%;resize:none}
+.efield-ta{line-height:1.7;font-size:11.5px}
+.ecopy-btn{flex-shrink:0;padding:7px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);font-family:var(--mono);font-size:10px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.ecopy-btn:hover{background:rgba(255,255,255,.11);color:#fff}
+.ecopy-btn.copied{background:rgba(80,200,120,.12);border-color:rgba(80,200,120,.28);color:rgba(80,200,120,.9)}
+.ecopy-all-btn{width:100%;margin-top:16px;padding:13px;border-radius:9px;border:1px solid rgba(80,200,120,.28);background:rgba(80,200,120,.07);color:rgba(80,200,120,.85);font-family:var(--mono);font-size:11px;letter-spacing:.07em;cursor:pointer;transition:background .15s}
+.ecopy-all-btn:hover{background:rgba(80,200,120,.13)}
+.ecopy-all-btn.copied{background:rgba(80,200,120,.18);color:rgba(80,200,120,1)}
 
 /* ─── SIDEBAR ─────────────────────────────────────────────── */
 .sidebar{display:flex;flex-direction:column;gap:14px}
@@ -993,9 +1011,13 @@ function showProspectError(msg){
 }
 
 /* ─── PROSPECT DETAIL MODAL ─────────────────────────────────── */
+var _modalProspect=null;
+var _modalContacts=[];
+
 function openProspectModal(idx){
   var r=_clickableProspects[idx];
   if(!r)return;
+  _modalProspect=r;
 
   var verdict=(r['Verdict']||'').trim();
   var score=parseFloat(r['Score'])||0;
@@ -1026,17 +1048,20 @@ function openProspectModal(idx){
       }).join('')
     :'<div style="font-size:12px;color:rgba(255,255,255,.28)">No signals recorded yet.</div>';
 
-  document.getElementById('pmodal-contacts').innerHTML=contacts.length
-    ?contacts.map(function(c){
-        var parts=c.split('—');
-        var name=(parts[0]||'').trim();
-        var title=(parts[1]||'').trim();
-        var init=name.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
-        return '<div class="contact-card">'+
+  _modalContacts=contacts.map(function(c){
+    var parts=c.split('—');
+    return{name:(parts[0]||'').trim(),title:(parts[1]||'').trim()};
+  });
+  document.getElementById('pmodal-contacts').innerHTML=_modalContacts.length
+    ?_modalContacts.map(function(c,ci){
+        var init=c.name.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();
+        return '<div class="contact-card" onclick="openEmailModal('+ci+')">'+
           '<div class="contact-av-lg">'+esc(init)+'</div>'+
-          '<div><div class="contact-name">'+esc(name)+'</div>'+
-          (title?'<div class="contact-title">'+esc(title)+'</div>':'')+
-          '</div></div>';
+          '<div style="flex:1"><div class="contact-name">'+esc(c.name)+'</div>'+
+          (c.title?'<div class="contact-title">'+esc(c.title)+'</div>':'')+
+          '</div>'+
+          '<span class="contact-email-cta">Draft email →</span>'+
+          '</div>';
       }).join('')
     :'<div style="font-size:12px;color:rgba(255,255,255,.28)">No contacts recorded yet.</div>';
 
@@ -1057,7 +1082,153 @@ function closeProspectModal(){
   document.body.style.overflow='';
 }
 
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProspectModal()});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(document.getElementById('email-modal').classList.contains('open')){closeEmailModal();}
+    else{closeProspectModal();}
+  }
+});
+
+/* ─── EMAIL DRAFT MODAL ─────────────────────────────────────── */
+function inferRemit(title){
+  var t=(title||'').toLowerCase();
+  if(/chief executive|ceo|president|managing director/.test(t))
+    return 'As CEO/President, they set the strategic direction of the organisation. They respond to high-level partnership opportunities, competitive differentiation, and industry positioning that creates measurable business value and market leadership.';
+  if(/chief technology|cto/.test(t))
+    return 'As CTO, they own the technology roadmap and architecture decisions. They prioritise interoperability, open standards adoption, API-driven modernisation, and reducing integration complexity across the stack.';
+  if(/chief information|cio/.test(t))
+    return 'As CIO, they govern IT strategy and enterprise systems. They focus on integration standards, platform consolidation, and solutions that accelerate digital service delivery while reducing operational complexity.';
+  if(/chief operating|coo/.test(t))
+    return 'As COO, they focus on operational efficiency and organisational scalability. They are drawn to frameworks that reduce process complexity, improve time-to-market, and deliver measurable operational gains.';
+  if(/chief digital|chief data|cdto|cdao|digital officer/.test(t))
+    return 'In their digital transformation leadership role, they champion modernisation programmes and data-driven operations. Open APIs, cloud-native architecture, and ecosystem interoperability are central to their mandate.';
+  if(/oss|bss|operations support|business support/.test(t))
+    return 'In their OSS/BSS role, they manage the operational and business support systems stack. ODA\'s open APIs and component-based architecture directly address their system modernisation challenges and vendor integration complexity.';
+  if(/network|infrastructure/.test(t))
+    return 'In their networks leadership role, they oversee infrastructure evolution, service delivery platforms, and capacity planning. Network API standardisation and automation are central to their strategic roadmap.';
+  if(/digital|transformation/.test(t))
+    return 'Leading digital transformation initiatives, they are tasked with modernising legacy platforms and delivering cloud-native capabilities at scale. Industry frameworks like ODA provide the architecture blueprint they need.';
+  if(/partner|alliance|ecosystem|business development/.test(t))
+    return 'In their partnerships role, they actively develop ecosystem opportunities that extend the company\'s commercial reach. TM Forum\'s global member network and ODA Catalyst programme are directly relevant to their objectives.';
+  if(/product|portfolio/.test(t))
+    return 'As a product leader, they define the services roadmap and competitive positioning. Open API standards and ODA alignment shape both their product architecture and go-to-market strategy.';
+  if(/strategy|innovation/.test(t))
+    return 'In their strategy role, they scan the industry for emerging standards and competitive moves. ODA adoption trends and TM Forum member benchmarking data are directly useful to their work.';
+  if(/sales|commercial|revenue/.test(t))
+    return 'In their commercial role, they focus on revenue growth and strategic account development. They respond to business cases that demonstrate clear ROI, market differentiation, and ecosystem network effects.';
+  if(/architect/.test(t))
+    return 'As a solutions or enterprise architect, they define the technical blueprint for the organisation\'s systems. Open API standards and ODA component architecture are directly relevant to their design decisions.';
+  return 'In their senior leadership role, they influence key decisions around technology adoption, standards adoption, and strategic partnerships within the organisation.';
+}
+
+function guessEmailDomain(company){
+  var known={
+    'orange':'orange.com','vodafone':'vodafone.com','att':'att.com',
+    'verizon':'verizon.com','deutsche telekom':'telekom.com','telekom':'telekom.com',
+    'bt group':'bt.com','bt ':'bt.com','telefonica':'telefonica.com',
+    'softbank':'softbank.jp','ntt':'ntt.com','mtn':'mtn.com','airtel':'airtel.com',
+    'etisalat':'etisalat.com','stc':'stc.com.sa','singtel':'singtel.com',
+    'telstra':'telstra.com','telus':'telus.com','t-mobile':'t-mobile.com',
+    'telia':'telia.com','telenor':'telenor.com','swisscom':'swisscom.com',
+    'proximus':'proximus.com','turkcell':'turkcell.com.tr',
+    'ericsson':'ericsson.com','nokia':'nokia.com','huawei':'huawei.com',
+    'amdocs':'amdocs.com','netcracker':'netcracker.com',
+    'comverse':'comverse.com','cisco':'cisco.com','aws':'amazon.com'
+  };
+  var lower=(company||'').toLowerCase();
+  for(var key in known){if(lower.indexOf(key)!==-1)return known[key];}
+  return lower.replace(/[^a-z0-9]/g,'').slice(0,20)+'.com';
+}
+
+function buildEmailDraft(r,contact){
+  var firstName=contact.name.split(' ')[0];
+  var company=r['Company']||'your organisation';
+  var signals=(r['Top Signals']||'').split(',').map(function(s){return s.trim()}).filter(Boolean);
+  var timing=r['Timing Hook']||'';
+  var t=(contact.title||'').toLowerCase();
+
+  /* pick the most role-relevant signal */
+  var relevantSignal=signals[0]||'digital transformation';
+  for(var i=0;i<signals.length;i++){
+    var sl=signals[i].toLowerCase();
+    if((/cto|architect|oss|bss|network/.test(t)&&/api|cloud|oda|network|integrat/.test(sl))||
+       (/ceo|president|strategy/.test(t)&&/transform|partner|growth|ecosystem/.test(sl))||
+       (/partner|business dev|alliance/.test(t)&&/partner|ecosystem|market|revenue/.test(sl))){
+      relevantSignal=signals[i];break;
+    }
+  }
+
+  var openingLine;
+  if(/chief executive|ceo|president|managing director/.test(t)){
+    openingLine=company+'\'s strategic trajectory — particularly '+relevantSignal+' — aligns closely with what TM Forum members are achieving through ODA adoption, and I wanted to reach out directly.';
+  }else if(/chief technology|cto|architect/.test(t)){
+    openingLine=company+'\'s technical direction — specifically around '+relevantSignal+' — maps directly to what TM Forum\'s ODA framework is designed to accelerate, so I\'d love to make the connection.';
+  }else if(/partner|alliance|business dev/.test(t)){
+    openingLine='There may be a strong commercial and ecosystem fit between '+company+' and TM Forum\'s ODA member community, particularly given '+relevantSignal+'.';
+  }else{
+    openingLine=company+'\'s focus on '+relevantSignal+' aligns closely with the outcomes TM Forum\'s ODA programme is delivering for leading operators globally.';
+  }
+
+  var timingPara=timing?'\nGiven '+timing+', I believe the timing is particularly relevant.\n':'';
+
+  return 'Hi '+firstName+',\n\n'+
+    'I hope this finds you well. My name is Claire Watson and I work within TM Forum\'s ODA (Open Digital Architecture) programme.\n\n'+
+    openingLine+'\n\n'+
+    'TM Forum\'s ODA is now adopted by 50+ operators and vendors worldwide — providing a shared blueprint for cloud-native transformation, open API standardisation, and ecosystem interoperability. Membership gives '+company+' direct access to the working groups, Catalyst projects, and peer benchmarking driving industry-wide change.'+
+    timingPara+'\n'+
+    'I\'d love to share a brief overview of what\'s most relevant to '+company+'\'s priorities and explore whether there\'s a fit worth pursuing.\n\n'+
+    'Would you be open to a 30-minute conversation in the coming weeks?\n\n'+
+    'Best regards,\nClaire Watson\nTM Forum ODA Programme\n[your email]';
+}
+
+function openEmailModal(ci){
+  var r=_modalProspect;
+  var c=_modalContacts[ci];
+  if(!r||!c)return;
+
+  document.getElementById('emodal-name').textContent=c.name;
+  var metaHtml='<span style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35)">'+esc(c.title)+'</span>';
+  if(r['Company'])metaHtml+='&nbsp;<span style="color:rgba(255,255,255,.2)">·</span>&nbsp;<span style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.25)">'+esc(r['Company'])+'</span>';
+  document.getElementById('emodal-meta').innerHTML=metaHtml;
+  document.getElementById('emodal-remit').textContent=inferRemit(c.title);
+
+  var firstName=c.name.split(' ')[0];
+  var lastName=c.name.split(' ').slice(1).join('');
+  var domain=guessEmailDomain(r['Company']||'');
+  document.getElementById('emodal-addr').value=firstName.toLowerCase()+'.'+lastName.toLowerCase().replace(/[^a-z]/g,'')+
+    '@'+domain+' (estimated — please verify)';
+  document.getElementById('emodal-subject').value='TM Forum ODA — Partnership Opportunity for '+(r['Company']||'your organisation');
+  document.getElementById('emodal-body').value=buildEmailDraft(r,c);
+
+  document.getElementById('email-modal').classList.add('open');
+}
+
+function closeEmailModal(){
+  document.getElementById('email-modal').classList.remove('open');
+}
+
+function copyField(id,btn){
+  var val=document.getElementById(id).value;
+  /* strip the "(estimated…)" note from email address before copying */
+  if(id==='emodal-addr')val=val.split(' (estimated')[0];
+  navigator.clipboard.writeText(val).then(function(){
+    var orig=btn.textContent;
+    btn.textContent='✓ Copied';btn.classList.add('copied');
+    setTimeout(function(){btn.textContent=orig;btn.classList.remove('copied')},2000);
+  });
+}
+
+function copyAllEmail(){
+  var addr=document.getElementById('emodal-addr').value.split(' (estimated')[0];
+  var subject=document.getElementById('emodal-subject').value;
+  var body=document.getElementById('emodal-body').value;
+  var full='To: '+addr+'\nSubject: '+subject+'\n\n'+body;
+  navigator.clipboard.writeText(full).then(function(){
+    var btn=document.getElementById('ecopy-all-btn');
+    btn.textContent='✓ Copied to Clipboard';btn.classList.add('copied');
+    setTimeout(function(){btn.textContent='Copy Full Email to Clipboard';btn.classList.remove('copied')},2500);
+  });
+}
 </script>
 
 <!-- Prospect Detail Modal -->
@@ -1079,6 +1250,40 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProspec
       </div>
     </div>
     <div id="pmodal-foot" class="pmodal-foot" style="display:none"></div>
+  </div>
+</div>
+<!-- Email Draft Modal -->
+<div id="email-modal" class="pmodal-overlay" style="z-index:950" onclick="if(event.target===this)closeEmailModal()">
+  <div class="pmodal-panel emodal-panel">
+    <div class="pmodal-head">
+      <button class="pmodal-close" onclick="closeEmailModal()">✕</button>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.13em;color:rgba(255,255,255,.28);text-transform:uppercase;margin-bottom:8px">Contact Briefing &amp; Draft Outreach</div>
+      <div id="emodal-name" class="pmodal-co" style="font-size:24px"></div>
+      <div id="emodal-meta" class="pmodal-meta"></div>
+    </div>
+    <div style="padding:20px 28px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div class="pmodal-sec-title" style="margin-bottom:10px">Their Remit</div>
+      <div id="emodal-remit" class="emodal-remit-box"></div>
+    </div>
+    <div style="padding:22px 28px 28px">
+      <div class="pmodal-sec-title" style="margin-bottom:18px">Draft Email</div>
+      <div class="efield-label">Suggested email address <span style="opacity:.45;font-size:8.5px">(verify before sending)</span></div>
+      <div class="efield-row" style="margin-bottom:14px">
+        <input id="emodal-addr" class="efield-input" readonly>
+        <button class="ecopy-btn" onclick="copyField('emodal-addr',this)">Copy</button>
+      </div>
+      <div class="efield-label">Subject line</div>
+      <div class="efield-row" style="margin-bottom:14px">
+        <input id="emodal-subject" class="efield-input" readonly>
+        <button class="ecopy-btn" onclick="copyField('emodal-subject',this)">Copy</button>
+      </div>
+      <div class="efield-label">Email body</div>
+      <div class="efield-row" style="align-items:flex-start">
+        <textarea id="emodal-body" class="efield-input efield-ta" readonly rows="13"></textarea>
+        <button class="ecopy-btn" onclick="copyField('emodal-body',this)" style="align-self:flex-start">Copy</button>
+      </div>
+      <button id="ecopy-all-btn" class="ecopy-all-btn" onclick="copyAllEmail()">Copy Full Email to Clipboard</button>
+    </div>
   </div>
 </div>
 </body>
