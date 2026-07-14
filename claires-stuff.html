@@ -548,6 +548,7 @@
 })();
 
 // ── Prospect Research Engine ────────────────────────────────────────────────
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 var RESEARCH_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-research';
 var SAVE_WH     = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-save';
 var currentResearch = null;
