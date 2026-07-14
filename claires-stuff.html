@@ -674,25 +674,36 @@ function loadProspects(force){
     updateStats();
     return;
   }
-  fetch(SHEET_URL,{redirect:'follow'})
+  // Cache-bust so the browser never serves a stale n8n response
+  fetch(SHEET_URL+'?_='+Date.now(),{redirect:'follow',cache:'no-store'})
     .then(function(r){return r.text()})
     .then(function(text){
       var data;
       try{data=JSON.parse(text)}catch(e){
-        allProspects=[];renderProspects();updateStats();return;
+        showProspectError();return;
       }
       var rows=(data.prospects||data['Prospects']||[]);
       allProspects=rows.filter(function(r){return r['Company']||r['company']});
+      if(!allProspects.length&&!Object.keys(data).length){showProspectError();return;}
       _prospectsCache=allProspects;
       _cacheTime=Date.now();
       renderProspects();
       updateStats();
     })
-    .catch(function(){
-      allProspects=[];
-      renderProspects();
-      updateStats();
+    .catch(function(err){
+      showProspectError();
     });
+}
+
+function showProspectError(){
+  document.getElementById('pipe-loading').style.display='none';
+  var grid=document.getElementById('pipe-grid');
+  if(!grid)return;
+  grid.style.display='grid';
+  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 0;opacity:.7">'+
+    '<div style="font-size:15px;margin-bottom:12px">Could not load prospects — please check your connection</div>'+
+    '<button onclick="loadProspects(true)" style="background:var(--acc);color:#fff;border:none;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:13px">Retry</button>'+
+    '</div>';
 }
 
 function updateStats(){
