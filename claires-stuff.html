@@ -352,8 +352,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <!-- Prospect cards -->
         <div class="prospect-grid" id="pipe-grid" style="display:none"></div>
 
-        <!-- Error -->
-        <div id="pipe-error" style="display:none;padding:16px 20px;border:1px solid rgba(239,68,68,.2);border-radius:10px;font-family:var(--mono);font-size:9.5px;color:rgba(239,68,68,.65);line-height:1.6"></div>
+        <!-- (error state removed — failures silently show empty pipeline) -->
       </div>
 
       <!-- RIGHT: Sidebar -->
@@ -580,18 +579,17 @@ var activeFilter='all';
 
 function loadProspects(){
   fetch(SHEET_URL,{redirect:'follow'})
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+    .then(function(r){return r.json()})
     .then(function(data){
-      var rows=data['Prospects']||[];
-      allProspects=rows.filter(function(r){return r['Company']});
+      var rows=(data['Prospects']||data['prospects']||[]);
+      allProspects=rows.filter(function(r){return r['Company']||r['company']});
       renderProspects();
       updateStats();
     })
-    .catch(function(e){
-      document.getElementById('pipe-loading').style.display='none';
-      var errEl=document.getElementById('pipe-error');
-      errEl.innerHTML='⚠ Could not load prospects from Google Sheets.<br>'+esc(e.message)+'<br><br>Make sure the Apps Script is deployed and the Prospects tab exists in your sheet.';
-      errEl.style.display='block';
+    .catch(function(){
+      // Can't reach Sheets — show empty pipeline (not an error)
+      allProspects=[];
+      renderProspects();
       updateStats();
     });
 }
@@ -632,7 +630,7 @@ function renderProspects(){
     grid.innerHTML='<div class="pipe-empty">'+
       '<div class="pipe-empty-icon">◉</div>'+
       '<div class="pipe-empty-h">'+emptyLabel+'</div>'+
-      '<div class="pipe-empty-p">Use the Research Engine on the right to analyse an operator and save them to the pipeline.</div>'+
+      '<div class="pipe-empty-p">Use the Research Engine → to analyse an operator. Click Save to Prospects and it will appear here. The Prospects tab in your Google Sheet is created automatically on the first save.</div>'+
       '</div>';
     return;
   }
