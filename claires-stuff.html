@@ -579,15 +579,26 @@ var activeFilter='all';
 
 function loadProspects(){
   fetch(SHEET_URL,{redirect:'follow'})
-    .then(function(r){return r.json()})
-    .then(function(data){
+    .then(function(r){
+      console.log('[Prospects] HTTP status:', r.status, r.ok);
+      return r.text();
+    })
+    .then(function(text){
+      console.log('[Prospects] Raw response (first 500):', text.slice(0,500));
+      var data;
+      try{data=JSON.parse(text)}catch(e){
+        console.warn('[Prospects] JSON parse failed:', e.message);
+        allProspects=[];renderProspects();updateStats();return;
+      }
+      console.log('[Prospects] Sheet tabs returned:', Object.keys(data));
       var rows=(data['Prospects']||data['prospects']||[]);
+      console.log('[Prospects] Rows found:', rows.length);
       allProspects=rows.filter(function(r){return r['Company']||r['company']});
       renderProspects();
       updateStats();
     })
-    .catch(function(){
-      // Can't reach Sheets — show empty pipeline (not an error)
+    .catch(function(e){
+      console.warn('[Prospects] Fetch failed:', e.message);
       allProspects=[];
       renderProspects();
       updateStats();
