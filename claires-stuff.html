@@ -481,7 +481,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         </div>
 
         <!-- Member Intelligence -->
-        <a href="member-dashboard.html" class="member-card">
+        <a href="member-dashboard.html" target="_blank" rel="noopener" class="member-card">
           <div class="member-card-eyebrow">
             <span>Member Intelligence</span>
             <span>→</span>
@@ -938,23 +938,36 @@ function runProspectResearch(){
     msgEl.textContent=loadingMessages[msgIdx];
   },6000);
 
-  fetch(RESEARCH_WH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({company:company})})
-    .then(function(r){return r.json()})
-    .then(function(d){
+  var resCtrl=new AbortController();
+  var resTimer=setTimeout(function(){resCtrl.abort()},90000); // 90s — Claude can be slow
+  fetch(RESEARCH_WH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({company:company}),signal:resCtrl.signal})
+    .then(function(r){clearTimeout(resTimer);return r.text()})
+    .then(function(text){
       clearInterval(msgTimer);
       document.getElementById('prospect-loading').style.display='none';
       document.getElementById('prospect-btn').disabled=false;
       document.getElementById('prospect-btn').textContent='Research →';
+      if(!text||!text.trim()){
+        showProspectError('No response from the research server — it may have timed out. Please try again in a moment.');
+        return;
+      }
+      var d;
+      try{d=JSON.parse(text)}catch(e){
+        showProspectError('Unexpected response from server. Please try again.');
+        return;
+      }
       if(!d.success||!d.research){showProspectError(d.error||'Research failed — please try again.');return}
       currentResearch=d.research;
       renderProspectResult(d.research);
     })
     .catch(function(e){
+      clearTimeout(resTimer);
       clearInterval(msgTimer);
       document.getElementById('prospect-loading').style.display='none';
       document.getElementById('prospect-btn').disabled=false;
       document.getElementById('prospect-btn').textContent='Research →';
-      showProspectError('Connection error: '+e.message);
+      var msg=e.name==='AbortError'?'Research timed out — please try again.':'Connection error: '+e.message;
+      showProspectError(msg);
     });
 }
 
