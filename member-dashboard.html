@@ -577,6 +577,20 @@ const SESSION_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-session-
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+// Convert whatever date format Google Sheets returns into YYYY-MM-DD for <input type="date">
+function toISODate(s){
+  if(!s)return '';
+  s=String(s).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10); // already ISO
+  var m=/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/.exec(s);
+  if(m){
+    // Assume DD/MM/YYYY (UK/EU); if day part >12 it must be the day anyway
+    var d=m[1].padStart(2,'0'),mo=m[2].padStart(2,'0'),yr=m[3];
+    return yr+'-'+mo+'-'+d;
+  }
+  var dt=new Date(s);
+  return isNaN(dt)?'':dt.toISOString().slice(0,10);
+}
 
 function showToast(msg,type){
   const t=document.getElementById('crud-toast');
@@ -826,7 +840,7 @@ const CRUD_CONFIG={
       return i!==null?live[i]:null;
     },
     fillForm(r){
-      document.getElementById('ss-date').value=r?r['Date']||'':new Date().toISOString().slice(0,10);
+      document.getElementById('ss-date').value=r?toISODate(r['Date'])||'':new Date().toISOString().slice(0,10);
       const catEl=document.getElementById('ss-category');
       if(catEl)catEl.value=r?r['Category']||'Strategy':'Strategy';
       document.getElementById('ss-title').value=r?r['Topic / Title']||r['Title']||'':'';
