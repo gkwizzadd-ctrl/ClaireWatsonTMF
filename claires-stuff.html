@@ -686,17 +686,24 @@ function loadProspects(force){
   }catch(e){}
 
   var ctrl=new AbortController();
-  var timer=setTimeout(function(){ctrl.abort()},12000);
+  // Give more time when stale data is already visible; only abort fast on a blank load
+  var timeoutMs=allProspects.length?30000:12000;
+  var timer=setTimeout(function(){ctrl.abort()},timeoutMs);
   fetch(SHEET_URL+'?_='+Date.now(),{redirect:'follow',cache:'no-store',signal:ctrl.signal})
     .then(function(r){clearTimeout(timer);return r.text()})
     .then(function(text){
       var data;
       try{data=JSON.parse(text)}catch(e){
-        showProspectError();return;
+        if(!allProspects.length)showProspectError();
+        return;
       }
       var rows=(data.prospects||data['Prospects']||[]);
-      allProspects=rows.filter(function(r){return r['Company']||r['company']});
-      if(!allProspects.length&&!Object.keys(data).length){showProspectError();return;}
+      var fresh=rows.filter(function(r){return r['Company']||r['company']});
+      if(!fresh.length&&!Object.keys(data).length){
+        if(!allProspects.length)showProspectError();
+        return;
+      }
+      allProspects=fresh;
       _prospectsCache=allProspects;
       _cacheTime=Date.now();
       try{sessionStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
@@ -705,7 +712,8 @@ function loadProspects(force){
     })
     .catch(function(){
       clearTimeout(timer);
-      showProspectError();
+      // Only show error state when nothing is already displayed
+      if(!allProspects.length)showProspectError();
     });
 }
 
