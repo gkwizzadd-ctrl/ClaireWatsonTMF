@@ -546,6 +546,19 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ─── SHARED HELPER ─────────────────────────────────────────── */
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
+/* ─── PROSPECT PIPELINE GLOBALS (must be before IIFE so pre-render works on return visits) ── */
+var SHEET_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospects-read';
+var RESEARCH_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-research';
+var PROSPECT_SS_KEY='cwclaires-prospects';
+var allProspects=[];
+var activeFilter='all';
+var currentPage=1;
+var PAGE_SIZE=12;
+var _prospectsCache=null;
+var _cacheTime=0;
+var CACHE_TTL=5*60*1000;
+var _clickableProspects=[];
+
 /* ─── PASSWORD GATE ─────────────────────────────────────────── */
 (function(){
   var PW_CHECK='https://n8n.srv1739004.hstgr.cloud/webhook/claires-stuff-pw-check';
@@ -624,9 +637,31 @@ function initDashboard(){
   loadProspects();
 }
 
-/* Re-fetch prospects when browser restores page from back-forward cache */
+/* On bfcache restore: if data is already showing, just silently queue a background
+   refresh — don't re-run the full loadProspects which can block on a cold n8n */
 window.addEventListener('pageshow',function(e){
-  if(e.persisted && localStorage.getItem('cwclaires-auth')==='1'){
+  if(!e.persisted)return;
+  if(localStorage.getItem('cwclaires-auth')!=='1')return;
+  if(allProspects.length){
+    // Data is already visible — refresh silently in the background after a short delay
+    setTimeout(function(){
+      fetch(SHEET_URL+'?_='+Date.now(),{redirect:'follow',cache:'no-store'})
+        .then(function(r){return r.text()})
+        .then(function(text){
+          try{
+            var data=JSON.parse(text);
+            var rows=(data.prospects||data['Prospects']||[]);
+            var fresh=rows.filter(function(r){return r['Company']||r['company']});
+            if(fresh.length){
+              allProspects=fresh;_prospectsCache=fresh;_cacheTime=Date.now();
+              try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(fresh))}catch(e){}
+              renderProspects();updateStats();
+            }
+          }catch(e){}
+        }).catch(function(){});
+    },500);
+  }else{
+    // Nothing showing yet — do a full load
     loadProspects();
   }
 });
@@ -666,18 +701,6 @@ window.saveNotes=function(){
 };
 
 /* ─── PROSPECT PIPELINE ──────────────────────────────────────── */
-var SHEET_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospects-read';
-var allProspects=[];
-var activeFilter='all';
-var currentPage=1;
-var PAGE_SIZE=12;
-var _prospectsCache=null;
-var _cacheTime=0;
-var CACHE_TTL=5*60*1000;
-var _clickableProspects=[];
-
-var PROSPECT_SS_KEY='cwclaires-prospects';
-
 function loadProspects(force){
   if(!force&&_prospectsCache&&(Date.now()-_cacheTime<CACHE_TTL)){
     allProspects=_prospectsCache;
@@ -919,7 +942,6 @@ function buildCard(r,i){
 }
 
 /* ─── PROSPECT RESEARCH ENGINE ──────────────────────────────── */
-var RESEARCH_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-research';
 var SAVE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-save';
 var currentResearch=null;
 
