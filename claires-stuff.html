@@ -347,6 +347,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .contact-row:hover .tmfc-actions{opacity:1}
 .tmfc-add-btn{font-family:var(--mono);font-size:9px;letter-spacing:.06em;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.45);padding:3px 10px;cursor:pointer;transition:background .15s,color .15s}
 .tmfc-add-btn:hover{background:rgba(255,255,255,.09);color:rgba(255,255,255,.8)}
+.more-row{text-align:center;padding:8px 0 2px}
+.more-btn{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:none;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.35);padding:4px 14px;cursor:pointer;transition:border-color .15s,color .15s}
+.more-btn:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.7)}
 .tmfc-modal{position:fixed;inset:0;background:rgba(5,3,20,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 .tmfc-modal.open{opacity:1;pointer-events:all}
 .tmfc-panel{background:rgba(13,11,77,.98);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px;width:100%;max-width:400px}
@@ -707,6 +710,8 @@ function initDashboard(){
 /* ─── TMF CONTACTS ──────────────────────────────────────────── */
 var TMF_CONTACTS_KEY='cwclaires-tmf-contacts';
 var _tmfEditIdx=null;
+var _tmfExpanded=false;
+var TMF_PAGE=8;
 var _tmfDefault=[
   {id:'tmfc_1',name:'George Glass',role:'Chief Technology Officer · TM Forum'},
   {id:'tmfc_2',name:"Mike O'Sullivan",role:'ODA Specialist · TM Forum'},
@@ -716,7 +721,13 @@ var _tmfDefault=[
 ];
 
 function getTmfContacts(){
-  try{var r=localStorage.getItem(TMF_CONTACTS_KEY);return r?JSON.parse(r):_tmfDefault;}catch(e){return _tmfDefault;}
+  try{
+    var r=localStorage.getItem(TMF_CONTACTS_KEY);
+    if(r)return JSON.parse(r);
+  }catch(e){}
+  // First visit — seed localStorage with defaults so edits persist
+  saveTmfContacts(_tmfDefault);
+  return _tmfDefault;
 }
 function saveTmfContacts(c){localStorage.setItem(TMF_CONTACTS_KEY,JSON.stringify(c));}
 function tmfInitials(n){return n.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();}
@@ -729,7 +740,8 @@ function renderTmfContacts(){
     el.innerHTML='<div style="padding:8px 0;opacity:.4;font-size:12px">No contacts yet — click + Add</div>';
     return;
   }
-  el.innerHTML=contacts.map(function(c,i){
+  var show=_tmfExpanded?contacts:contacts.slice(0,TMF_PAGE);
+  el.innerHTML=show.map(function(c,i){
     return '<div class="contact-row">'+
       '<div class="contact-av-large">'+esc(tmfInitials(c.name))+'</div>'+
       '<div style="flex:1;min-width:0">'+
@@ -742,6 +754,13 @@ function renderTmfContacts(){
       '</div>'+
     '</div>';
   }).join('');
+  if(contacts.length>TMF_PAGE){
+    var more=contacts.length-TMF_PAGE;
+    el.innerHTML+='<div class="more-row">'+(_tmfExpanded
+      ?'<button class="more-btn" onclick="_tmfExpanded=false;renderTmfContacts()">Show less</button>'
+      :'<button class="more-btn" onclick="_tmfExpanded=true;renderTmfContacts()">+ '+more+' more</button>'
+    )+'</div>';
+  }
 }
 
 function openTmfEdit(idx){
