@@ -669,8 +669,6 @@ async function init(){
   }catch(err){showError(err);}
 }
 
-init();
-
 // ─── CRUD HELPERS ─────────────────────────────────────────────────────
 const CONTACT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contact-write';
 const SESSION_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-session-write';
@@ -1567,6 +1565,11 @@ async function submitNewMember(){
     submitBtn.textContent='Add to Dashboard';
   }
 }
+
+// init() must run after every top-level const/let above is declared —
+// its cached-data path calls renderMember() synchronously (no await),
+// so anything it touches has to already be initialized.
+init();
 </script>
 <!-- Toast notification -->
 <div id="crud-toast" class="crud-toast"></div>
