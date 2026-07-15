@@ -554,6 +554,15 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
   function showDashboard(){
     document.getElementById('gate').style.display='none';
     document.getElementById('dashboard').style.display='block';
+    // Render cached prospects synchronously before any network calls
+    try{
+      var cached=localStorage.getItem('cwclaires-prospects');
+      if(cached){
+        allProspects=JSON.parse(cached);
+        renderProspects();
+        updateStats();
+      }
+    }catch(e){}
     initDashboard();
   }
   window.showDashboard=showDashboard;
@@ -676,15 +685,6 @@ function loadProspects(force){
     updateStats();
     return;
   }
-  // Show stale sessionStorage data instantly while the fresh fetch runs
-  try{
-    var ss=localStorage.getItem(PROSPECT_SS_KEY);
-    if(ss&&!force){
-      var cached=JSON.parse(ss);
-      allProspects=cached;renderProspects();updateStats();
-    }
-  }catch(e){}
-
   var ctrl=new AbortController();
   // Give more time when stale data is already visible; only abort fast on a blank load
   var timeoutMs=allProspects.length?30000:12000;
