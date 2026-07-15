@@ -32,7 +32,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .tb-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--g500)}
 
 /* Member Picker */
-.picker-wrap{display:flex;align-items:center;gap:8px}
+.picker-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.msearch{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;color:rgba(255,255,255,.75);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.04em;padding:5px 12px 5px 26px;outline:none;width:100px;transition:width .2s,border-color .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:9px center}
+.msearch:focus{border-color:rgba(130,180,255,.35);width:160px}
+.msearch::placeholder{color:rgba(255,255,255,.22)}
 .picker-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);white-space:nowrap}
 .picker{position:relative;display:flex;align-items:center}
 .picker select{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 36px 7px 14px;cursor:pointer;outline:none;min-width:220px;transition:border-color .2s}
@@ -235,6 +238,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="tb-right">
       <div class="picker-wrap">
         <span class="picker-label">Member</span>
+        <input id="msearch" class="msearch" type="text" placeholder="Search…" oninput="filterMembers(this.value)" autocomplete="off">
         <div class="picker"><select id="picker" onchange="selectMember(this.value)" disabled></select></div>
       </div>
       <div class="tb-date" id="tbdate"></div>
@@ -474,10 +478,22 @@ function selectMember(id){
   setTimeout(()=>{renderMember(MEMBERS[id]);document.querySelectorAll('.fade').forEach(f=>f.classList.remove('out'));},180);
 }
 
+var _allMemberOpts=[];
+
 function buildPicker(){
   const sel=document.getElementById('picker');
-  sel.innerHTML=Object.values(MEMBERS).map(m=>`<option value="${m.id}">${m.id} — ${m.name}</option>`).join('');
+  _allMemberOpts=Object.values(MEMBERS).map(m=>({id:m.id,text:`${m.id} — ${m.name}`}));
+  sel.innerHTML=_allMemberOpts.map(o=>`<option value="${o.id}">${o.text}</option>`).join('');
   sel.disabled=false;
+}
+
+function filterMembers(q){
+  const sel=document.getElementById('picker');
+  const lq=q.trim().toLowerCase();
+  const opts=lq?_allMemberOpts.filter(o=>o.text.toLowerCase().includes(lq)):_allMemberOpts;
+  sel.innerHTML=opts.map(o=>`<option value="${o.id}"${o.id===currentId?' selected':''}>${o.text}</option>`).join('')
+    ||'<option disabled>No results</option>';
+  if(opts.length===1&&opts[0].id!==currentId)selectMember(opts[0].id);
 }
 
 // ─── RADAR ───────────────────────────────────────────────────────────

@@ -121,6 +121,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pipe-search{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;color:rgba(255,255,255,.75);font-family:var(--mono);font-size:9px;letter-spacing:.04em;padding:5px 12px 5px 28px;outline:none;width:110px;transition:width .25s,border-color .2s,background .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center}
 .pipe-search:focus{border-color:rgba(130,180,255,.35);background-color:rgba(255,255,255,.08);width:190px}
 .pipe-search::placeholder{color:rgba(255,255,255,.22)}
+.sort-sel{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;color:rgba(255,255,255,.55);font-family:var(--mono);font-size:9px;letter-spacing:.04em;padding:5px 22px 5px 10px;outline:none;cursor:pointer;transition:border-color .2s,color .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.sort-sel:focus,.sort-sel:hover{border-color:rgba(130,180,255,.35);color:rgba(255,255,255,.8)}
+.sort-sel option{background:#0D0B4D;color:var(--white)}
 
 /* Prospect cards grid */
 .prospect-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
@@ -441,6 +444,12 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <button class="ftab ftab-moderate" data-filter="Moderate" onclick="setFilter('Moderate')">Moderate</button>
           <button class="ftab ftab-weak" data-filter="Weak" onclick="setFilter('Weak')">Weak</button>
           <button class="ftab ftab-new" data-filter="new" onclick="setFilter('new')">New</button>
+          <select class="sort-sel" onchange="setSort(this.value)" title="Sort by">
+            <option value="score">↓ Score</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+            <option value="status">Status</option>
+          </select>
           <input id="pipe-search" class="pipe-search" type="text" placeholder="Search…" oninput="setSearch(this.value)" autocomplete="off">
         </div>
 
@@ -598,6 +607,7 @@ var _cacheTime=0;
 var CACHE_TTL=5*60*1000;
 var _clickableProspects=[];
 var searchQuery='';
+var activeSort='score';
 
 /* ─── PASSWORD GATE ─────────────────────────────────────────── */
 (function(){
@@ -828,6 +838,12 @@ function setSearch(q){
   renderProspects();
 }
 
+function setSort(v){
+  activeSort=v;
+  currentPage=1;
+  renderProspects();
+}
+
 function changePage(dir){
   var filtered=getFiltered();
   var totalPages=Math.ceil(filtered.length/PAGE_SIZE)||1;
@@ -907,8 +923,17 @@ function renderProspects(){
 
   var filtered=getFiltered();
 
-  /* sort strongest first */
-  filtered.sort(function(a,b){return(parseFloat(b['Score'])||0)-(parseFloat(a['Score'])||0)});
+  /* sort */
+  if(activeSort==='score'){
+    filtered.sort(function(a,b){return(parseFloat(b['Score'])||0)-(parseFloat(a['Score'])||0)});
+  }else if(activeSort==='az'){
+    filtered.sort(function(a,b){return(a['Company']||'').localeCompare(b['Company']||'')});
+  }else if(activeSort==='za'){
+    filtered.sort(function(a,b){return(b['Company']||'').localeCompare(a['Company']||'')});
+  }else if(activeSort==='status'){
+    var sOrd={New:0,Strong:1,Moderate:2,Weak:3};
+    filtered.sort(function(a,b){return(sOrd[a['Verdict']]??99)-(sOrd[b['Verdict']]??99)});
+  }
 
   if(!filtered.length){
     var emptyLabel=searchQuery
