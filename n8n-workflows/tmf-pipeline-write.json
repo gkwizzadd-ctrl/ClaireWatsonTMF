@@ -1,0 +1,159 @@
+{
+  "name": "TMF — Pipeline Write (Add / Update / Delete)",
+  "nodes": [
+    {
+      "id": "pw-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-pipeline-write",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "pw-002",
+      "name": "IF — Add?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 360],
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ ($json.body ?? $json).action }}", "operation": "equal", "value2": "add" }]
+        }
+      }
+    },
+    {
+      "id": "pw-003",
+      "name": "Append Pipeline",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [680, 220],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Pipeline", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID":       "={{ ($json.body ?? $json).pipeline['Member ID'] }}",
+            "Opportunity":     "={{ ($json.body ?? $json).pipeline['Opportunity'] }}",
+            "Stage":           "={{ ($json.body ?? $json).pipeline['Stage'] }}",
+            "Expected Close":  "={{ ($json.body ?? $json).pipeline['Expected Close'] }}",
+            "Owner":           "={{ ($json.body ?? $json).pipeline['Owner'] }}",
+            "Record ID":       "={{ ($json.body ?? $json).pipeline['Record ID'] }}",
+            "Deleted":         ""
+          },
+          "matchingColumns": [], "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "pw-004",
+      "name": "IF — Update?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 480],
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ ($json.body ?? $json).action }}", "operation": "equal", "value2": "update" }]
+        }
+      }
+    },
+    {
+      "id": "pw-005",
+      "name": "Update Pipeline",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [900, 380],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Pipeline", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Record ID"],
+          "value": {
+            "Member ID":       "={{ ($json.body ?? $json).pipeline['Member ID'] }}",
+            "Opportunity":     "={{ ($json.body ?? $json).pipeline['Opportunity'] }}",
+            "Stage":           "={{ ($json.body ?? $json).pipeline['Stage'] }}",
+            "Expected Close":  "={{ ($json.body ?? $json).pipeline['Expected Close'] }}",
+            "Owner":           "={{ ($json.body ?? $json).pipeline['Owner'] }}",
+            "Record ID":       "={{ ($json.body ?? $json).pipeline['Record ID'] }}",
+            "Deleted":         ""
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "pw-006",
+      "name": "Soft Delete Pipeline",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [900, 580],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Pipeline", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Record ID"],
+          "value": {
+            "Record ID": "={{ ($json.body ?? $json).pipeline['Record ID'] }}",
+            "Deleted":   "true"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "pw-007",
+      "name": "Respond — Add",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 220],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"add\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    },
+    {
+      "id": "pw-008",
+      "name": "Respond — Update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 380],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"update\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    },
+    {
+      "id": "pw-009",
+      "name": "Respond — Delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 580],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"delete\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    }
+  ],
+  "connections": {
+    "Webhook":         { "main": [[{ "node": "IF — Add?",          "type": "main", "index": 0 }]] },
+    "IF — Add?":       { "main": [[{ "node": "Append Pipeline",    "type": "main", "index": 0 }],
+                                   [{ "node": "IF — Update?",       "type": "main", "index": 0 }]] },
+    "IF — Update?":    { "main": [[{ "node": "Update Pipeline",    "type": "main", "index": 0 }],
+                                   [{ "node": "Soft Delete Pipeline","type": "main", "index": 0 }]] },
+    "Append Pipeline":      { "main": [[{ "node": "Respond — Add",    "type": "main", "index": 0 }]] },
+    "Update Pipeline":      { "main": [[{ "node": "Respond — Update", "type": "main", "index": 0 }]] },
+    "Soft Delete Pipeline": { "main": [[{ "node": "Respond — Delete", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

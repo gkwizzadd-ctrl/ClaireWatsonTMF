@@ -120,7 +120,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* Catalysts */
 .cl{display:flex;flex-direction:column;gap:7px}
-.ci{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px}
+.ci{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;position:relative}
 .cid{font-family:'DM Mono',monospace;font-size:9px;color:var(--g500);white-space:nowrap;margin-top:2px;flex-shrink:0;min-width:76px}
 .ctb{flex:1;min-width:0}
 .ctit{font-size:12px;font-weight:500}
@@ -134,7 +134,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* Pipeline */
 .pl{display:flex;flex-direction:column;gap:7px}
-.pi{padding:9px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px}
+.pi{padding:9px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;position:relative}
 .ptop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
 .pname{font-size:12px;font-weight:500;flex:1;min-width:0}
 .pstg{font-family:'DM Mono',monospace;font-size:9px;padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0}
@@ -176,7 +176,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ccard-phone{font-size:11px;color:var(--g500);margin-top:2px}
 .ccard-notes{font-size:10.5px;color:var(--g500);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-style:italic;line-height:1.5}
 .ccard-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px;opacity:0;transition:opacity .15s}
-.ccard:hover .ccard-actions,.scard:hover .ccard-actions{opacity:1}
+.ccard:hover .ccard-actions,.scard:hover .ccard-actions,.ci:hover .ccard-actions,.pi:hover .ccard-actions{opacity:1}
 .crd-btn{padding:3px 9px;border-radius:5px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.05em;cursor:pointer;border:1px solid;transition:background .15s,color .15s;line-height:1.6}
 .crd-edit{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}.crd-edit:hover{background:rgba(255,255,255,.1);color:#fff}
 .crd-del{background:rgba(217,18,65,.05);border-color:rgba(217,18,65,.18);color:rgba(217,18,65,.55)}.crd-del:hover{background:rgba(217,18,65,.12);color:#f87171}
@@ -335,8 +335,8 @@ function buildMembers(data){
       stats:[
         {n:contacts.filter(c=>c['Deleted']!=='true').length,l:'Contacts',c:accent},
         {n:sessions.filter(s=>s['Deleted']!=='true').length,l:'Sessions',c:'var(--c-data)'},
-        {n:catalysts.length,l:'Catalysts',c:'#22c55e'},
-        {n:pipeline.length,l:'Pipeline',c:'#f97316'},
+        {n:catalysts.filter(c=>c['Deleted']!=='true').length,l:'Catalysts',c:'#22c55e'},
+        {n:pipeline.filter(p=>p['Deleted']!=='true').length,l:'Pipeline',c:'#f97316'},
         {n:matRows.length||6,l:'Domains',c:'#C9A84C'},
         {n:events.length,l:'Events',c:accent},
       ],
@@ -348,13 +348,8 @@ function buildMembers(data){
       })),
       dmu:dmu.map(r=>({role:r['DMU Role'],cls:DMU_CLS[r['DMU Role']]||'r-user',people:r['Person(s)'],note:r['Notes']})),
       rawSessions:sessions,
-      sessions:sessions.slice(0,10).map(r=>({
-        date:r['Date'],cat:getSessionCat(r['Category']),label:r['Category'],
-        title:r['Topic / Title'],who:r['Axian Attendees']||'',
-        out:r['Outcome / Status']||r['Key Notes']||''
-      })),
-      catalysts:catalysts.map(r=>({id:r['Catalyst ID'],title:r['Title'],mis:r['Mission'],st:r['Status'],sc:getCatCls(r['Status'])})),
-      pipeline:pipeline.map(r=>({name:r['Opportunity'],stage:r['Stage'],sc:getPipeCls(r['Stage']),close:r['Expected Close'],owner:r['Owner']})),
+      rawCatalysts:catalysts,
+      rawPipeline:pipeline,
       events:events.map(r=>({date:r['Date'],type:r['Type'],title:r['Event / Initiative'],note:r['Notes']})),
     };
   }).filter(Boolean);
@@ -410,8 +405,14 @@ function buildDashboardHTML(){
       <div class="sg" id="sessions"></div>
     </div>
     <div class="grid-equal fade" id="grid-lower" style="margin-top:22px">
-      <div class="card"><div class="ch"><span class="ct">Catalysts &amp; Projects</span></div><div class="cl" id="cats"></div></div>
-      <div class="card"><div class="ch"><span class="ct">Pipeline Opportunities</span></div><div class="pl" id="pipe"></div></div>
+      <div class="card">
+        <div class="ch"><span class="ct" id="cats-lbl">Catalysts &amp; Projects</span><button class="add-row-btn" onclick="openCrud('catalyst',null)">+ Add</button></div>
+        <div class="cl" id="cats"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct" id="pipe-lbl">Pipeline Opportunities</span><button class="add-row-btn" onclick="openCrud('pipeline',null)">+ Add</button></div>
+        <div class="pl" id="pipe"></div>
+      </div>
     </div>
     <div class="fade" id="events-wrap" style="margin-top:6px">
       <div class="slbl">Marketing &amp; Events</div>
@@ -451,18 +452,8 @@ function renderMember(m){
   ).join('');
 
   renderSessions(m);
-
-  document.getElementById('cats').innerHTML=m.catalysts.map(c=>
-    `<div class="ci"><div class="cid">${c.id||'—'}</div>
-     <div class="ctb"><div class="ctit">${c.title}</div>
-     <div class="cmeta"><span class="cst ${c.sc}">${c.st}</span><span class="cmis">${c.mis}</span></div>
-     </div></div>`
-  ).join('');
-
-  document.getElementById('pipe').innerHTML=m.pipeline.map(p=>
-    `<div class="pi"><div class="ptop"><div class="pname">${p.name}</div><span class="pstg ${p.sc}">${p.stage}</span></div>
-     <div class="psub">${p.close} · ${p.owner}</div></div>`
-  ).join('');
+  renderCatalysts(m);
+  renderPipeline(m);
 
   document.getElementById('events').innerHTML=m.events.map(e=>
     `<div class="ei"><div class="edate">${e.date}</div>
@@ -574,6 +565,8 @@ init();
 // ─── CRUD HELPERS ─────────────────────────────────────────────────────
 const CONTACT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contact-write';
 const SESSION_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-session-write';
+const CATALYST_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-catalyst-write';
+const PIPELINE_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-pipeline-write';
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -761,6 +754,133 @@ async function doDeleteSession(i){
   }catch(e){showToast('Delete failed: '+e.message,'err')}
 }
 
+// ─── CATALYSTS ────────────────────────────────────────────────────────
+function renderCatalysts(m){
+  const live=(m.rawCatalysts||[]).filter(c=>c['Deleted']!=='true');
+  const lbl=document.getElementById('cats-lbl');
+  const el=document.getElementById('cats');
+  if(!el)return;
+  if(lbl)lbl.innerHTML=`Catalysts &amp; Projects <span style="opacity:.45;font-size:10px">(${live.length})</span>`;
+  if(!live.length){
+    el.innerHTML='<div style="padding:10px 0;opacity:.5;font-size:12px">No catalysts yet.</div>';
+    return;
+  }
+  el.innerHTML=live.map((c,i)=>`
+    <div class="ci">
+      <div class="ccard-actions">
+        <button class="crd-btn crd-edit" onclick="openCrud('catalyst',${i})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeleteCatalyst(${i})">Delete</button>
+      </div>
+      <div class="cid">${esc(c['Catalyst ID']||'—')}</div>
+      <div class="ctb">
+        <div class="ctit">${esc(c['Title']||'')}</div>
+        <div class="cmeta"><span class="cst ${getCatCls(c['Status'])}">${esc(c['Status']||'')}</span><span class="cmis">${esc(c['Mission']||'')}</span></div>
+      </div>
+    </div>`).join('');
+}
+
+function refreshCatalystStats(m){
+  m.stats[2].n=(m.rawCatalysts||[]).filter(c=>c['Deleted']!=='true').length;
+  document.getElementById('stats').innerHTML=m.stats.map(s=>
+    `<div class="sc"><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
+}
+
+function confirmDeleteCatalyst(i){
+  const cards=document.querySelectorAll('#cats .ci');
+  const card=cards[i];
+  if(!card)return;
+  const d=document.createElement('div');
+  d.className='ccard-confirm';
+  d.innerHTML=`<span>Delete this catalyst?</span>
+    <button class="conf-yes" onclick="doDeleteCatalyst(${i})">Delete</button>
+    <button class="conf-no" onclick="this.closest('.ccard-confirm').remove()">Cancel</button>`;
+  card.appendChild(d);
+}
+
+async function doDeleteCatalyst(i){
+  const m=MEMBERS[currentId];
+  const live=(m.rawCatalysts||[]).filter(c=>c['Deleted']!=='true');
+  const c=live[i];
+  if(!c)return;
+  const hasId=!!(c['Record ID']);
+  try{
+    if(hasId){
+      await fetch(CATALYST_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'delete',catalyst:c})});
+      const idx=m.rawCatalysts.findIndex(x=>x['Record ID']===c['Record ID']);
+      if(idx>=0)m.rawCatalysts[idx]['Deleted']='true';
+    }else{
+      const idx=m.rawCatalysts.indexOf(c);
+      if(idx>=0)m.rawCatalysts.splice(idx,1);
+    }
+    refreshCatalystStats(m);
+    renderCatalysts(m);
+    showToast(hasId?'Catalyst deleted':'Removed from view — delete the row in Google Sheet to make it permanent','ok');
+  }catch(e){showToast('Delete failed: '+e.message,'err')}
+}
+
+// ─── PIPELINE ─────────────────────────────────────────────────────────
+function renderPipeline(m){
+  const live=(m.rawPipeline||[]).filter(p=>p['Deleted']!=='true');
+  const lbl=document.getElementById('pipe-lbl');
+  const el=document.getElementById('pipe');
+  if(!el)return;
+  if(lbl)lbl.innerHTML=`Pipeline Opportunities <span style="opacity:.45;font-size:10px">(${live.length})</span>`;
+  if(!live.length){
+    el.innerHTML='<div style="padding:10px 0;opacity:.5;font-size:12px">No pipeline opportunities yet.</div>';
+    return;
+  }
+  el.innerHTML=live.map((p,i)=>`
+    <div class="pi">
+      <div class="ccard-actions">
+        <button class="crd-btn crd-edit" onclick="openCrud('pipeline',${i})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeletePipeline(${i})">Delete</button>
+      </div>
+      <div class="ptop"><div class="pname">${esc(p['Opportunity']||'')}</div><span class="pstg ${getPipeCls(p['Stage'])}">${esc(p['Stage']||'')}</span></div>
+      <div class="psub">${esc(p['Expected Close']||'')}${p['Expected Close']&&p['Owner']?' · ':''}${esc(p['Owner']||'')}</div>
+    </div>`).join('');
+}
+
+function refreshPipelineStats(m){
+  m.stats[3].n=(m.rawPipeline||[]).filter(p=>p['Deleted']!=='true').length;
+  document.getElementById('stats').innerHTML=m.stats.map(s=>
+    `<div class="sc"><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
+}
+
+function confirmDeletePipeline(i){
+  const cards=document.querySelectorAll('#pipe .pi');
+  const card=cards[i];
+  if(!card)return;
+  const d=document.createElement('div');
+  d.className='ccard-confirm';
+  d.innerHTML=`<span>Delete this opportunity?</span>
+    <button class="conf-yes" onclick="doDeletePipeline(${i})">Delete</button>
+    <button class="conf-no" onclick="this.closest('.ccard-confirm').remove()">Cancel</button>`;
+  card.appendChild(d);
+}
+
+async function doDeletePipeline(i){
+  const m=MEMBERS[currentId];
+  const live=(m.rawPipeline||[]).filter(p=>p['Deleted']!=='true');
+  const p=live[i];
+  if(!p)return;
+  const hasId=!!(p['Record ID']);
+  try{
+    if(hasId){
+      await fetch(PIPELINE_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'delete',pipeline:p})});
+      const idx=m.rawPipeline.findIndex(x=>x['Record ID']===p['Record ID']);
+      if(idx>=0)m.rawPipeline[idx]['Deleted']='true';
+    }else{
+      const idx=m.rawPipeline.indexOf(p);
+      if(idx>=0)m.rawPipeline.splice(idx,1);
+    }
+    refreshPipelineStats(m);
+    renderPipeline(m);
+    showToast(hasId?'Opportunity deleted':'Removed from view — delete the row in Google Sheet to make it permanent','ok');
+  }catch(e){showToast('Delete failed: '+e.message,'err')}
+}
+
 // ─── CRUD MODAL ───────────────────────────────────────────────────────
 let _crudType=null,_crudIdx=null;
 
@@ -880,6 +1000,119 @@ const CRUD_CONFIG={
       }
       refreshSessionStats(m);
       renderSessions(m);
+      if(isEdit&&!hadRecordId)return 'no_id_edit';
+    }
+  },
+  catalyst:{
+    label:'Catalyst',
+    title_add:'Add Catalyst / Project',title_edit:'Edit Catalyst / Project',
+    fields:[
+      {id:'cl-id',label:'Catalyst ID',type:'input',placeholder:'e.g. CAT-001'},
+      {id:'cl-title',label:'Title',type:'input',required:true,placeholder:'Catalyst or project name'},
+      {id:'cl-mission',label:'Mission',type:'select',options:['Autonomous Networks','AI & Data','Composable IT & Ecosystems','Business Assurance','Business Process/eTOM']},
+      {id:'cl-status',label:'Status',type:'select',options:['Active','In Progress','Planned','Planning','Forming']},
+    ],
+    getRow(i){
+      const m=MEMBERS[currentId];
+      const live=(m.rawCatalysts||[]).filter(c=>c['Deleted']!=='true');
+      return i!==null?live[i]:null;
+    },
+    fillForm(r){
+      document.getElementById('cl-id').value=r?r['Catalyst ID']||'':'';
+      document.getElementById('cl-title').value=r?r['Title']||'':'';
+      const mis=document.getElementById('cl-mission');
+      if(mis)mis.value=r?r['Mission']||'Autonomous Networks':'Autonomous Networks';
+      const st=document.getElementById('cl-status');
+      if(st)st.value=r?r['Status']||'Planned':'Planned';
+    },
+    buildPayload(m,existing){
+      const recordId=existing&&existing['Record ID']?existing['Record ID']:genId();
+      return{
+        'Member ID':m.id,
+        'Catalyst ID':document.getElementById('cl-id').value.trim(),
+        'Title':document.getElementById('cl-title').value.trim(),
+        'Mission':document.getElementById('cl-mission').value,
+        'Status':document.getElementById('cl-status').value,
+        'Record ID':recordId,'Deleted':''
+      };
+    },
+    validate(){
+      const t=document.getElementById('cl-title').value.trim();
+      if(!t){document.getElementById('cl-title').focus();return false;}
+      return true;
+    },
+    async save(m,payload,isEdit,existing){
+      const hadRecordId=isEdit&&!!(existing&&existing['Record ID']);
+      const action=hadRecordId?'update':'add';
+      await fetch(CATALYST_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action,catalyst:payload})});
+      if(!m.rawCatalysts)m.rawCatalysts=[];
+      if(isEdit){
+        const idx=hadRecordId
+          ?m.rawCatalysts.findIndex(x=>x['Record ID']===existing['Record ID'])
+          :m.rawCatalysts.indexOf(existing);
+        if(idx>=0)m.rawCatalysts[idx]=payload;else m.rawCatalysts.push(payload);
+      }else{
+        m.rawCatalysts.unshift(payload);
+      }
+      refreshCatalystStats(m);
+      renderCatalysts(m);
+      if(isEdit&&!hadRecordId)return 'no_id_edit';
+    }
+  },
+  pipeline:{
+    label:'Pipeline Opportunity',
+    title_add:'Add Pipeline Opportunity',title_edit:'Edit Pipeline Opportunity',
+    fields:[
+      {id:'pp-opp',label:'Opportunity',type:'input',required:true,placeholder:'Opportunity name'},
+      {id:'pp-stage',label:'Stage',type:'select',options:['Discovery','Scoping','Planning','Pursuing','Proposal','Committed','Nurture','RFQ Stage','In Progress']},
+      {id:'pp-close',label:'Expected Close',type:'input',placeholder:'e.g. Q3 2026'},
+      {id:'pp-owner',label:'Owner',type:'input',placeholder:'Axian owner'},
+    ],
+    getRow(i){
+      const m=MEMBERS[currentId];
+      const live=(m.rawPipeline||[]).filter(p=>p['Deleted']!=='true');
+      return i!==null?live[i]:null;
+    },
+    fillForm(r){
+      document.getElementById('pp-opp').value=r?r['Opportunity']||'':'';
+      const st=document.getElementById('pp-stage');
+      if(st)st.value=r?r['Stage']||'Discovery':'Discovery';
+      document.getElementById('pp-close').value=r?r['Expected Close']||'':'';
+      document.getElementById('pp-owner').value=r?r['Owner']||'':'';
+    },
+    buildPayload(m,existing){
+      const recordId=existing&&existing['Record ID']?existing['Record ID']:genId();
+      return{
+        'Member ID':m.id,
+        'Opportunity':document.getElementById('pp-opp').value.trim(),
+        'Stage':document.getElementById('pp-stage').value,
+        'Expected Close':document.getElementById('pp-close').value.trim(),
+        'Owner':document.getElementById('pp-owner').value.trim(),
+        'Record ID':recordId,'Deleted':''
+      };
+    },
+    validate(){
+      const t=document.getElementById('pp-opp').value.trim();
+      if(!t){document.getElementById('pp-opp').focus();return false;}
+      return true;
+    },
+    async save(m,payload,isEdit,existing){
+      const hadRecordId=isEdit&&!!(existing&&existing['Record ID']);
+      const action=hadRecordId?'update':'add';
+      await fetch(PIPELINE_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action,pipeline:payload})});
+      if(!m.rawPipeline)m.rawPipeline=[];
+      if(isEdit){
+        const idx=hadRecordId
+          ?m.rawPipeline.findIndex(x=>x['Record ID']===existing['Record ID'])
+          :m.rawPipeline.indexOf(existing);
+        if(idx>=0)m.rawPipeline[idx]=payload;else m.rawPipeline.push(payload);
+      }else{
+        m.rawPipeline.unshift(payload);
+      }
+      refreshPipelineStats(m);
+      renderPipeline(m);
       if(isEdit&&!hadRecordId)return 'no_id_edit';
     }
   }

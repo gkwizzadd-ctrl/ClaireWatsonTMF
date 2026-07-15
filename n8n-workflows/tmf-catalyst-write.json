@@ -1,0 +1,159 @@
+{
+  "name": "TMF — Catalyst Write (Add / Update / Delete)",
+  "nodes": [
+    {
+      "id": "cw-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-catalyst-write",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "cw-002",
+      "name": "IF — Add?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 360],
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ ($json.body ?? $json).action }}", "operation": "equal", "value2": "add" }]
+        }
+      }
+    },
+    {
+      "id": "cw-003",
+      "name": "Append Catalyst",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [680, 220],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Catalysts", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID":   "={{ ($json.body ?? $json).catalyst['Member ID'] }}",
+            "Catalyst ID": "={{ ($json.body ?? $json).catalyst['Catalyst ID'] }}",
+            "Title":       "={{ ($json.body ?? $json).catalyst['Title'] }}",
+            "Mission":     "={{ ($json.body ?? $json).catalyst['Mission'] }}",
+            "Status":      "={{ ($json.body ?? $json).catalyst['Status'] }}",
+            "Record ID":   "={{ ($json.body ?? $json).catalyst['Record ID'] }}",
+            "Deleted":     ""
+          },
+          "matchingColumns": [], "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "cw-004",
+      "name": "IF — Update?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 480],
+      "parameters": {
+        "conditions": {
+          "string": [{ "value1": "={{ ($json.body ?? $json).action }}", "operation": "equal", "value2": "update" }]
+        }
+      }
+    },
+    {
+      "id": "cw-005",
+      "name": "Update Catalyst",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [900, 380],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Catalysts", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Record ID"],
+          "value": {
+            "Member ID":   "={{ ($json.body ?? $json).catalyst['Member ID'] }}",
+            "Catalyst ID": "={{ ($json.body ?? $json).catalyst['Catalyst ID'] }}",
+            "Title":       "={{ ($json.body ?? $json).catalyst['Title'] }}",
+            "Mission":     "={{ ($json.body ?? $json).catalyst['Mission'] }}",
+            "Status":      "={{ ($json.body ?? $json).catalyst['Status'] }}",
+            "Record ID":   "={{ ($json.body ?? $json).catalyst['Record ID'] }}",
+            "Deleted":     ""
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "cw-006",
+      "name": "Soft Delete Catalyst",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [900, 580],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Catalysts", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Record ID"],
+          "value": {
+            "Record ID": "={{ ($json.body ?? $json).catalyst['Record ID'] }}",
+            "Deleted":   "true"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "cw-007",
+      "name": "Respond — Add",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 220],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"add\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    },
+    {
+      "id": "cw-008",
+      "name": "Respond — Update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 380],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"update\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    },
+    {
+      "id": "cw-009",
+      "name": "Respond — Delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 580],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"delete\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    }
+  ],
+  "connections": {
+    "Webhook":          { "main": [[{ "node": "IF — Add?",           "type": "main", "index": 0 }]] },
+    "IF — Add?":        { "main": [[{ "node": "Append Catalyst",     "type": "main", "index": 0 }],
+                                    [{ "node": "IF — Update?",        "type": "main", "index": 0 }]] },
+    "IF — Update?":     { "main": [[{ "node": "Update Catalyst",     "type": "main", "index": 0 }],
+                                    [{ "node": "Soft Delete Catalyst", "type": "main", "index": 0 }]] },
+    "Append Catalyst":      { "main": [[{ "node": "Respond — Add",    "type": "main", "index": 0 }]] },
+    "Update Catalyst":      { "main": [[{ "node": "Respond — Update", "type": "main", "index": 0 }]] },
+    "Soft Delete Catalyst": { "main": [[{ "node": "Respond — Delete", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
