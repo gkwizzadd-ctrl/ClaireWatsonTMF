@@ -1,0 +1,133 @@
+{
+  "name": "TMF — Prospect Write (Update / Delete)",
+  "nodes": [
+    {
+      "id": "pw-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-prospect-write",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "pw-002",
+      "name": "IF — Update?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 360],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ ($json.body ?? $json).action }}",
+              "operation": "equal",
+              "value2": "update"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "pw-003",
+      "name": "Update Prospect",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [680, 240],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": { "__rl": true, "value": "Prospects", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Company"],
+          "value": {
+            "Company":          "={{ ($json.body ?? $json).prospect['Company'] }}",
+            "HQ":               "={{ ($json.body ?? $json).prospect['HQ'] }}",
+            "Score":            "={{ ($json.body ?? $json).prospect['Score'] }}",
+            "Verdict":          "={{ ($json.body ?? $json).prospect['Verdict'] }}",
+            "Primary Mission":  "={{ ($json.body ?? $json).prospect['Primary Mission'] }}",
+            "Status":           "={{ ($json.body ?? $json).prospect['Status'] }}",
+            "Summary":          "={{ ($json.body ?? $json).prospect['Summary'] }}",
+            "Top Signals":      "={{ ($json.body ?? $json).prospect['Top Signals'] }}",
+            "Key Contacts":     "={{ ($json.body ?? $json).prospect['Key Contacts'] }}",
+            "Timing Hook":      "={{ ($json.body ?? $json).prospect['Timing Hook'] }}"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "pw-004",
+      "name": "Soft Delete Prospect",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [680, 480],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": { "__rl": true, "value": "Prospects", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Company"],
+          "value": {
+            "Company": "={{ ($json.body ?? $json).prospect['Company'] }}",
+            "Status":  "Deleted"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "pw-005",
+      "name": "Respond — Update",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 240],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"action\": \"update\" }",
+        "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } }
+      }
+    },
+    {
+      "id": "pw-006",
+      "name": "Respond — Delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 480],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"action\": \"delete\" }",
+        "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook":                { "main": [[{ "node": "IF — Update?",         "type": "main", "index": 0 }]] },
+    "IF — Update?":           { "main": [[{ "node": "Update Prospect",      "type": "main", "index": 0 }],
+                                          [{ "node": "Soft Delete Prospect", "type": "main", "index": 0 }]] },
+    "Update Prospect":        { "main": [[{ "node": "Respond — Update",    "type": "main", "index": 0 }]] },
+    "Soft Delete Prospect":   { "main": [[{ "node": "Respond — Delete",    "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

@@ -209,6 +209,40 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pmodal-notes-text{font-size:11px;color:rgba(255,255,255,.28);line-height:1.75;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05)}
 .pcard{cursor:pointer}
 .pcard:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.35)}
+
+/* ─── PROSPECT CARD EDIT/DELETE ACTIONS ─── */
+.pcard-actions{position:absolute;top:10px;right:10px;display:flex;gap:5px;opacity:0;transition:opacity .18s;z-index:2}
+.pcard:hover .pcard-actions{opacity:1}
+.pact-btn{font-family:var(--mono);font-size:8px;letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:4px;border:none;cursor:pointer;transition:background .15s,color .15s;line-height:1.6}
+.pact-edit{background:rgba(59,130,246,.22);color:rgba(130,180,255,.95)}
+.pact-edit:hover{background:rgba(59,130,246,.4)}
+.pact-del{background:rgba(217,18,65,.18);color:rgba(255,100,120,.95)}
+.pact-del:hover{background:rgba(217,18,65,.38)}
+
+/* ─── PROSPECT EDIT MODAL ─── */
+.pedit-panel{max-width:580px}
+.pedit-body{padding:20px 28px;display:flex;flex-direction:column;gap:14px}
+.pedit-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pefield{display:flex;flex-direction:column;gap:5px}
+.pefield label{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.pefield label span{color:rgba(217,18,65,.8)}
+.pefield input,.pefield select,.pefield textarea{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:6px;color:rgba(255,255,255,.88);font-size:12.5px;padding:8px 10px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.pefield input:focus,.pefield select,.pefield textarea:focus{border-color:rgba(130,180,255,.4)}
+.pefield select option{background:#0D0B4D;color:#fff}
+.pefield input[readonly]{opacity:.45;cursor:default}
+.pefield textarea{resize:vertical;min-height:70px;line-height:1.55}
+.pedit-foot{padding:16px 28px 22px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
+.pedit-cancel{background:transparent;border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.55);padding:8px 18px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .15s}
+.pedit-cancel:hover{background:rgba(255,255,255,.07)}
+.pedit-save{background:rgba(80,200,120,.18);border:1px solid rgba(80,200,120,.35);color:rgba(80,200,120,.95);padding:8px 22px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:background .15s}
+.pedit-save:hover{background:rgba(80,200,120,.32)}
+.pedit-save:disabled{opacity:.45;cursor:default}
+
+/* ─── TOAST ─── */
+.ps-toast{position:fixed;bottom:24px;right:24px;z-index:2000;padding:10px 18px;border-radius:8px;font-size:12.5px;font-family:var(--mono);letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .22s,transform .22s}
+.ps-toast.visible{opacity:1;transform:translateY(0)}
+.ps-toast.ok{background:rgba(80,200,120,.18);border:1px solid rgba(80,200,120,.35);color:rgba(80,200,120,.95)}
+.ps-toast.err{background:rgba(217,18,65,.16);border:1px solid rgba(217,18,65,.3);color:rgba(255,100,120,.95)}
 .pcard{transition:background .15s,border-color .15s,transform .15s,box-shadow .15s}
 .contact-card{cursor:pointer;border-radius:8px;padding:10px 8px;margin:0 -8px;transition:background .15s}
 .contact-card:hover{background:rgba(255,255,255,.05)}
@@ -549,6 +583,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 /* ─── PROSPECT PIPELINE GLOBALS (must be before IIFE so pre-render works on return visits) ── */
 var SHEET_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospects-read';
 var RESEARCH_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-research';
+var PROSPECT_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-write';
 var PROSPECT_SS_KEY='cwclaires-prospects';
 var allProspects=[];
 var activeFilter='all';
@@ -721,7 +756,7 @@ function loadProspects(force){
         return;
       }
       var rows=(data.prospects||data['Prospects']||[]);
-      var fresh=rows.filter(function(r){return r['Company']||r['company']});
+      var fresh=rows.filter(function(r){return (r['Company']||r['company'])&&(r['Status']||'').toLowerCase()!=='deleted'});
       if(!fresh.length&&!Object.keys(data).length){
         if(!allProspects.length)showProspectError();
         return;
@@ -923,6 +958,10 @@ function buildCard(r,i){
   }).join('');
 
   return '<div class="pcard" onclick="openProspectModal('+i+')" style="animation-delay:'+(i*0.05)+'s">'+
+    '<div class="pcard-actions">'+
+      '<button class="pact-btn pact-edit" onclick="event.stopPropagation();openProspectEdit('+i+')">Edit</button>'+
+      '<button class="pact-btn pact-del" onclick="event.stopPropagation();confirmDeleteProspect('+i+')">Delete</button>'+
+    '</div>'+
     '<div class="pcard-accent" style="background:'+accentColor+'"></div>'+
     '<div class="pcard-top">'+
       '<span class="pcard-verdict '+vClass+'">'+esc(verdict||'Unrated')+'</span>'+
@@ -1076,6 +1115,101 @@ function showProspectError(msg){
   var el=document.getElementById('prospect-error');
   el.textContent='⚠ '+msg;
   el.style.display='block';
+}
+
+/* ─── TOAST ─────────────────────────────────────────────────── */
+function showPsToast(msg,isErr){
+  var t=document.getElementById('ps-toast');
+  if(!t)return;
+  t.textContent=msg;
+  t.className='ps-toast '+(isErr?'err':'ok');
+  t.classList.add('visible');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.classList.remove('visible')},3000);
+}
+
+/* ─── PROSPECT EDIT / DELETE ─────────────────────────────────── */
+var _editProspectIdx=null;
+
+function openProspectEdit(idx){
+  var r=_clickableProspects[idx];
+  if(!r)return;
+  _editProspectIdx=idx;
+  document.getElementById('pedit-company-label').textContent=r['Company']||'';
+  document.getElementById('pedit-company').value=r['Company']||'';
+  document.getElementById('pedit-hq').value=r['HQ']||'';
+  document.getElementById('pedit-score').value=r['Score']||'';
+  document.getElementById('pedit-verdict').value=r['Verdict']||'Moderate';
+  document.getElementById('pedit-mission').value=r['Primary Mission']||r['Primay Mission']||'';
+  document.getElementById('pedit-status').value=r['Status']||'New';
+  document.getElementById('pedit-summary').value=r['Summary']||'';
+  document.getElementById('pedit-signals').value=r['Top Signals']||'';
+  document.getElementById('pedit-contacts').value=r['Key Contacts']||'';
+  document.getElementById('pedit-timing').value=r['Timing Hook']||'';
+  document.getElementById('prospect-edit-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeProspectEdit(){
+  document.getElementById('prospect-edit-modal').classList.remove('open');
+  document.body.style.overflow='';
+  _editProspectIdx=null;
+}
+
+async function saveProspectEdit(){
+  var r=_clickableProspects[_editProspectIdx];
+  if(!r)return;
+  var btn=document.getElementById('pedit-save-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+  var payload={
+    action:'update',
+    prospect:{
+      'Company':r['Company'],
+      'HQ':document.getElementById('pedit-hq').value.trim(),
+      'Score':document.getElementById('pedit-score').value.trim(),
+      'Verdict':document.getElementById('pedit-verdict').value,
+      'Primary Mission':document.getElementById('pedit-mission').value,
+      'Status':document.getElementById('pedit-status').value,
+      'Summary':document.getElementById('pedit-summary').value.trim(),
+      'Top Signals':document.getElementById('pedit-signals').value.trim(),
+      'Key Contacts':document.getElementById('pedit-contacts').value.trim(),
+      'Timing Hook':document.getElementById('pedit-timing').value.trim()
+    }
+  };
+  try{
+    var resp=await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Save failed');
+    Object.assign(r,payload.prospect);
+    try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
+    closeProspectEdit();
+    renderProspects();
+    showPsToast('Prospect updated');
+  }catch(e){
+    showPsToast('Save failed: '+e.message,true);
+  }finally{
+    btn.disabled=false;btn.textContent='Save Changes';
+  }
+}
+
+function confirmDeleteProspect(idx){
+  var r=_clickableProspects[idx];
+  if(!r)return;
+  if(!confirm('Remove '+esc(r['Company']||'this prospect')+' from the pipeline?'))return;
+  deleteProspect(idx,r);
+}
+
+async function deleteProspect(idx,r){
+  try{
+    await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'delete',prospect:{'Company':r['Company']}})});
+  }catch(e){}
+  var gi=allProspects.indexOf(r);
+  if(gi!==-1)allProspects.splice(gi,1);
+  try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
+  renderProspects();
+  updateStats();
+  showPsToast('Prospect removed');
 }
 
 /* ─── PROSPECT DETAIL MODAL ─────────────────────────────────── */
@@ -1320,6 +1454,82 @@ function copyAllEmail(){
     <div id="pmodal-foot" class="pmodal-foot" style="display:none"></div>
   </div>
 </div>
+<!-- Prospect Edit Modal -->
+<div id="prospect-edit-modal" class="pmodal-overlay" onclick="if(event.target===this)closeProspectEdit()">
+  <div class="pmodal-panel pedit-panel">
+    <div class="pmodal-head">
+      <button class="pmodal-close" onclick="closeProspectEdit()">✕</button>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.13em;color:rgba(255,255,255,.28);text-transform:uppercase;margin-bottom:8px">Edit Prospect</div>
+      <div id="pedit-company-label" class="pmodal-co" style="font-size:22px"></div>
+    </div>
+    <div class="pedit-body">
+      <input type="hidden" id="pedit-company">
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>HQ / Location</label>
+          <input id="pedit-hq" type="text" placeholder="City, Country">
+        </div>
+        <div class="pefield">
+          <label>Score (0–30)</label>
+          <input id="pedit-score" type="number" min="0" max="30" placeholder="0">
+        </div>
+      </div>
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Verdict <span>*</span></label>
+          <select id="pedit-verdict">
+            <option>Strong</option>
+            <option>Moderate</option>
+            <option>Weak</option>
+          </select>
+        </div>
+        <div class="pefield">
+          <label>Status</label>
+          <select id="pedit-status">
+            <option>New</option>
+            <option>Contacted</option>
+            <option>In Progress</option>
+            <option>Pitched</option>
+            <option>Won</option>
+            <option>Lost</option>
+          </select>
+        </div>
+      </div>
+      <div class="pefield">
+        <label>Primary ODA Mission</label>
+        <select id="pedit-mission">
+          <option value=""></option>
+          <option>Autonomous Networks</option>
+          <option>AI &amp; Data</option>
+          <option>Composable IT &amp; Ecosystems</option>
+          <option>Business Assurance</option>
+          <option>Business Process/eTOM</option>
+        </select>
+      </div>
+      <div class="pefield">
+        <label>Summary</label>
+        <textarea id="pedit-summary" placeholder="3–4 sentence prospect narrative…" rows="4"></textarea>
+      </div>
+      <div class="pefield">
+        <label>Top Signals <span style="opacity:.45;font-weight:400;font-size:8px">(comma separated)</span></label>
+        <input id="pedit-signals" type="text" placeholder="5G rollout, AI programme, cloud-native BSS…">
+      </div>
+      <div class="pefield">
+        <label>Key Contacts <span style="opacity:.45;font-weight:400;font-size:8px">(semicolon separated: Name — Title; Name — Title)</span></label>
+        <textarea id="pedit-contacts" rows="2" placeholder="Ahmed Khalil — CTO; Sara Benali — Head of Strategy"></textarea>
+      </div>
+      <div class="pefield">
+        <label>Timing Hook</label>
+        <input id="pedit-timing" type="text" placeholder="Specific reason to reach out now…">
+      </div>
+    </div>
+    <div class="pedit-foot">
+      <button class="pedit-cancel" onclick="closeProspectEdit()">Cancel</button>
+      <button id="pedit-save-btn" class="pedit-save" onclick="saveProspectEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- Email Draft Modal -->
 <div id="email-modal" class="pmodal-overlay" style="z-index:950" onclick="if(event.target===this)closeEmailModal()">
   <div class="pmodal-panel emodal-panel">
@@ -1354,5 +1564,6 @@ function copyAllEmail(){
     </div>
   </div>
 </div>
+<div id="ps-toast" class="ps-toast"></div>
 </body>
 </html>
