@@ -704,12 +704,15 @@ function initDashboard(){
   loadPlans();
   loadNotes();
   loadProspects();
-  renderTmfContacts();
+  initTmfContacts();
 }
 
 /* ─── TMF CONTACTS ──────────────────────────────────────────── */
-var TMF_CONTACTS_KEY='cwclaires-tmf-contacts';
-var _tmfEditIdx=null;
+var CONTACTS_READ_WH ='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contacts-read';
+var CONTACTS_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contacts-write';
+var CONTACTS_CACHE_KEY='cwclaires-tmf-sheet-cache';
+var _tmfEditId=null;
+var _tmfContacts=[];
 var _tmfExpanded=false;
 var TMF_PAGE=8;
 var _tmfDefault=[
@@ -720,37 +723,31 @@ var _tmfDefault=[
   {id:'tmfc_5',name:"Joan O'Brien",role:'Member Success Lead · TM Forum'}
 ];
 
-function getTmfContacts(){
-  try{
-    var r=localStorage.getItem(TMF_CONTACTS_KEY);
-    if(r)return JSON.parse(r);
-  }catch(e){}
-  // First visit — seed localStorage with defaults so edits persist
-  saveTmfContacts(_tmfDefault);
-  return _tmfDefault;
-}
-function saveTmfContacts(c){localStorage.setItem(TMF_CONTACTS_KEY,JSON.stringify(c));}
+function tmfCacheSave(contacts){try{localStorage.setItem(CONTACTS_CACHE_KEY,JSON.stringify(contacts));}catch(e){}}
+function tmfCacheLoad(){try{var r=localStorage.getItem(CONTACTS_CACHE_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+
 function tmfInitials(n){return n.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();}
 
 function renderTmfContacts(){
   var el=document.getElementById('tmfc-list');
   if(!el)return;
-  var contacts=getTmfContacts();
+  var contacts=_tmfContacts;
   if(!contacts.length){
     el.innerHTML='<div style="padding:8px 0;opacity:.4;font-size:12px">No contacts yet — click + Add</div>';
     return;
   }
   var show=_tmfExpanded?contacts:contacts.slice(0,TMF_PAGE);
-  el.innerHTML=show.map(function(c,i){
+  el.innerHTML=show.map(function(c){
+    var cid=esc(c.id||c.ID);
     return '<div class="contact-row">'+
-      '<div class="contact-av-large">'+esc(tmfInitials(c.name))+'</div>'+
+      '<div class="contact-av-large">'+esc(tmfInitials(c.name||c.Name))+'</div>'+
       '<div style="flex:1;min-width:0">'+
-        '<div class="contact-name">'+esc(c.name)+'</div>'+
-        '<div class="contact-role">'+esc(c.role)+'</div>'+
+        '<div class="contact-name">'+esc(c.name||c.Name)+'</div>'+
+        '<div class="contact-role">'+esc(c.role||c.Role)+'</div>'+
       '</div>'+
       '<div class="tmfc-actions">'+
-        '<button class="crd-btn crd-edit" onclick="event.stopPropagation();openTmfEdit('+i+')">Edit</button>'+
-        '<button class="crd-btn crd-del" onclick="event.stopPropagation();deleteTmfContact('+i+')">Delete</button>'+
+        '<button class="crd-btn crd-edit" onclick="event.stopPropagation();openTmfEdit(\''+cid+'\')">Edit</button>'+
+        '<button class="crd-btn crd-del"  onclick="event.stopPropagation();deleteTmfContact(\''+cid+'\')">Delete</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -763,10 +760,66 @@ function renderTmfContacts(){
   }
 }
 
-function openTmfEdit(idx){
-  _tmfEditIdx=idx;
-  var contacts=getTmfContacts();
-  var c=idx!==null?contacts[idx]:null;
+function initTmfContacts(){
+  // Show cached data immediately so return visits feel instant
+  var cached=tmfCacheLoad();
+  if(cached&&cached.length){_tmfContacts=cached;renderTmfContacts();}
+  else{var el=document.getElementById('tmfc-list');if(el)el.innerHTML='<div style="padding:8px 0;opacity:.4;font-size:12px">Loading…</div>';}
+  // Always fetch fresh from Sheets in background
+  fetch(CONTACTS_READ_WH+'?_='+Date.now(),{redirect:'follow',cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var sheetRows=(d.contacts||[]).filter(function(c){return c.ID||c.id;});
+      var sheetIds  =sheetRows.map(function(c){return (c.ID||c.id||'').toLowerCase();});
+      var sheetNames=sheetRows.map(function(c){return (c.Name||c.name||'').toLowerCase();});
+
+      // 1. Migrate the 5 defaults if they're not in the sheet yet
+      _tmfDefault.forEach(function(def){
+        if(sheetIds.indexOf(def.id.toLowerCase())!==-1)return;
+        if(sheetNames.indexOf(def.name.toLowerCase())!==-1)return;
+        fetch(CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'add',contact:def})});
+        sheetRows.push(def);
+        sheetIds.push(def.id.toLowerCase());
+        sheetNames.push(def.name.toLowerCase());
+      });
+
+      // 2. Migrate any extra contacts still in localStorage
+      try{
+        var legacy=JSON.parse(localStorage.getItem('cwclaires-tmf-contacts')||'[]');
+        legacy.forEach(function(c){
+          if(!c.name)return;
+          if(sheetIds.indexOf((c.id||'').toLowerCase())!==-1)return;
+          if(sheetNames.indexOf(c.name.toLowerCase())!==-1)return;
+          var contact={id:c.id||('tmfc_'+Date.now()),name:c.name,role:c.role||''};
+          fetch(CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'add',contact:contact})});
+          sheetRows.push(contact);
+          sheetIds.push(contact.id.toLowerCase());
+          sheetNames.push(contact.name.toLowerCase());
+        });
+        localStorage.removeItem('cwclaires-tmf-contacts');
+      }catch(e){}
+
+      _tmfContacts=sheetRows.map(function(c){
+        return {id:c.ID||c.id,name:c.Name||c.name,role:c.Role||c.role};
+      });
+      tmfCacheSave(_tmfContacts);
+      renderTmfContacts();
+    })
+    .catch(function(){
+      // n8n unreachable — use cache if available, otherwise show defaults
+      if(!_tmfContacts.length){
+        var cached=tmfCacheLoad();
+        _tmfContacts=cached&&cached.length?cached:_tmfDefault.slice();
+        renderTmfContacts();
+      }
+    });
+}
+
+function openTmfEdit(id){
+  _tmfEditId=id||null;
+  var c=id?_tmfContacts.find(function(x){return x.id===id;}):null;
   document.getElementById('tmfc-modal-title').textContent=c?'Edit Contact':'Add Contact';
   document.getElementById('tmfc-name').value=c?c.name:'';
   document.getElementById('tmfc-role').value=c?c.role:'';
@@ -782,24 +835,31 @@ function saveTmfEdit(){
   var name=document.getElementById('tmfc-name').value.trim();
   var role=document.getElementById('tmfc-role').value.trim();
   if(!name)return;
-  var contacts=getTmfContacts();
-  if(_tmfEditIdx!==null){
-    contacts[_tmfEditIdx].name=name;
-    contacts[_tmfEditIdx].role=role;
-  }else{
-    contacts.push({id:'tmfc_'+Date.now(),name:name,role:role});
-  }
-  saveTmfContacts(contacts);
   closeTmfEdit();
-  renderTmfContacts();
+  if(_tmfEditId){
+    var c=_tmfContacts.find(function(x){return x.id===_tmfEditId;});
+    if(c){c.name=name;c.role=role;}
+    tmfCacheSave(_tmfContacts);
+    renderTmfContacts();
+    fetch(CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'update',contact:{id:_tmfEditId,name:name,role:role}})});
+  } else {
+    var newContact={id:'tmfc_'+Date.now(),name:name,role:role};
+    _tmfContacts.push(newContact);
+    tmfCacheSave(_tmfContacts);
+    renderTmfContacts();
+    fetch(CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'add',contact:newContact})});
+  }
 }
 
-function deleteTmfContact(idx){
+function deleteTmfContact(id){
   if(!confirm('Remove this contact?'))return;
-  var contacts=getTmfContacts();
-  contacts.splice(idx,1);
-  saveTmfContacts(contacts);
+  _tmfContacts=_tmfContacts.filter(function(c){return c.id!==id;});
+  tmfCacheSave(_tmfContacts);
   renderTmfContacts();
+  fetch(CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'delete',contact:{id:id}})});
 }
 
 /* On bfcache restore: if data is already showing, just silently queue a background
