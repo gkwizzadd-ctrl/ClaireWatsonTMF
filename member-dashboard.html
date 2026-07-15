@@ -307,11 +307,37 @@ function getSessionCat(cat){
 function getCatCls(st){return CAT_CLS[st]||'st-planned'}
 function getPipeCls(st){return PIPE_CLS[st]||'ps-planning'}
 
+// ─── CACHE ───────────────────────────────────────────────────────────
+const DASH_CACHE_KEY='cwclaires-dash-v2';
+const DASH_CACHE_TTL=10*60*1000; // 10 minutes
+
+function getCachedData(){
+  try{
+    const raw=localStorage.getItem(DASH_CACHE_KEY);
+    if(!raw)return null;
+    const obj=JSON.parse(raw);
+    return(Date.now()-obj.ts)<DASH_CACHE_TTL?obj.data:null;
+  }catch(e){return null;}
+}
+
+function setCachedData(data){
+  try{localStorage.setItem(DASH_CACHE_KEY,JSON.stringify({ts:Date.now(),data}));}catch(e){}
+}
+
 // ─── FETCH ───────────────────────────────────────────────────────────
-async function fetchAllTabs(){
+async function fetchFresh(){
   const resp=await fetch(DATA_URL,{redirect:'follow'});
   if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
-  return await resp.json();
+  const data=await resp.json();
+  setCachedData(data);
+  return data;
+}
+
+function applyData(data){
+  const members=buildMembers(data);
+  if(!members.length)throw new Error('No members found in the Members tab.');
+  MEMBERS=Object.fromEntries(members.map(m=>[m.id,m]));
+  return members;
 }
 
 // ─── BUILD MEMBER DATA ────────────────────────────────────────────────
@@ -556,27 +582,46 @@ function buildRadar(maturity,accentColor){
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────
+function showError(err){
+  document.getElementById('main-content').innerHTML=`
+    <div class="state-overlay">
+      <div class="state-label">Unable to load data</div>
+      <div class="err-msg">${err.message}<br><br>
+        Make sure the Google Sheet is published:<br>
+        <strong>File → Share → Publish to web → Publish</strong>
+      </div>
+      <button class="retry-btn" onclick="init()">↻ Retry</button>
+    </div>`;
+}
+
+function renderDashboard(members){
+  if(!currentId)currentId=members[0].id;
+  document.getElementById('main-content').innerHTML=buildDashboardHTML();
+  buildPicker();
+  renderMember(MEMBERS[currentId]);
+}
+
 async function init(){
   try{
-    const data=await fetchAllTabs();
-    const members=buildMembers(data);
-    if(!members.length)throw new Error('No members found in the Members tab.');
-    MEMBERS=Object.fromEntries(members.map(m=>[m.id,m]));
-    currentId=members[0].id;
-    document.getElementById('main-content').innerHTML=buildDashboardHTML();
-    buildPicker();
-    renderMember(MEMBERS[currentId]);
-  }catch(err){
-    document.getElementById('main-content').innerHTML=`
-      <div class="state-overlay">
-        <div class="state-label">Unable to load data</div>
-        <div class="err-msg">${err.message}<br><br>
-          Make sure the Google Sheet is published:<br>
-          <strong>File → Share → Publish to web → Publish</strong>
-        </div>
-        <button class="retry-btn" onclick="init()">↻ Retry</button>
-      </div>`;
-  }
+    const cached=getCachedData();
+    if(cached){
+      // Instant render from cache
+      const members=applyData(cached);
+      renderDashboard(members);
+      // Silent background refresh — updates MEMBERS then re-renders current panel
+      fetchFresh().then(data=>{
+        const prev=currentId;
+        applyData(data);
+        buildPicker();
+        if(prev&&MEMBERS[prev])renderMember(MEMBERS[prev]);
+      }).catch(()=>{});
+    }else{
+      // First visit — must fetch
+      const data=await fetchFresh();
+      const members=applyData(data);
+      renderDashboard(members);
+    }
+  }catch(err){showError(err);}
 }
 
 init();
