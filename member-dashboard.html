@@ -151,7 +151,10 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* Events */
 .el{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:9px}
-.ei{display:flex;gap:11px;align-items:flex-start;padding:9px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px}
+.ei{display:flex;gap:11px;align-items:flex-start;padding:9px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;position:relative}
+.more-row{margin-top:10px;text-align:center;grid-column:1/-1}
+.more-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 22px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;transition:background .15s,color .15s}
+.more-btn:hover{background:rgba(255,255,255,.09);color:rgba(255,255,255,.75)}
 .edate{font-family:'DM Mono',monospace;font-size:9px;color:var(--g500);flex-shrink:0;width:62px;padding-top:2px;line-height:1.4}
 .etit{font-size:12px;font-weight:500}
 .etyp{font-family:'DM Mono',monospace;font-size:9px;color:var(--g500);margin-top:1px}
@@ -338,7 +341,7 @@ function buildMembers(data){
         {n:catalysts.filter(c=>c['Deleted']!=='true').length,l:'Catalysts',c:'#22c55e'},
         {n:pipeline.filter(p=>p['Deleted']!=='true').length,l:'Pipeline',c:'#f97316'},
         {n:matRows.length||6,l:'Domains',c:'#C9A84C'},
-        {n:events.length,l:'Events',c:accent},
+        {n:events.filter(e=>e['Deleted']!=='true').length,l:'Events',c:accent},
       ],
       maturity:matRows.map(r=>({
         domain:r['Domain'],
@@ -350,7 +353,7 @@ function buildMembers(data){
       rawSessions:sessions,
       rawCatalysts:catalysts,
       rawPipeline:pipeline,
-      events:events.map(r=>({date:r['Date'],type:r['Type'],title:r['Event / Initiative'],note:r['Notes']})),
+      rawEvents:events,
     };
   }).filter(Boolean);
 }
@@ -415,12 +418,16 @@ function buildDashboardHTML(){
       </div>
     </div>
     <div class="fade" id="events-wrap" style="margin-top:6px">
-      <div class="slbl">Marketing &amp; Events</div>
+      <div class="slbl" id="events-lbl">Marketing &amp; Events
+        <button class="add-row-btn" onclick="openCrud('event',null)" style="font-size:9px;text-transform:none;letter-spacing:normal">+ Add</button>
+      </div>
       <div class="el" id="events"></div>
     </div>`;
 }
 
 function renderMember(m){
+  // Reset all section expand states when switching members
+  _exp.sessions=false;_exp.catalysts=false;_exp.pipeline=false;_exp.events=false;
   document.documentElement.style.setProperty('--accent',m.accent);
   document.documentElement.style.setProperty('--accent-dim',m.accentDim);
   document.documentElement.style.setProperty('--accent-border',m.accentBorder);
@@ -455,11 +462,7 @@ function renderMember(m){
   renderCatalysts(m);
   renderPipeline(m);
 
-  document.getElementById('events').innerHTML=m.events.map(e=>
-    `<div class="ei"><div class="edate">${e.date}</div>
-     <div><div class="etit">${e.title}</div><div class="etyp">${e.type}</div><div class="enote">${e.note}</div></div>
-     </div>`
-  ).join('');
+  renderEvents(m);
 
   renderContacts(m);
 }
@@ -567,6 +570,9 @@ const CONTACT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contact-
 const SESSION_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-session-write';
 const CATALYST_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-catalyst-write';
 const PIPELINE_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-pipeline-write';
+const EVENT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-event-write';
+const PAGE=8; // items shown before "show more" in each section
+const _exp={sessions:false,catalysts:false,pipeline:false,events:false};
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -702,7 +708,8 @@ function renderSessions(m){
     el.innerHTML='<div style="padding:18px 0;opacity:.55;font-size:13px">No sessions yet — click "+ Add Session" to add one.</div>';
     return;
   }
-  el.innerHTML=live.map((s,i)=>{
+  const show=_exp.sessions?live:live.slice(0,PAGE);
+  el.innerHTML=show.map((s,i)=>{
     const cat=getSessionCat(s['Category']);
     const title=s['Topic / Title']||s['Title']||'';
     const who=s['Axian Attendees']||s['Attendees']||'';
@@ -718,6 +725,13 @@ function renderSessions(m){
       ${out?`<div class="sout">${esc(out)}</div>`:''}
     </div>`;
   }).join('');
+  if(live.length>PAGE){
+    const more=live.length-PAGE;
+    el.innerHTML+=`<div class="more-row">${_exp.sessions
+      ?`<button class="more-btn" onclick="_exp.sessions=false;renderSessions(MEMBERS[currentId])">Show less</button>`
+      :`<button class="more-btn" onclick="_exp.sessions=true;renderSessions(MEMBERS[currentId])">+ ${more} more</button>`
+    }</div>`;
+  }
 }
 
 function confirmDeleteSession(i){
@@ -765,7 +779,8 @@ function renderCatalysts(m){
     el.innerHTML='<div style="padding:10px 0;opacity:.5;font-size:12px">No catalysts yet.</div>';
     return;
   }
-  el.innerHTML=live.map((c,i)=>`
+  const show=_exp.catalysts?live:live.slice(0,PAGE);
+  el.innerHTML=show.map((c,i)=>`
     <div class="ci">
       <div class="ccard-actions">
         <button class="crd-btn crd-edit" onclick="openCrud('catalyst',${i})">Edit</button>
@@ -777,6 +792,13 @@ function renderCatalysts(m){
         <div class="cmeta"><span class="cst ${getCatCls(c['Status'])}">${esc(c['Status']||'')}</span><span class="cmis">${esc(c['Mission']||'')}</span></div>
       </div>
     </div>`).join('');
+  if(live.length>PAGE){
+    const more=live.length-PAGE;
+    el.innerHTML+=`<div class="more-row">${_exp.catalysts
+      ?`<button class="more-btn" onclick="_exp.catalysts=false;renderCatalysts(MEMBERS[currentId])">Show less</button>`
+      :`<button class="more-btn" onclick="_exp.catalysts=true;renderCatalysts(MEMBERS[currentId])">+ ${more} more</button>`
+    }</div>`;
+  }
 }
 
 function refreshCatalystStats(m){
@@ -830,7 +852,8 @@ function renderPipeline(m){
     el.innerHTML='<div style="padding:10px 0;opacity:.5;font-size:12px">No pipeline opportunities yet.</div>';
     return;
   }
-  el.innerHTML=live.map((p,i)=>`
+  const show=_exp.pipeline?live:live.slice(0,PAGE);
+  el.innerHTML=show.map((p,i)=>`
     <div class="pi">
       <div class="ccard-actions">
         <button class="crd-btn crd-edit" onclick="openCrud('pipeline',${i})">Edit</button>
@@ -839,6 +862,13 @@ function renderPipeline(m){
       <div class="ptop"><div class="pname">${esc(p['Opportunity']||'')}</div><span class="pstg ${getPipeCls(p['Stage'])}">${esc(p['Stage']||'')}</span></div>
       <div class="psub">${esc(p['Expected Close']||'')}${p['Expected Close']&&p['Owner']?' · ':''}${esc(p['Owner']||'')}</div>
     </div>`).join('');
+  if(live.length>PAGE){
+    const more=live.length-PAGE;
+    el.innerHTML+=`<div class="more-row">${_exp.pipeline
+      ?`<button class="more-btn" onclick="_exp.pipeline=false;renderPipeline(MEMBERS[currentId])">Show less</button>`
+      :`<button class="more-btn" onclick="_exp.pipeline=true;renderPipeline(MEMBERS[currentId])">+ ${more} more</button>`
+    }</div>`;
+  }
 }
 
 function refreshPipelineStats(m){
@@ -879,6 +909,82 @@ async function doDeletePipeline(i){
     renderPipeline(m);
     showToast(hasId?'Opportunity deleted':'Removed from view — delete the row in Google Sheet to make it permanent','ok');
   }catch(e){showToast('Delete failed: '+e.message,'err')}
+}
+
+// ─── MARKETING & EVENTS ───────────────────────────────────────────────
+function renderEvents(m){
+  const live=(m.rawEvents||[]).filter(e=>e['Deleted']!=='true');
+  const lbl=document.getElementById('events-lbl');
+  const el=document.getElementById('events');
+  if(!el)return;
+  const n=live.length;
+  if(lbl)lbl.innerHTML=`Marketing &amp; Events <span style="opacity:.45;font-size:10px">(${n})</span>`+
+    `<button class="add-row-btn" onclick="openCrud('event',null)" style="font-size:9px;text-transform:none;letter-spacing:normal">+ Add</button>`;
+  if(!n){
+    el.innerHTML='<div style="padding:10px 0;opacity:.5;font-size:12px;grid-column:1/-1">No events yet.</div>';
+    return;
+  }
+  const show=_exp.events?live:live.slice(0,PAGE);
+  el.innerHTML=show.map((e,i)=>`
+    <div class="ei">
+      <div class="ccard-actions">
+        <button class="crd-btn crd-edit" onclick="openCrud('event',${i})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeleteEvent(${i})">Delete</button>
+      </div>
+      <div class="edate">${esc(e['Date']||'')}</div>
+      <div>
+        <div class="etit">${esc(e['Event / Initiative']||'')}</div>
+        <div class="etyp">${esc(e['Type']||'')}</div>
+        ${e['Notes']?`<div class="enote">${esc(e['Notes'])}</div>`:''}
+      </div>
+    </div>`).join('');
+  if(live.length>PAGE){
+    const more=live.length-PAGE;
+    el.innerHTML+=`<div class="more-row">${_exp.events
+      ?`<button class="more-btn" onclick="_exp.events=false;renderEvents(MEMBERS[currentId])">Show less</button>`
+      :`<button class="more-btn" onclick="_exp.events=true;renderEvents(MEMBERS[currentId])">+ ${more} more</button>`
+    }</div>`;
+  }
+}
+
+function refreshEventStats(m){
+  m.stats[5].n=(m.rawEvents||[]).filter(e=>e['Deleted']!=='true').length;
+  document.getElementById('stats').innerHTML=m.stats.map(s=>
+    `<div class="sc"><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
+}
+
+function confirmDeleteEvent(i){
+  const cards=document.querySelectorAll('#events .ei');
+  const card=cards[i];
+  if(!card)return;
+  const d=document.createElement('div');
+  d.className='ccard-confirm';
+  d.innerHTML=`<span>Delete this event?</span>
+    <button class="conf-yes" onclick="doDeleteEvent(${i})">Delete</button>
+    <button class="conf-no" onclick="this.closest('.ccard-confirm').remove()">Cancel</button>`;
+  card.appendChild(d);
+}
+
+async function doDeleteEvent(i){
+  const m=MEMBERS[currentId];
+  const live=(m.rawEvents||[]).filter(e=>e['Deleted']!=='true');
+  const e=live[i];
+  if(!e)return;
+  const hasId=!!(e['Record ID']);
+  try{
+    if(hasId){
+      await fetch(EVENT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'delete',event:e})});
+      const idx=m.rawEvents.findIndex(x=>x['Record ID']===e['Record ID']);
+      if(idx>=0)m.rawEvents[idx]['Deleted']='true';
+    }else{
+      const idx=m.rawEvents.indexOf(e);
+      if(idx>=0)m.rawEvents.splice(idx,1);
+    }
+    refreshEventStats(m);
+    renderEvents(m);
+    showToast(hasId?'Event deleted':'Removed from view — delete the row in Google Sheet to make it permanent','ok');
+  }catch(err){showToast('Delete failed: '+err.message,'err')}
 }
 
 // ─── CRUD MODAL ───────────────────────────────────────────────────────
@@ -1113,6 +1219,62 @@ const CRUD_CONFIG={
       }
       refreshPipelineStats(m);
       renderPipeline(m);
+      if(isEdit&&!hadRecordId)return 'no_id_edit';
+    }
+  },
+  event:{
+    label:'Event',
+    title_add:'Add Marketing / Event',title_edit:'Edit Marketing / Event',
+    fields:[
+      {id:'ev-date',label:'Date',type:'input',placeholder:'e.g. 12 Jun 2026'},
+      {id:'ev-type',label:'Type',type:'select',options:['Conference','Exhibition','Webinar','Workshop','Partner Event','Round Table','Awards','Other']},
+      {id:'ev-title',label:'Event / Initiative',type:'input',required:true,placeholder:'Event name or initiative'},
+      {id:'ev-notes',label:'Notes',type:'textarea',placeholder:'Key notes or outcome…'},
+    ],
+    getRow(i){
+      const m=MEMBERS[currentId];
+      const live=(m.rawEvents||[]).filter(e=>e['Deleted']!=='true');
+      return i!==null?live[i]:null;
+    },
+    fillForm(r){
+      document.getElementById('ev-date').value=r?r['Date']||'':'';
+      const tp=document.getElementById('ev-type');
+      if(tp)tp.value=r?r['Type']||'Conference':'Conference';
+      document.getElementById('ev-title').value=r?r['Event / Initiative']||'':'';
+      document.getElementById('ev-notes').value=r?r['Notes']||'':'';
+    },
+    buildPayload(m,existing){
+      const recordId=existing&&existing['Record ID']?existing['Record ID']:genId();
+      return{
+        'Member ID':m.id,
+        'Date':document.getElementById('ev-date').value.trim(),
+        'Type':document.getElementById('ev-type').value,
+        'Event / Initiative':document.getElementById('ev-title').value.trim(),
+        'Notes':document.getElementById('ev-notes').value.trim(),
+        'Record ID':recordId,'Deleted':''
+      };
+    },
+    validate(){
+      const t=document.getElementById('ev-title').value.trim();
+      if(!t){document.getElementById('ev-title').focus();return false;}
+      return true;
+    },
+    async save(m,payload,isEdit,existing){
+      const hadRecordId=isEdit&&!!(existing&&existing['Record ID']);
+      const action=hadRecordId?'update':'add';
+      await fetch(EVENT_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action,event:payload})});
+      if(!m.rawEvents)m.rawEvents=[];
+      if(isEdit){
+        const idx=hadRecordId
+          ?m.rawEvents.findIndex(x=>x['Record ID']===existing['Record ID'])
+          :m.rawEvents.indexOf(existing);
+        if(idx>=0)m.rawEvents[idx]=payload;else m.rawEvents.push(payload);
+      }else{
+        m.rawEvents.unshift(payload);
+      }
+      refreshEventStats(m);
+      renderEvents(m);
       if(isEdit&&!hadRecordId)return 'no_id_edit';
     }
   }
