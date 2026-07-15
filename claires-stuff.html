@@ -118,6 +118,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ftab-moderate.active{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:rgba(245,158,11,.9)}
 .ftab-weak.active{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:rgba(239,68,68,.8)}
 .ftab-new.active{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:rgba(130,180,255,.9)}
+.pipe-search{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;color:rgba(255,255,255,.75);font-family:var(--mono);font-size:9px;letter-spacing:.04em;padding:5px 12px 5px 28px;outline:none;width:110px;transition:width .25s,border-color .2s,background .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center}
+.pipe-search:focus{border-color:rgba(130,180,255,.35);background-color:rgba(255,255,255,.08);width:190px}
+.pipe-search::placeholder{color:rgba(255,255,255,.22)}
 
 /* Prospect cards grid */
 .prospect-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
@@ -438,6 +441,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <button class="ftab ftab-moderate" data-filter="Moderate" onclick="setFilter('Moderate')">Moderate</button>
           <button class="ftab ftab-weak" data-filter="Weak" onclick="setFilter('Weak')">Weak</button>
           <button class="ftab ftab-new" data-filter="new" onclick="setFilter('new')">New</button>
+          <input id="pipe-search" class="pipe-search" type="text" placeholder="Search…" oninput="setSearch(this.value)" autocomplete="off">
         </div>
 
         <!-- Pipeline overview chart -->
@@ -588,11 +592,12 @@ var PROSPECT_SS_KEY='cwclaires-prospects';
 var allProspects=[];
 var activeFilter='all';
 var currentPage=1;
-var PAGE_SIZE=12;
+var PAGE_SIZE=9;
 var _prospectsCache=null;
 var _cacheTime=0;
 var CACHE_TTL=5*60*1000;
 var _clickableProspects=[];
+var searchQuery='';
 
 /* ─── PASSWORD GATE ─────────────────────────────────────────── */
 (function(){
@@ -805,12 +810,26 @@ function setFilter(f){
   renderProspects();
 }
 
-function changePage(dir){
-  var filtered=allProspects.filter(function(r){
-    if(activeFilter==='all')return true;
-    if(activeFilter==='new')return(r['Status']||'').toLowerCase()==='new';
-    return r['Verdict']===activeFilter;
+function getFiltered(){
+  return allProspects.filter(function(r){
+    var passTab=activeFilter==='all'?true:
+      activeFilter==='new'?(r['Status']||'').toLowerCase()==='new':
+      r['Verdict']===activeFilter;
+    if(!passTab)return false;
+    if(!searchQuery)return true;
+    var hay=((r['Company']||'')+' '+(r['HQ']||'')+' '+(r['Primary Mission']||'')+' '+(r['Top Signals']||'')+' '+(r['Summary']||'')).toLowerCase();
+    return hay.indexOf(searchQuery)!==-1;
   });
+}
+
+function setSearch(q){
+  searchQuery=q.trim().toLowerCase();
+  currentPage=1;
+  renderProspects();
+}
+
+function changePage(dir){
+  var filtered=getFiltered();
   var totalPages=Math.ceil(filtered.length/PAGE_SIZE)||1;
   currentPage=Math.max(1,Math.min(totalPages,currentPage+dir));
   renderProspects();
@@ -886,18 +905,15 @@ function renderProspects(){
 
   drawPipeChart();
 
-  var filtered=allProspects.filter(function(r){
-    if(activeFilter==='all')return true;
-    if(activeFilter==='new')return(r['Status']||'').toLowerCase()==='new';
-    return r['Verdict']===activeFilter;
-  });
+  var filtered=getFiltered();
 
   /* sort strongest first */
   filtered.sort(function(a,b){return(parseFloat(b['Score'])||0)-(parseFloat(a['Score'])||0)});
 
   if(!filtered.length){
-    var emptyLabel=activeFilter==='all'
-      ?'No prospects in the pipeline yet'
+    var emptyLabel=searchQuery
+      ?'No prospects match "'+searchQuery+'"'
+      :activeFilter==='all'?'No prospects in the pipeline yet'
       :'No '+activeFilter.toLowerCase()+' prospects yet';
     grid.innerHTML='<div class="pipe-empty">'+
       '<div class="pipe-empty-icon">◉</div>'+
