@@ -338,11 +338,28 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .qlink-ico{font-size:13px;flex-shrink:0;width:18px;text-align:center}
 
 /* Contacts */
-.contact-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.contact-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);position:relative}
 .contact-row:last-child{border-bottom:none;padding-bottom:0}
 .contact-av-large{width:28px;height:28px;border-radius:50%;background:rgba(0,48,135,.5);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:rgba(130,180,255,.8);flex-shrink:0;margin-top:1px}
 .contact-name{font-size:12px;color:rgba(255,255,255,.8);font-weight:500}
 .contact-role{font-family:var(--mono);font-size:8px;color:rgba(255,255,255,.3);letter-spacing:.03em;margin-top:1px}
+.tmfc-actions{position:absolute;top:50%;right:0;transform:translateY(-50%);display:flex;gap:4px;opacity:0;transition:opacity .15s;z-index:1}
+.contact-row:hover .tmfc-actions{opacity:1}
+.tmfc-add-btn{font-family:var(--mono);font-size:9px;letter-spacing:.06em;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.45);padding:3px 10px;cursor:pointer;transition:background .15s,color .15s}
+.tmfc-add-btn:hover{background:rgba(255,255,255,.09);color:rgba(255,255,255,.8)}
+.tmfc-modal{position:fixed;inset:0;background:rgba(5,3,20,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.tmfc-modal.open{opacity:1;pointer-events:all}
+.tmfc-panel{background:rgba(13,11,77,.98);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px;width:100%;max-width:400px}
+.tmfc-title{font-size:15px;font-weight:600;color:#fff;margin-bottom:20px}
+.tmfc-field{margin-bottom:14px}
+.tmfc-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
+.tmfc-field input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;color:rgba(255,255,255,.85);font-family:var(--sans);font-size:13px;outline:none;transition:border-color .15s;box-sizing:border-box}
+.tmfc-field input:focus{border-color:rgba(217,18,65,.5)}
+.tmfc-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.tmfc-save{background:var(--acc);border:none;border-radius:8px;color:#fff;font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:10px 22px;cursor:pointer;transition:opacity .15s}
+.tmfc-save:hover{opacity:.85}
+.tmfc-cancel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:rgba(255,255,255,.5);font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:10px 18px;cursor:pointer;transition:background .15s}
+.tmfc-cancel:hover{background:rgba(255,255,255,.09)}
 
 /* Admin */
 .admin-link{text-align:center;padding:12px;border-radius:8px;background:var(--surface);border:1px solid var(--border)}
@@ -571,12 +588,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
         <!-- Key Contacts -->
         <div class="scard">
-          <div class="scard-eyebrow">Key TMF Contacts</div>
-          <div class="contact-row"><div class="contact-av-large">GG</div><div><div class="contact-name">George Glass</div><div class="contact-role">Chief Technology Officer · TM Forum</div></div></div>
-          <div class="contact-row"><div class="contact-av-large">MS</div><div><div class="contact-name">Mike O'Sullivan</div><div class="contact-role">ODA Specialist · TM Forum</div></div></div>
-          <div class="contact-row"><div class="contact-av-large">AT</div><div><div class="contact-name">Andy Tiller</div><div class="contact-role">VP Strategy &amp; Membership · TM Forum</div></div></div>
-          <div class="contact-row"><div class="contact-av-large">AB</div><div><div class="contact-name">Aaron Patel-Boardman</div><div class="contact-role">Catalyst Programme Lead · TM Forum</div></div></div>
-          <div class="contact-row"><div class="contact-av-large">JO</div><div><div class="contact-name">Joan O'Brien</div><div class="contact-role">Member Success Lead · TM Forum</div></div></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="scard-eyebrow" style="margin-bottom:0">Key TMF Contacts</div>
+            <button class="tmfc-add-btn" onclick="openTmfEdit(null)">+ Add</button>
+          </div>
+          <div id="tmfc-list"></div>
         </div>
 
         <!-- Admin -->
@@ -685,6 +701,86 @@ function initDashboard(){
   loadPlans();
   loadNotes();
   loadProspects();
+  renderTmfContacts();
+}
+
+/* ─── TMF CONTACTS ──────────────────────────────────────────── */
+var TMF_CONTACTS_KEY='cwclaires-tmf-contacts';
+var _tmfEditIdx=null;
+var _tmfDefault=[
+  {id:'tmfc_1',name:'George Glass',role:'Chief Technology Officer · TM Forum'},
+  {id:'tmfc_2',name:"Mike O'Sullivan",role:'ODA Specialist · TM Forum'},
+  {id:'tmfc_3',name:'Andy Tiller',role:'VP Strategy & Membership · TM Forum'},
+  {id:'tmfc_4',name:'Aaron Patel-Boardman',role:'Catalyst Programme Lead · TM Forum'},
+  {id:'tmfc_5',name:"Joan O'Brien",role:'Member Success Lead · TM Forum'}
+];
+
+function getTmfContacts(){
+  try{var r=localStorage.getItem(TMF_CONTACTS_KEY);return r?JSON.parse(r):_tmfDefault;}catch(e){return _tmfDefault;}
+}
+function saveTmfContacts(c){localStorage.setItem(TMF_CONTACTS_KEY,JSON.stringify(c));}
+function tmfInitials(n){return n.split(' ').map(function(w){return w[0]||''}).join('').slice(0,2).toUpperCase();}
+
+function renderTmfContacts(){
+  var el=document.getElementById('tmfc-list');
+  if(!el)return;
+  var contacts=getTmfContacts();
+  if(!contacts.length){
+    el.innerHTML='<div style="padding:8px 0;opacity:.4;font-size:12px">No contacts yet — click + Add</div>';
+    return;
+  }
+  el.innerHTML=contacts.map(function(c,i){
+    return '<div class="contact-row">'+
+      '<div class="contact-av-large">'+esc(tmfInitials(c.name))+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="contact-name">'+esc(c.name)+'</div>'+
+        '<div class="contact-role">'+esc(c.role)+'</div>'+
+      '</div>'+
+      '<div class="tmfc-actions">'+
+        '<button class="crd-btn crd-edit" onclick="event.stopPropagation();openTmfEdit('+i+')">Edit</button>'+
+        '<button class="crd-btn crd-del" onclick="event.stopPropagation();deleteTmfContact('+i+')">Delete</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openTmfEdit(idx){
+  _tmfEditIdx=idx;
+  var contacts=getTmfContacts();
+  var c=idx!==null?contacts[idx]:null;
+  document.getElementById('tmfc-modal-title').textContent=c?'Edit Contact':'Add Contact';
+  document.getElementById('tmfc-name').value=c?c.name:'';
+  document.getElementById('tmfc-role').value=c?c.role:'';
+  document.getElementById('tmfc-modal').classList.add('open');
+  document.getElementById('tmfc-name').focus();
+}
+
+function closeTmfEdit(){
+  document.getElementById('tmfc-modal').classList.remove('open');
+}
+
+function saveTmfEdit(){
+  var name=document.getElementById('tmfc-name').value.trim();
+  var role=document.getElementById('tmfc-role').value.trim();
+  if(!name)return;
+  var contacts=getTmfContacts();
+  if(_tmfEditIdx!==null){
+    contacts[_tmfEditIdx].name=name;
+    contacts[_tmfEditIdx].role=role;
+  }else{
+    contacts.push({id:'tmfc_'+Date.now(),name:name,role:role});
+  }
+  saveTmfContacts(contacts);
+  closeTmfEdit();
+  renderTmfContacts();
+}
+
+function deleteTmfContact(idx){
+  if(!confirm('Remove this contact?'))return;
+  var contacts=getTmfContacts();
+  contacts.splice(idx,1);
+  saveTmfContacts(contacts);
+  renderTmfContacts();
 }
 
 /* On bfcache restore: if data is already showing, just silently queue a background
@@ -1606,5 +1702,24 @@ function copyAllEmail(){
   </div>
 </div>
 <div id="ps-toast" class="ps-toast"></div>
+
+<!-- ── TMF Contacts modal ─────────────────────────────────── -->
+<div id="tmfc-modal" class="tmfc-modal" onclick="if(event.target===this)closeTmfEdit()">
+  <div class="tmfc-panel">
+    <div class="tmfc-title" id="tmfc-modal-title">Add Contact</div>
+    <div class="tmfc-field">
+      <label>Name</label>
+      <input id="tmfc-name" type="text" placeholder="Full name" onkeydown="if(event.key==='Enter')saveTmfEdit()">
+    </div>
+    <div class="tmfc-field">
+      <label>Role / Title</label>
+      <input id="tmfc-role" type="text" placeholder="Role · Organisation" onkeydown="if(event.key==='Enter')saveTmfEdit()">
+    </div>
+    <div class="tmfc-foot">
+      <button class="tmfc-cancel" onclick="closeTmfEdit()">Cancel</button>
+      <button class="tmfc-save" onclick="saveTmfEdit()">Save</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
