@@ -1034,7 +1034,7 @@ function renderEvents(m){
         <button class="crd-btn crd-edit" onclick="openCrud('event',${i})">Edit</button>
         <button class="crd-btn crd-del" onclick="confirmDeleteEvent(${i})">Delete</button>
       </div>
-      <div class="edate">${esc(e['Date']||'')}</div>
+      <div class="edate">${esc(fmtDate(e['Date'])||'')}</div>
       <div>
         <div class="etit">${esc(e['Event / Initiative']||'')}</div>
         <div class="etyp">${esc(e['Type']||'')}</div>
