@@ -168,6 +168,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pi{padding:9px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;position:relative}
 .ptop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
 .pname{font-size:12px;font-weight:500;flex:1;min-width:0}
+.pval{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#22c55e;white-space:nowrap;flex-shrink:0}
 .pstg{font-family:'DM Mono',monospace;font-size:9px;padding:1px 6px;border-radius:3px;white-space:nowrap;flex-shrink:0}
 .psub{font-size:10.5px;color:var(--g500)}
 .ps-proposal {background:rgba(217,18,65,.1);color:var(--accent);border:1px solid rgba(217,18,65,.2)}
@@ -962,7 +963,7 @@ function renderPipeline(m){
         <button class="crd-btn crd-edit" onclick="openCrud('pipeline',${i})">Edit</button>
         <button class="crd-btn crd-del" onclick="confirmDeletePipeline(${i})">Delete</button>
       </div>
-      <div class="ptop"><div class="pname">${esc(p['Opportunity']||'')}</div><span class="pstg ${getPipeCls(p['Stage'])}">${esc(p['Stage']||'')}</span></div>
+      <div class="ptop"><div class="pname">${esc(p['Opportunity']||'')}</div>${p['Value']?`<span class="pval">${esc(p['Value'])}</span>`:''}<span class="pstg ${getPipeCls(p['Stage'])}">${esc(p['Stage']||'')}</span></div>
       <div class="psub">${esc(p['Expected Close']||'')}${p['Expected Close']&&p['Owner']?' · ':''}${esc(p['Owner']||'')}</div>
     </div>`).join('');
   if(live.length>PAGE){
@@ -1274,6 +1275,7 @@ const CRUD_CONFIG={
     title_add:'Add Pipeline Opportunity',title_edit:'Edit Pipeline Opportunity',
     fields:[
       {id:'pp-opp',label:'Opportunity',type:'input',required:true,placeholder:'Opportunity name'},
+      {id:'pp-value',label:'Value',type:'input',placeholder:'e.g. £50,000'},
       {id:'pp-stage',label:'Stage',type:'select',options:['Discovery','Scoping','Planning','Pursuing','Proposal','Committed','Nurture','RFQ Stage','In Progress']},
       {id:'pp-close',label:'Expected Close',type:'input',placeholder:'e.g. Q3 2026'},
       {id:'pp-owner',label:'Owner',type:'input',placeholder:'Axian owner'},
@@ -1285,6 +1287,7 @@ const CRUD_CONFIG={
     },
     fillForm(r){
       document.getElementById('pp-opp').value=r?r['Opportunity']||'':'';
+      document.getElementById('pp-value').value=r?r['Value']||'':'';
       const st=document.getElementById('pp-stage');
       if(st)st.value=r?r['Stage']||'Discovery':'Discovery';
       document.getElementById('pp-close').value=r?r['Expected Close']||'':'';
@@ -1295,6 +1298,7 @@ const CRUD_CONFIG={
       return{
         'Member ID':m.id,
         'Opportunity':document.getElementById('pp-opp').value.trim(),
+        'Value':document.getElementById('pp-value').value.trim(),
         'Stage':document.getElementById('pp-stage').value,
         'Expected Close':document.getElementById('pp-close').value.trim(),
         'Owner':document.getElementById('pp-owner').value.trim(),
