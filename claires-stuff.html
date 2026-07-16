@@ -952,13 +952,13 @@ function loadProspects(force){
     .then(function(text){
       var data;
       try{data=JSON.parse(text)}catch(e){
-        if(!allProspects.length)showProspectError();
+        if(!allProspects.length)showPipelineError();
         return;
       }
       var rows=(data.prospects||data['Prospects']||[]);
       var fresh=rows.filter(function(r){return (r['Company']||r['company'])&&(r['Status']||'').toLowerCase()!=='deleted'});
       if(!fresh.length&&!Object.keys(data).length){
-        if(!allProspects.length)showProspectError();
+        if(!allProspects.length)showPipelineError();
         return;
       }
       allProspects=fresh;
@@ -971,11 +971,15 @@ function loadProspects(force){
     .catch(function(){
       clearTimeout(timer);
       // Only show error state when nothing is already displayed
-      if(!allProspects.length)showProspectError();
+      if(!allProspects.length)showPipelineError();
     });
 }
 
-function showProspectError(){
+/* Renamed from showProspectError to avoid colliding with the differently-
+   signatured showProspectError(msg) used by the research tool below — the
+   two same-named function declarations meant this one was always shadowed,
+   so a failed prospects fetch never surfaced the retry UI (silent hang). */
+function showPipelineError(){
   document.getElementById('pipe-loading').style.display='none';
   var grid=document.getElementById('pipe-grid');
   if(!grid)return;
