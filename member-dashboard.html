@@ -407,6 +407,7 @@ function buildMembers(data){
       region:row['Region'], hq:row['HQ Country'],
       opcos:n>0?`${n} OPCO${n>1?'s':''}`:null,
       sectors:row['Sectors'], renewal:fmtDate(row['Renewal Year'])||'TBD',
+      category:row['Category']||'',
       am:row['Account Manager'], status:row['Status'],
       statusCls:row['Status']==='Active'?'st-active':'st-new',
       priority:row['Priority'], extra:row['Bond / Revenue Notes']||'',
@@ -516,6 +517,7 @@ function renderMember(m){
   document.getElementById('mmeta').innerHTML=
     `<span class="mpill ${m.statusCls}">● ${m.status}</span>`+
     `<span class="mpill hi">★ ${m.priority} Priority</span>`+
+    (m.category?`<span class="mpill">${esc(m.category)}</span>`:'')+
     `<span class="mpill">${m.region}</span>`+
     (m.hq?`<span class="mpill">${m.hq}</span>`:'')+
     (m.opcos?`<span class="mpill">${m.opcos}</span>`:'')+
@@ -1533,6 +1535,7 @@ async function submitNewMember(){
     'HQ Country':document.getElementById('lnm-country').value,
     'OPCO Count':document.getElementById('lnm-opco').value||'0',
     'Sectors':document.getElementById('lnm-sectors').value,
+    'Category':document.getElementById('lnm-category').value,
     'Renewal Year':document.getElementById('lnm-renewal').value,
     'Account Manager':document.getElementById('lnm-am').value,
     'Status':document.getElementById('lnm-status').value,
@@ -1626,6 +1629,10 @@ init();
       <div class="lnm-field">
         <label>Sectors</label>
         <input type="text" id="lnm-sectors" placeholder="e.g. Telecoms, Media">
+      </div>
+      <div class="lnm-field">
+        <label>Category</label>
+        <input type="text" id="lnm-category" placeholder="e.g. CSP, Vendor, Consultancy">
       </div>
       <div class="lnm-row">
         <div class="lnm-field">

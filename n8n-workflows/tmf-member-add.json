@@ -1,0 +1,86 @@
+{
+  "name": "TMF — Add New Member",
+  "nodes": [
+    {
+      "id": "ma-001",
+      "name": "Webhook — Add Member",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-member-add",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "ma-002",
+      "name": "Append to Members Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID":          "={{ ($json.body ?? $json).member['Member ID'] }}",
+            "Member Name":        "={{ ($json.body ?? $json).member['Member Name'] }}",
+            "Region":             "={{ ($json.body ?? $json).member['Region'] }}",
+            "HQ Country":         "={{ ($json.body ?? $json).member['HQ Country'] }}",
+            "OPCO Count":         "={{ ($json.body ?? $json).member['OPCO Count'] }}",
+            "Sectors":            "={{ ($json.body ?? $json).member['Sectors'] }}",
+            "Category":           "={{ ($json.body ?? $json).member['Category'] }}",
+            "Renewal Year":       "={{ ($json.body ?? $json).member['Renewal Year'] }}",
+            "Account Manager":    "={{ ($json.body ?? $json).member['Account Manager'] }}",
+            "Status":             "={{ ($json.body ?? $json).member['Status'] }}",
+            "Priority":           "={{ ($json.body ?? $json).member['Priority'] }}",
+            "Bond / Revenue Notes": "={{ ($json.body ?? $json).member['Bond / Revenue Notes'] }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" }
+      }
+    },
+    {
+      "id": "ma-003",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Add Member":    { "main": [[{ "node": "Append to Members Sheet", "type": "main", "index": 0 }]] },
+    "Append to Members Sheet": { "main": [[{ "node": "Respond",                  "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
