@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greg's Stuff — Engagement Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0A091E; --navy:#0D0B4D; --crimson:#D91241; --green:#50C878; --amber:#F59E0B;
+  --blue:#3B82F6;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --border:rgba(255,255,255,.07); --border-hi:rgba(255,255,255,.13);
+  --surface:rgba(255,255,255,.04); --surface-hi:rgba(255,255,255,.07);
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+body{background:var(--ink);color:#fff;font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 50% 40% at 90% 5%,rgba(217,18,65,.09) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 50% at 5% 95%,rgba(80,200,120,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 70% 70% at 50% 40%,rgba(22,19,90,.4) 0%,transparent 70%)}
+
+/* ─── GATE ─────────────────────────────────────────────────── */
+#gate{
+  position:fixed;inset:0;z-index:9999;background:var(--navy);
+  display:flex;align-items:center;justify-content:center;padding:40px 24px;
+  transition:opacity .4s;
+}
+#gate::after{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 60% at 80% 20%,rgba(217,18,65,.1) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 50% at 10% 80%,rgba(46,12,75,.5) 0%,transparent 60%)}
+.gate-wrap{position:relative;z-index:1;width:100%;max-width:380px;text-align:center}
+.gate-dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,#D91241,#2E0C4B);margin:0 auto 14px}
+.gate-name{font-family:var(--serif);font-size:22px;font-weight:500;color:#fff}
+.gate-sub{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:5px;margin-bottom:28px}
+.gate-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:28px 24px}
+.gate-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:16px}
+.gate-input{width:100%;padding:11px 14px;margin-bottom:10px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s}
+.gate-input:focus{border-color:rgba(217,18,65,.6)}
+.gate-btn{width:100%;padding:13px;background:var(--crimson);border:none;border-radius:8px;color:#fff;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+.gate-btn:hover{background:#b80f35}
+.gate-btn:disabled{background:rgba(217,18,65,.4);cursor:default}
+.gate-err{font-family:var(--mono);font-size:11px;color:#ef4444;margin-bottom:10px;display:none}
+.gate-back{display:block;margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.3);text-decoration:none;transition:color .2s}
+.gate-back:hover{color:rgba(255,255,255,.6)}
+
+/* ─── DASHBOARD ─────────────────────────────────────────────── */
+#dashboard{display:none;position:relative;z-index:1;min-height:100vh}
+
+.topbar{
+  background:rgba(13,11,77,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 28px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.tb-left{display:flex;align-items:center;gap:14px}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:var(--crimson)}
+.tb-title{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.tb-sep{width:1px;height:14px;background:var(--border)}
+.tb-date{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.25)}
+.tb-right{display:flex;align-items:center;gap:14px}
+.tb-link{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);text-decoration:none;transition:color .2s}
+.tb-link:hover{color:rgba(255,255,255,.65)}
+.tb-logout{background:rgba(217,18,65,.1);border:1px solid rgba(217,18,65,.2);border-radius:6px;color:rgba(217,18,65,.7);font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:5px 13px;cursor:pointer;transition:all .2s}
+.tb-logout:hover{background:rgba(217,18,65,.2);color:var(--crimson)}
+
+.db-body{padding:28px 28px 60px;max-width:1440px;margin:0 auto}
+
+.db-header{margin-bottom:24px}
+.db-header-eye{font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:5px}
+.db-header h1{font-family:var(--serif);font-size:34px;font-weight:500;letter-spacing:-.01em;line-height:1}
+.db-header h1 em{font-style:italic;color:rgba(255,255,255,.5)}
+.db-header-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:5px;font-family:var(--mono);letter-spacing:.04em}
+
+/* ─── FILTER BAR ───────────────────────────────────────────── */
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.filter-search{position:relative;flex:1;min-width:200px;max-width:280px}
+.filter-search input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;
+  color:rgba(255,255,255,.85);font-family:var(--sans);font-size:12.5px;padding:8px 14px 8px 32px;outline:none;
+  transition:border-color .2s,background .15s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.32)' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:11px center}
+.filter-search input:focus{border-color:rgba(217,18,65,.4);background-color:rgba(255,255,255,.07)}
+.filter-search input::placeholder{color:rgba(255,255,255,.28)}
+.filter-select{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:100px;color:rgba(255,255,255,.7);font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;
+  padding:8px 26px 8px 14px;outline:none;cursor:pointer;transition:border-color .2s,color .2s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.32)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center}
+.filter-select:hover,.filter-select:focus{border-color:rgba(217,18,65,.4);color:#fff}
+.filter-select option{background:#0D0B4D;color:#fff}
+.filter-clear{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;background:none;
+  border:1px solid rgba(255,255,255,.1);border-radius:100px;color:rgba(255,255,255,.35);padding:8px 16px;cursor:pointer;
+  transition:border-color .15s,color .15s;white-space:nowrap}
+.filter-clear:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.75)}
+.filter-count{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:rgba(255,255,255,.28);margin-left:auto;white-space:nowrap}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.stat-tile{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:18px 20px;position:relative;overflow:hidden;
+}
+.stat-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent-c,rgba(255,255,255,.08)),transparent)}
+.stat-n{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1;color:#fff}
+.stat-l{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:5px}
+.stat-d{font-family:var(--mono);font-size:9px;margin-top:2px}
+
+/* Badges (shared engagement / churn / contribution pill) */
+.vpill{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;display:inline-block}
+.v-strong{background:rgba(80,200,120,.12);color:rgba(80,200,120,.9);border:1px solid rgba(80,200,120,.25)}
+.v-moderate{background:rgba(245,158,11,.1);color:rgba(245,158,11,.9);border:1px solid rgba(245,158,11,.25)}
+.v-weak{background:rgba(239,68,68,.1);color:rgba(239,68,68,.8);border:1px solid rgba(239,68,68,.2)}
+.v-new{background:rgba(59,130,246,.1);color:rgba(130,180,255,.8);border:1px solid rgba(59,130,246,.2)}
+.v-neutral{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
+.override-tag{font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:rgba(217,18,65,.75);margin-left:6px}
+
+.signal-pill{font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);color:rgba(255,255,255,.45)}
+.pcard-timing{padding:7px 10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);border-radius:6px;font-size:11px;color:rgba(245,158,11,.85);line-height:1.5}
+.pcard-timing.overdue{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:rgba(239,68,68,.85)}
+
+/* ─── DONUT CHART ──────────────────────────────────────────── */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:28px}
+.chart-card-title{font-family:var(--serif);font-size:19px;font-weight:500;color:#fff}
+.chart-card-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:rgba(255,255,255,.32);margin-top:3px}
+.chart-card-body{display:flex;align-items:center;gap:36px;flex-wrap:wrap;margin-top:18px}
+.donut-wrap{position:relative;width:176px;height:176px;flex-shrink:0}
+.donut-wrap svg{width:100%;height:100%;display:block}
+.donut-seg{cursor:pointer;transition:opacity .15s}
+.donut-seg:hover{opacity:.8}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donut-center-n{font-family:var(--serif);font-size:34px;font-weight:600;color:#fff;line-height:1}
+.donut-center-l{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:4px}
+.donut-legend{display:flex;flex-direction:column;gap:10px;min-width:190px}
+.donut-leg-item{display:flex;align-items:center;gap:10px;cursor:pointer;padding:5px 6px;border-radius:6px;transition:background .15s}
+.donut-leg-item:hover{background:rgba(255,255,255,.05)}
+.donut-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.donut-leg-label{font-size:12.5px;color:rgba(255,255,255,.65);flex:1}
+.donut-leg-val{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.85);font-weight:500}
+.donut-leg-pct{color:rgba(255,255,255,.35);font-weight:400}
+.donut-tip{position:fixed;z-index:3000;background:#0D0B4D;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:9px 13px;
+  font-size:11px;color:rgba(255,255,255,.8);line-height:1.6;max-width:240px;pointer-events:none;display:none;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.donut-tip b{display:block;color:#fff;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+
+/* ─── EM GROUPS ────────────────────────────────────────────── */
+.em-group{margin-bottom:36px}
+.em-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.em-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--crimson),#2E0C4B);
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.em-name{font-family:var(--serif);font-size:20px;font-weight:500;color:#fff}
+.em-meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:rgba(255,255,255,.35);margin-top:2px}
+.em-riskbar{margin-left:auto;display:flex;gap:5px;align-items:center}
+.em-risk-chip{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;padding:3px 9px;border-radius:100px}
+.em-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px}
+
+/* ─── ACCOUNT CARD ─────────────────────────────────────────── */
+.acard{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:20px;position:relative;
+  overflow:hidden;transition:border-color .2s,background .2s;animation:fadeUp .35s ease both}
+.acard:hover{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.12)}
+.acard-accent{position:absolute;top:0;left:0;bottom:0;width:3px}
+.acard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.acard-name{font-family:var(--serif);font-size:21px;font-weight:500;color:#fff;letter-spacing:-.01em;line-height:1.15}
+.acard-meta{font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,.32);letter-spacing:.05em;margin-top:3px}
+.acard-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.acard-section{margin-top:12px}
+.acard-label{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:7px}
+.acard-mstats{display:flex;flex-wrap:wrap;gap:10px;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.45)}
+.acard-mstats b{color:rgba(255,255,255,.75);font-weight:500}
+.acard-chips{display:flex;flex-wrap:wrap;gap:5px}
+.acard-empty{font-size:11px;color:rgba(255,255,255,.25);font-style:italic}
+.sugg-list{display:flex;flex-direction:column;gap:6px}
+.sugg-item{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:rgba(255,255,255,.6);line-height:1.5}
+.sugg-arrow{color:var(--crimson);font-weight:600;flex-shrink:0}
+.acard-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05)}
+.acard-notes{font-size:10.5px;color:rgba(255,255,255,.3);line-height:1.5;font-style:italic}
+.edit-ov-btn{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.45);padding:5px 12px;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;flex-shrink:0}
+.edit-ov-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* ─── OVERRIDE MODAL (reuses prospect edit-modal pattern) ────── */
+.pmodal-overlay{position:fixed;inset:0;background:rgba(5,3,20,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+.pmodal-overlay.open{opacity:1;pointer-events:all}
+.pmodal-panel{background:#0D0B4D;border:1px solid rgba(255,255,255,.11);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:scale(.96) translateY(12px);transition:transform .28s cubic-bezier(.34,1.46,.64,1);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04) inset}
+.pmodal-overlay.open .pmodal-panel{transform:scale(1) translateY(0)}
+.pmodal-head{padding:26px 28px 16px;border-bottom:1px solid rgba(255,255,255,.07);position:relative}
+.pmodal-close{position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s,color .15s}
+.pmodal-close:hover{background:rgba(255,255,255,.14);color:#fff}
+.pmodal-co{font-family:var(--serif);font-size:24px;font-weight:500;color:#fff;line-height:1.1;margin-bottom:6px;padding-right:40px}
+.pmodal-sub{font-size:11.5px;color:rgba(255,255,255,.35);font-family:var(--mono);letter-spacing:.02em;line-height:1.6}
+.pedit-body{padding:20px 28px;display:flex;flex-direction:column;gap:14px}
+.pedit-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pefield{display:flex;flex-direction:column;gap:5px}
+.pefield label{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.pefield input,.pefield select,.pefield textarea{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:6px;color:rgba(255,255,255,.88);font-size:12.5px;padding:8px 10px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.pefield input:focus,.pefield select:focus,.pefield textarea:focus{border-color:rgba(130,180,255,.4)}
+.pefield select option{background:#0D0B4D;color:#fff}
+.pefield textarea{resize:vertical;min-height:70px;line-height:1.55}
+.pedit-foot{padding:16px 28px 22px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
+.pedit-cancel{background:transparent;border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.55);padding:8px 18px;border-radius:6px;cursor:pointer;font-size:12px;transition:background .15s}
+.pedit-cancel:hover{background:rgba(255,255,255,.07)}
+.pedit-save{background:rgba(80,200,120,.18);border:1px solid rgba(80,200,120,.35);color:rgba(80,200,120,.95);padding:8px 22px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;transition:background .15s}
+.pedit-save:hover{background:rgba(80,200,120,.32)}
+.pedit-save:disabled{opacity:.45;cursor:default}
+
+/* ─── TOAST ─── */
+.ps-toast{position:fixed;bottom:24px;right:24px;z-index:2000;padding:10px 18px;border-radius:8px;font-size:12.5px;font-family:var(--mono);letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .22s,transform .22s}
+.ps-toast.visible{opacity:1;transform:translateY(0)}
+.ps-toast.ok{background:rgba(80,200,120,.18);border:1px solid rgba(80,200,120,.35);color:rgba(80,200,120,.95)}
+.ps-toast.err{background:rgba(217,18,65,.16);border:1px solid rgba(217,18,65,.3);color:rgba(255,100,120,.95)}
+
+/* ─── EMPTY / SKELETON ─── */
+.gs-empty{text-align:center;padding:60px 20px;border:1px dashed rgba(255,255,255,.1);border-radius:11px}
+.gs-empty-h{font-family:var(--serif);font-size:22px;font-weight:500;color:rgba(255,255,255,.5);margin-bottom:6px}
+.gs-empty-p{font-size:12px;color:rgba(255,255,255,.25);max-width:400px;margin:0 auto;line-height:1.7}
+.skel-card{border:1px solid var(--border);border-radius:11px;padding:20px;height:260px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.07) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+
+@media(max-width:1000px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .em-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .db-body{padding:20px 14px 40px}
+  .topbar{padding:0 14px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .pedit-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── PASSWORD GATE ─────────────────────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-wrap">
+    <div class="gate-dot"></div>
+    <div class="gate-name">Greg</div>
+    <div class="gate-sub">Engagement Command Center · Private Access</div>
+    <div class="gate-card">
+      <div class="gate-label">🔒 Restricted — Authorised Access Only</div>
+      <div class="gate-err" id="gate-err">Incorrect password.</div>
+      <input class="gate-input" type="password" id="gate-pw" placeholder="Enter access password" autocomplete="current-password">
+      <button class="gate-btn" id="gate-btn">Access →</button>
+    </div>
+    <a href="/" class="gate-back">← Back to site</a>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ─────────────────────────────────────────────────────── -->
+<div id="dashboard">
+
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-dot"></div>
+      <span class="tb-title">TM Forum Engagement Management</span>
+      <div class="tb-sep"></div>
+      <span class="tb-date" id="tb-date"></span>
+    </div>
+    <div class="tb-right">
+      <a href="claires-stuff.html" class="tb-link">← Claire's Stuff</a>
+      <a href="/" class="tb-link">← Site</a>
+      <button class="tb-logout" onclick="logout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="db-body">
+
+    <div class="db-header">
+      <div class="db-header-eye">Private · Greg · Engagement Management</div>
+      <h1>Engagement <em>Command</em> Center</h1>
+      <div class="db-header-sub">Portfolio health across all engagement managers · reads live from Member Intelligence</div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="filter-search">
+        <input type="text" id="filter-search" placeholder="Search engagement manager…">
+      </div>
+      <select class="filter-select" id="filter-team">
+        <option value="">All Teams</option>
+      </select>
+      <select class="filter-select" id="filter-region">
+        <option value="">All Regions</option>
+        <option value="North America">North America</option>
+        <option value="LATAM">LATAM</option>
+        <option value="Europe">Europe</option>
+        <option value="Middle East">Middle East</option>
+        <option value="Africa">Africa</option>
+        <option value="Asia">Asia</option>
+        <option value="Unmapped">Unmapped</option>
+      </select>
+      <button class="filter-clear" id="filter-clear" style="display:none">✕ Clear filters</button>
+      <span class="filter-count" id="filter-count"></span>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-tile" style="--accent-c:rgba(255,255,255,.1)">
+        <div class="stat-n" id="stat-total">—</div>
+        <div class="stat-l">Accounts Managed</div>
+        <div class="stat-d" style="color:rgba(255,255,255,.28)">across all EMs</div>
+      </div>
+      <div class="stat-tile" style="--accent-c:rgba(239,68,68,.3)">
+        <div class="stat-n" id="stat-risk" style="color:rgba(239,68,68,.85)">—</div>
+        <div class="stat-l">At Risk of Churn</div>
+        <div class="stat-d" style="color:rgba(239,68,68,.45)">high risk flag</div>
+      </div>
+      <div class="stat-tile" style="--accent-c:rgba(245,158,11,.3)">
+        <div class="stat-n" id="stat-renewals" style="color:rgba(245,158,11,.9)">—</div>
+        <div class="stat-l">Renewals Due</div>
+        <div class="stat-d" style="color:rgba(245,158,11,.4)">within 90 days</div>
+      </div>
+      <div class="stat-tile" style="--accent-c:rgba(80,200,120,.3)">
+        <div class="stat-n" id="stat-engaged" style="color:rgba(80,200,120,.9)">—</div>
+        <div class="stat-l">Actively Engaged</div>
+        <div class="stat-d" style="color:rgba(80,200,120,.45)">of total accounts</div>
+      </div>
+    </div>
+
+    <!-- Churn risk distribution -->
+    <div class="chart-card" id="chart-card" style="display:none">
+      <div class="chart-card-title">Churn Risk Distribution</div>
+      <div class="chart-card-sub">Share of managed accounts by computed risk level</div>
+      <div class="chart-card-body">
+        <div class="donut-wrap">
+          <svg viewBox="0 0 200 200" id="risk-donut"></svg>
+          <div class="donut-center">
+            <div class="donut-center-n" id="donut-total">—</div>
+            <div class="donut-center-l">Accounts</div>
+          </div>
+        </div>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+
+    <div id="em-groups"></div>
+    <div id="gs-empty" class="gs-empty" style="display:none">
+      <div class="gs-empty-h" id="gs-empty-h">Unable to load data</div>
+      <div class="gs-empty-p" id="gs-empty-msg"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="donut-tip" id="donut-tip"></div>
+
+<!-- ── OVERRIDE MODAL ────────────────────────────────────────────────── -->
+<div class="pmodal-overlay" id="ov-overlay">
+  <div class="pmodal-panel">
+    <div class="pmodal-head">
+      <button class="pmodal-close" onclick="closeOverride()">×</button>
+      <div class="pmodal-co" id="ov-title">Account</div>
+      <div class="pmodal-sub">Manual override — leave on "Auto" to use the computed score. Overrides are visible to all engagement managers.</div>
+    </div>
+    <div class="pedit-body">
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Churn Risk</label>
+          <select id="ov-churn">
+            <option value="">Auto (computed)</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div class="pefield">
+          <label>Contribution Level</label>
+          <select id="ov-contrib">
+            <option value="">Auto (computed)</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+      </div>
+      <div class="pefield">
+        <label>Notes</label>
+        <textarea id="ov-notes" placeholder="Why override? e.g. verbal renewal commitment received on last call…"></textarea>
+      </div>
+    </div>
+    <div class="pedit-foot">
+      <button class="pedit-cancel" onclick="closeOverride()">Cancel</button>
+      <button class="pedit-save" id="ov-save-btn" onclick="saveOverride()">Save Override</button>
+    </div>
+  </div>
+</div>
+
+<div class="ps-toast" id="toast"></div>
+
+<script>
+/* ─── AUTH GUARD is the gate below; no separate redirect needed ─────── */
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+/* ─── CONFIG ──────────────────────────────────────────────────────── */
+const DATA_URL   = 'https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrFn6JtkR8XDxYSUA7vVo4rJAGLxNdA4zS1dMj-lovI19dpx/exec';
+const UPDATE_WH  = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-update';
+const GS_CACHE_KEY = 'gregstuff-dash-v1';
+const GS_CACHE_TTL = 10*60*1000;
+
+let MEMBERS=[];
+let _ovTarget=null;
+
+/* ─── HELPERS ─────────────────────────────────────────────────────── */
+function daysBetween(a,b){return Math.round((b-a)/86400000)}
+
+function fmtDate(v){
+  if(!v||v==='TBD')return v||'TBD';
+  const d=new Date(v);
+  if(isNaN(d.getTime()))return v;
+  const dd=String(d.getUTCDate()).padStart(2,'0');
+  const mm=String(d.getUTCMonth()+1).padStart(2,'0');
+  const yyyy=d.getUTCFullYear();
+  return`${dd}/${mm}/${yyyy}`;
+}
+
+function initials(name){
+  return String(name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='ps-toast visible '+(type||'ok');
+  setTimeout(()=>{t.className='ps-toast '+(type||'ok')},2600);
+}
+
+/* ─── DATA ────────────────────────────────────────────────────────── */
+function getCachedData(){
+  try{
+    const raw=localStorage.getItem(GS_CACHE_KEY);
+    if(!raw)return null;
+    const obj=JSON.parse(raw);
+    return(Date.now()-obj.ts)<GS_CACHE_TTL?obj.data:null;
+  }catch(e){return null}
+}
+function setCachedData(data){
+  try{localStorage.setItem(GS_CACHE_KEY,JSON.stringify({ts:Date.now(),data}))}catch(e){}
+}
+async function fetchFresh(){
+  const resp=await fetch(DATA_URL,{redirect:'follow'});
+  if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
+  const data=await resp.json();
+  setCachedData(data);
+  return data;
+}
+
+/* Best-effort mapping of free-text Region values into the 6 standard buckets.
+   Order matters: check Africa before Middle East so "Africa & MENA" lands on
+   its primary continent rather than the secondary MENA mention. */
+function mapRegion(raw){
+  const s=String(raw||'').toLowerCase();
+  if(!s)return 'Unmapped';
+  if(/north america|\busa\b|\bus\b|canada/.test(s))return 'North America';
+  if(/latam|latin america|south america|caribbean|brazil|mexico/.test(s))return 'LATAM';
+  if(/europe|\beu\b|\buk\b|united kingdom/.test(s))return 'Europe';
+  if(/africa/.test(s))return 'Africa';
+  if(/middle east|mena|gulf/.test(s))return 'Middle East';
+  if(/asia|apac|pacific/.test(s))return 'Asia';
+  return 'Unmapped';
+}
+
+function buildMembers(data){
+  return (data['Members']||[]).map(row=>{
+    const id=row['Member ID'];
+    if(!id)return null;
+    const filter=tab=>(data[tab]||[]).filter(r=>r['Member ID']===id);
+    const rawSessions=filter('Sessions').filter(s=>s['Deleted']!=='true').sort((a,b)=>String(b['Date']).localeCompare(String(a['Date'])));
+    const rawCatalysts=filter('Catalysts').filter(c=>c['Deleted']!=='true');
+    const rawPipeline=filter('Pipeline').filter(p=>p['Deleted']!=='true');
+    const rawEvents=filter('Marketing & Events').filter(e=>e['Deleted']!=='true');
+    const matRows=filter('Maturity');
+    const dmu=filter('DMU');
+    return{
+      id, name:row['Member Name']||'Unnamed Member',
+      region:row['Region']||'', hq:row['HQ Country']||'',
+      regionBucket:mapRegion(row['Region']),
+      renewalRaw:row['Renewal Year'], renewalDisplay:fmtDate(row['Renewal Year'])||'TBD',
+      am:row['Account Manager']||'Unassigned',
+      team:(row['Team']||'').trim(),
+      status:row['Status']||'', priority:row['Priority']||'',
+      churnOverride:(row['Churn Risk Override']||'').trim(),
+      contribOverride:(row['Contribution Override']||'').trim(),
+      overrideNotes:(row['Override Notes']||'').trim(),
+      rawSessions, rawCatalysts, rawPipeline, rawEvents,
+      maturity:matRows.map(r=>({domain:r['Domain'],current:parseFloat(r['Current Level'])||0,target:parseFloat(r['Target Level'])||0})),
+      dmuCount:dmu.length,
+    };
+  }).filter(Boolean);
+}
+
+/* ─── SCORING ─────────────────────────────────────────────────────── */
+function levelToVClass(level){
+  return level==='strong'?'v-strong':level==='moderate'?'v-moderate':level==='weak'?'v-weak':'v-neutral';
+}
+function overrideToLevel(v,kind){
+  // kind: 'churn' -> Low=strong(good),High=weak(bad) ; 'contrib' -> High=strong(good),Low=weak
+  if(!v)return null;
+  if(kind==='churn')  return v==='Low'?'strong':v==='Medium'?'moderate':'weak';
+  return v==='High'?'strong':v==='Medium'?'moderate':'weak';
+}
+
+function computeIntel(m){
+  const today=new Date();
+  const lastSession=m.rawSessions[0];
+  const lastSessionDate=lastSession?new Date(lastSession['Date']):null;
+  const daysSinceSession=(lastSessionDate&&!isNaN(lastSessionDate.getTime()))?daysBetween(lastSessionDate,today):null;
+
+  let engagement;
+  if(daysSinceSession===null) engagement={level:'weak',label:'No Activity'};
+  else if(daysSinceSession<=30) engagement={level:'strong',label:'Active'};
+  else if(daysSinceSession<=75) engagement={level:'moderate',label:'Slowing'};
+  else engagement={level:'weak',label:'Dormant'};
+
+  let renewalDays=null;
+  if(m.renewalRaw&&m.renewalRaw!=='TBD'){
+    const rd=new Date(m.renewalRaw);
+    if(!isNaN(rd.getTime()))renewalDays=daysBetween(today,rd);
+  }
+
+  const activeCatalysts=m.rawCatalysts.filter(c=>['Active','In Progress','Forming','Planned','Planning'].includes(c['Status']));
+  const maturityProgress=m.maturity.length
+    ?m.maturity.reduce((s,d)=>s+(d.target>0?Math.min(d.current/d.target,1):0),0)/m.maturity.length
+    :0;
+
+  let contribScore=m.rawCatalysts.length*2+Math.round(maturityProgress*10);
+  let contribution;
+  if(contribScore>=14)contribution={level:'strong',label:'High Contributor'};
+  else if(contribScore>=6)contribution={level:'moderate',label:'Moderate Contributor'};
+  else contribution={level:'weak',label:'Low Contributor'};
+
+  let riskScore=0;
+  if(daysSinceSession===null)riskScore+=3;
+  else if(daysSinceSession>90)riskScore+=3;
+  else if(daysSinceSession>45)riskScore+=1;
+  if(renewalDays!==null&&renewalDays<0)riskScore+=2;
+  else if(renewalDays!==null&&renewalDays<=90&&engagement.level!=='strong')riskScore+=2;
+  if(m.priority==='High'&&engagement.level==='weak')riskScore+=1;
+  if(m.rawPipeline.length===0)riskScore+=1;
+  if(m.rawCatalysts.length===0)riskScore+=1;
+
+  let churn;
+  if(riskScore>=5)churn={level:'weak',label:'High Risk'};
+  else if(riskScore>=2)churn={level:'moderate',label:'Medium Risk'};
+  else churn={level:'strong',label:'Low Risk'};
+
+  const reasons=[];
+  if(daysSinceSession===null)reasons.push('No engagement sessions logged yet');
+  else if(daysSinceSession>90)reasons.push(`No session in ${daysSinceSession} days`);
+  if(renewalDays!==null&&renewalDays<0)reasons.push('Renewal date has passed');
+  else if(renewalDays!==null&&renewalDays<=90)reasons.push(`Renewal in ${renewalDays} days`);
+  if(m.rawPipeline.length===0)reasons.push('No active pipeline opportunities');
+  if(m.rawCatalysts.length===0)reasons.push('Not participating in any catalysts');
+  if(!reasons.length)reasons.push('Healthy engagement across all signals');
+
+  const suggestions=[];
+  if(daysSinceSession===null||daysSinceSession>60)suggestions.push('Schedule a check-in session — engagement has gone quiet.');
+  if(renewalDays!==null&&renewalDays<0)suggestions.push('Renewal date has passed — confirm status with the member urgently.');
+  else if(renewalDays!==null&&renewalDays<=120&&churn.level!=='strong')suggestions.push('Renewal approaching — prepare a value/ROI recap before the conversation.');
+  if(m.rawCatalysts.length===0)suggestions.push('Introduce a relevant Catalyst project to deepen involvement.');
+  if(m.rawPipeline.length===0)suggestions.push('No pipeline opportunities — explore expansion or upsell angles.');
+  if(m.dmuCount<2)suggestions.push('Decision-making unit is thin — map more stakeholders.');
+  if(!suggestions.length)suggestions.push('Account is healthy — maintain current cadence.');
+
+  // Apply manual overrides on top of computed values, marking provenance
+  const churnOv=overrideToLevel(m.churnOverride,'churn');
+  const contribOv=overrideToLevel(m.contribOverride,'contrib');
+  const finalChurn = churnOv?{level:churnOv,label:m.churnOverride+' Risk',override:true,computed:churn}:Object.assign({override:false},churn);
+  const finalContrib = contribOv?{level:contribOv,label:m.contribOverride+' Contributor',override:true,computed:contribution}:Object.assign({override:false},contribution);
+
+  return{engagement,churn:finalChurn,contribution:finalContrib,renewalDays,daysSinceSession,reasons,suggestions,activeCatalysts};
+}
+
+/* ─── RENDER ──────────────────────────────────────────────────────── */
+function renderStats(members){
+  const total=members.length;
+  const risk=members.filter(m=>m.intel.churn.level==='weak').length;
+  const renewalsSoon=members.filter(m=>m.intel.renewalDays!==null&&m.intel.renewalDays>=0&&m.intel.renewalDays<=90).length;
+  const engaged=members.filter(m=>m.intel.engagement.level==='strong').length;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-risk').textContent=risk;
+  document.getElementById('stat-renewals').textContent=renewalsSoon;
+  document.getElementById('stat-engaged').textContent=total?Math.round(100*engaged/total)+'%':'—';
+}
+
+function accountCard(m){
+  const it=m.intel;
+  const accentColor=it.churn.level==='weak'?'#ef4444':it.churn.level==='moderate'?'#f59e0b':'#50c878';
+  const projects=[...it.activeCatalysts.map(c=>c['Title']).filter(Boolean),
+                   ...m.rawPipeline.map(p=>p['Opportunity']).filter(Boolean)];
+  const renewalBox = m.renewalRaw==='TBD'||!m.renewalRaw
+    ? `<span class="signal-pill">Renewal: TBD</span>`
+    : it.renewalDays!==null && it.renewalDays<=90
+      ? `<div class="pcard-timing ${it.renewalDays<0?'overdue':''}">⚡ ${it.renewalDays<0?`Renewal overdue by ${Math.abs(it.renewalDays)}d (${m.renewalDisplay})`:`Renews in ${it.renewalDays}d (${m.renewalDisplay})`}</div>`
+      : `<span class="signal-pill">Renews ${m.renewalDisplay}</span>`;
+
+  return `<div class="acard">
+    <div class="acard-accent" style="background:${accentColor}"></div>
+    <div class="acard-top">
+      <div>
+        <div class="acard-name">${esc(m.name)}</div>
+        <div class="acard-meta">${esc(m.region)}${m.region&&m.hq?' · ':''}${esc(m.hq)}</div>
+      </div>
+    </div>
+    <div class="acard-badges">
+      <span class="vpill ${levelToVClass(it.engagement.level)}">${esc(it.engagement.label)}</span>
+      <span class="vpill ${levelToVClass(it.churn.level)}">${esc(it.churn.label)}${it.churn.override?'<span class="override-tag">· Manual</span>':''}</span>
+      <span class="vpill ${levelToVClass(it.contribution.level)}">${esc(it.contribution.label)}${it.contribution.override?'<span class="override-tag">· Manual</span>':''}</span>
+      ${m.priority?`<span class="vpill v-neutral">${esc(m.priority)} Priority</span>`:''}
+      <span class="vpill v-neutral">${esc(m.regionBucket)}</span>
+      ${m.team?`<span class="vpill v-neutral">${esc(m.team)}</span>`:''}
+    </div>
+
+    ${renewalBox}
+
+    <div class="acard-section">
+      <div class="acard-label">Activity</div>
+      <div class="acard-mstats">
+        <span><b>${m.rawSessions.length}</b> sessions</span>
+        <span><b>${m.rawCatalysts.length}</b> catalysts</span>
+        <span><b>${m.rawPipeline.length}</b> pipeline</span>
+        <span><b>${m.rawEvents.length}</b> events</span>
+      </div>
+    </div>
+
+    <div class="acard-section">
+      <div class="acard-label">Projects &amp; Opportunities</div>
+      <div class="acard-chips">
+        ${projects.length?projects.slice(0,6).map(p=>`<span class="signal-pill">${esc(p)}</span>`).join(''):'<span class="acard-empty">None currently tracked</span>'}
+      </div>
+    </div>
+
+    <div class="acard-section">
+      <div class="acard-label">Suggested Actions</div>
+      <div class="sugg-list">
+        ${it.suggestions.map(s=>`<div class="sugg-item"><span class="sugg-arrow">→</span><span>${esc(s)}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="acard-footer">
+      <div class="acard-notes">${m.overrideNotes?esc(m.overrideNotes):''}</div>
+      <button class="edit-ov-btn" onclick="openOverride('${esc(m.id)}')">Edit Override</button>
+    </div>
+  </div>`;
+}
+
+function renderGroups(members,filtered){
+  const wrap=document.getElementById('em-groups');
+  if(!members.length){
+    wrap.innerHTML='';
+    document.getElementById('gs-empty-h').textContent=filtered?'No matches':'No members yet';
+    document.getElementById('gs-empty-msg').textContent=filtered
+      ?'No accounts match the current filters.'
+      :'No members found in the Members tab.';
+    document.getElementById('gs-empty').style.display='block';
+    return;
+  }
+  document.getElementById('gs-empty').style.display='none';
+
+  const groups={};
+  members.forEach(m=>{(groups[m.am]=groups[m.am]||[]).push(m)});
+  const emNames=Object.keys(groups).sort();
+
+  wrap.innerHTML=emNames.map(em=>{
+    const accts=groups[em].sort((a,b)=>{
+      const order={weak:0,moderate:1,strong:2,neutral:3};
+      return (order[a.intel.churn.level]-order[b.intel.churn.level])||a.name.localeCompare(b.name);
+    });
+    const atRisk=accts.filter(a=>a.intel.churn.level==='weak').length;
+    return `<div class="em-group">
+      <div class="em-head">
+        <div class="em-avatar">${esc(initials(em))}</div>
+        <div>
+          <div class="em-name">${esc(em)}</div>
+          <div class="em-meta">${accts.length} account${accts.length!==1?'s':''}${atRisk?` · ${atRisk} at risk`:''}</div>
+        </div>
+      </div>
+      <div class="em-grid">${accts.map(accountCard).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+const RISK_CFG=[
+  {key:'strong',   label:'Low Risk',    color:'var(--green)'},
+  {key:'moderate', label:'Medium Risk', color:'var(--amber)'},
+  {key:'weak',     label:'High Risk',   color:'#ef4444'},
+];
+
+function renderDonut(members){
+  const card=document.getElementById('chart-card');
+  const total=members.length;
+  if(!total){card.style.display='none';return}
+  card.style.display='block';
+
+  const counts={strong:0,moderate:0,weak:0};
+  members.forEach(m=>counts[m.intel.churn.level]++);
+  document.getElementById('donut-total').textContent=total;
+
+  const r=70,cx=100,cy=100,sw=26;
+  const circ=2*Math.PI*r;
+  const nonZero=RISK_CFG.filter(c=>counts[c.key]>0).length;
+  const gapDeg=nonZero>1?4:0;
+
+  let cumDeg=0,arcs='';
+  RISK_CFG.forEach(c=>{
+    const n=counts[c.key];
+    if(!n)return;
+    const frac=n/total;
+    const segDeg=Math.max(frac*360-gapDeg,0);
+    const segLen=(segDeg/360)*circ;
+    const rotate=cumDeg-90;
+    arcs+=`<circle class="donut-seg" data-key="${c.key}" cx="${cx}" cy="${cy}" r="${r}" fill="none"
+      stroke="${c.color}" stroke-width="${sw}" stroke-linecap="${nonZero>1?'round':'butt'}"
+      stroke-dasharray="${segLen} ${circ-segLen}" transform="rotate(${rotate} ${cx} ${cy})"><title></title></circle>`;
+    cumDeg+=frac*360;
+  });
+  document.getElementById('risk-donut').innerHTML=arcs;
+
+  document.getElementById('donut-legend').innerHTML=RISK_CFG.map(c=>{
+    const n=counts[c.key],pct=total?Math.round(100*n/total):0;
+    return `<div class="donut-leg-item" data-key="${c.key}">
+      <span class="donut-leg-dot" style="background:${c.color}"></span>
+      <span class="donut-leg-label">${c.label}</span>
+      <span class="donut-leg-val">${n} <span class="donut-leg-pct">(${pct}%)</span></span>
+    </div>`;
+  }).join('');
+
+  attachDonutTooltip(members,counts);
+}
+
+function attachDonutTooltip(members,counts){
+  const tip=document.getElementById('donut-tip');
+  function show(e,key){
+    const cfg=RISK_CFG.find(c=>c.key===key);
+    const names=members.filter(m=>m.intel.churn.level===key).map(m=>m.name);
+    tip.innerHTML=`<b>${esc(cfg.label)} — ${counts[key]}</b>${names.length?esc(names.join(', ')):'No accounts'}`;
+    tip.style.left=(e.clientX+14)+'px';
+    tip.style.top=(e.clientY+14)+'px';
+    tip.style.display='block';
+  }
+  document.querySelectorAll('.donut-seg,.donut-leg-item').forEach(el=>{
+    el.addEventListener('mousemove',e=>show(e,el.dataset.key));
+    el.addEventListener('mouseleave',()=>{tip.style.display='none'});
+  });
+}
+
+/* ─── FILTERS ─────────────────────────────────────────────────────── */
+let filterSearch='',filterTeam='',filterRegion='';
+
+function populateTeamOptions(){
+  const sel=document.getElementById('filter-team');
+  const prev=sel.value;
+  const teams=[...new Set(MEMBERS.map(m=>m.team).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">All Teams</option>'+teams.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  if(teams.includes(prev))sel.value=prev;
+}
+
+function applyFilters(){
+  const q=filterSearch.trim().toLowerCase();
+  const filtered=MEMBERS.filter(m=>{
+    if(q&&!m.am.toLowerCase().includes(q))return false;
+    if(filterTeam&&m.team!==filterTeam)return false;
+    if(filterRegion&&m.regionBucket!==filterRegion)return false;
+    return true;
+  });
+  const active=!!(q||filterTeam||filterRegion);
+  document.getElementById('filter-clear').style.display=active?'inline-block':'none';
+  document.getElementById('filter-count').textContent=active?`${filtered.length} of ${MEMBERS.length} accounts`:'';
+  renderStats(filtered);
+  renderDonut(filtered);
+  renderGroups(filtered,active);
+}
+
+function render(members){
+  MEMBERS=members.map(m=>Object.assign(m,{intel:computeIntel(m)}));
+  populateTeamOptions();
+  applyFilters();
+}
+
+document.getElementById('filter-search').addEventListener('input',e=>{filterSearch=e.target.value;applyFilters()});
+document.getElementById('filter-team').addEventListener('change',e=>{filterTeam=e.target.value;applyFilters()});
+document.getElementById('filter-region').addEventListener('change',e=>{filterRegion=e.target.value;applyFilters()});
+document.getElementById('filter-clear').addEventListener('click',()=>{
+  filterSearch='';filterTeam='';filterRegion='';
+  document.getElementById('filter-search').value='';
+  document.getElementById('filter-team').value='';
+  document.getElementById('filter-region').value='';
+  applyFilters();
+});
+
+/* ─── OVERRIDE MODAL ──────────────────────────────────────────────── */
+function openOverride(id){
+  const m=MEMBERS.find(x=>x.id===id);
+  if(!m)return;
+  _ovTarget=m;
+  document.getElementById('ov-title').textContent=m.name;
+  document.getElementById('ov-churn').value=m.churnOverride||'';
+  document.getElementById('ov-contrib').value=m.contribOverride||'';
+  document.getElementById('ov-notes').value=m.overrideNotes||'';
+  document.getElementById('ov-overlay').classList.add('open');
+}
+function closeOverride(){
+  document.getElementById('ov-overlay').classList.remove('open');
+  _ovTarget=null;
+}
+async function saveOverride(){
+  if(!_ovTarget)return;
+  const btn=document.getElementById('ov-save-btn');
+  const churnOverride=document.getElementById('ov-churn').value;
+  const contribOverride=document.getElementById('ov-contrib').value;
+  const notes=document.getElementById('ov-notes').value;
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const resp=await fetch(UPDATE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({memberId:_ovTarget.id,churnOverride,contribOverride,notes})});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    _ovTarget.churnOverride=churnOverride;
+    _ovTarget.contribOverride=contribOverride;
+    _ovTarget.overrideNotes=notes;
+    _ovTarget.intel=computeIntel(_ovTarget);
+    applyFilters();
+    showToast('Override saved','ok');
+    closeOverride();
+  }catch(e){
+    showToast('Save failed — is the tmf-member-update workflow imported & active in n8n?','err');
+  }finally{
+    btn.disabled=false;btn.textContent='Save Override';
+  }
+}
+document.getElementById('ov-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('ov-overlay'))closeOverride();
+});
+
+/* ─── INIT / LOAD ─────────────────────────────────────────────────── */
+function showError(err){
+  document.getElementById('em-groups').innerHTML='';
+  document.getElementById('gs-empty-h').textContent='Unable to load data';
+  document.getElementById('gs-empty-msg').innerHTML=`${esc(err.message)}<br><br>Make sure the Google Sheet is published:<br><strong>File → Share → Publish to web → Publish</strong>`;
+  document.getElementById('gs-empty').style.display='block';
+}
+
+async function loadDashboard(){
+  try{
+    const cached=getCachedData();
+    if(cached){
+      render(buildMembers(cached));
+      fetchFresh().then(data=>render(buildMembers(data))).catch(()=>{});
+    }else{
+      const data=await fetchFresh();
+      render(buildMembers(data));
+    }
+  }catch(err){showError(err)}
+}
+
+/* ─── PASSWORD GATE ───────────────────────────────────────────────── */
+(function(){
+  var PW_CHECK='https://n8n.srv1739004.hstgr.cloud/webhook/gregs-stuff-pw-check';
+  var SESSION_KEY='greg-auth';
+
+  function showDashboard(){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    var d=new Date();
+    var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('tb-date').textContent=d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear();
+    loadDashboard();
+  }
+
+  if(localStorage.getItem(SESSION_KEY)==='1'){showDashboard();return}
+  document.getElementById('gate-pw').focus();
+
+  async function sha256(msg){
+    var buf=new TextEncoder().encode(msg);
+    var hash=await crypto.subtle.digest('SHA-256',buf);
+    return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+  }
+
+  var btn=document.getElementById('gate-btn');
+  var err=document.getElementById('gate-err');
+  var inp=document.getElementById('gate-pw');
+
+  btn.addEventListener('click',async function(){
+    var pw=inp.value;
+    if(!pw){inp.focus();return}
+    btn.textContent='Checking…';btn.disabled=true;err.style.display='none';
+    try{
+      var hash=await sha256(pw);
+      var r=await fetch(PW_CHECK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hash:hash})});
+      var d=await r.json();
+      if(d.valid){grant()}else{deny('Incorrect password.')}
+    }catch(e){
+      var h2=await sha256(pw);
+      var def=await sha256('EngageOps2026!');
+      if(h2===def){grant()}else{deny('Incorrect password.')}
+    }
+  });
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')btn.click()});
+
+  function grant(){
+    localStorage.setItem(SESSION_KEY,'1');
+    document.getElementById('gate').style.opacity='0';
+    setTimeout(showDashboard,400);
+  }
+  function deny(msg){
+    err.textContent=msg;err.style.display='block';
+    inp.value='';inp.focus();
+    btn.textContent='Access →';btn.disabled=false;
+  }
+
+  window.logout=function(){
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href='/';
+  };
+})();
+</script>
+</body>
+</html>
