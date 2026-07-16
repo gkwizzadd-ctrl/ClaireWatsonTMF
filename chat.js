@@ -432,11 +432,12 @@
       : '(No conversation recorded before form submission)';
 
     try {
-      await fetch(FORM_WH, {
+      const resp = await fetch(FORM_WH, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, organisation: org, message: msg, source: 'ClaireWatsonTMF', conversationTranscript: transcript })
       });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
       cfPanel.innerHTML = '<p style="color:#0D0B4D;font-size:14px;text-align:center;padding:20px">✓ Message sent. Claire will be in touch shortly.</p>';
     } catch {
       alert('Sorry, there was an error. Please try again.');
