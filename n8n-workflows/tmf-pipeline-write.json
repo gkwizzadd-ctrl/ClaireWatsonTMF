@@ -42,7 +42,7 @@
           "value": {
             "Member ID":       "={{ ($json.body ?? $json).pipeline['Member ID'] }}",
             "Opportunity":     "={{ ($json.body ?? $json).pipeline['Opportunity'] }}",
-            "Value":           "={{ ($json.body ?? $json).pipeline['Value'] }}",
+            "Value Est":       "={{ ($json.body ?? $json).pipeline['Value'] }}",
             "Stage":           "={{ ($json.body ?? $json).pipeline['Stage'] }}",
             "Expected Close":  "={{ ($json.body ?? $json).pipeline['Expected Close'] }}",
             "Owner":           "={{ ($json.body ?? $json).pipeline['Owner'] }}",
@@ -84,7 +84,7 @@
           "value": {
             "Member ID":       "={{ ($json.body ?? $json).pipeline['Member ID'] }}",
             "Opportunity":     "={{ ($json.body ?? $json).pipeline['Opportunity'] }}",
-            "Value":           "={{ ($json.body ?? $json).pipeline['Value'] }}",
+            "Value Est":       "={{ ($json.body ?? $json).pipeline['Value'] }}",
             "Stage":           "={{ ($json.body ?? $json).pipeline['Stage'] }}",
             "Expected Close":  "={{ ($json.body ?? $json).pipeline['Expected Close'] }}",
             "Owner":           "={{ ($json.body ?? $json).pipeline['Owner'] }}",
