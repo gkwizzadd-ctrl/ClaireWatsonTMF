@@ -1446,7 +1446,7 @@ function closeLnm(){
 }
 
 async function loadNewMembers(){
-  if(!('showDirectoryPicker' in window)){
+  if(!('showOpenFilePicker' in window)){
     alert('This feature requires Chrome or Edge. Please open this page in Chrome.');
     return;
   }
@@ -1463,12 +1463,15 @@ async function loadNewMembers(){
   submitBtn.style.display='none';
   submitBtn.disabled=true;
   statusMsg.textContent='';
-  sub.textContent='Select the Claire members folder to scan for new files…';
+  sub.textContent='Select the new member file(s) to load…';
   modal.classList.add('open');
 
-  var dirHandle;
+  var fileHandles;
   try{
-    dirHandle=await window.showDirectoryPicker({mode:'read'});
+    fileHandles=await window.showOpenFilePicker({
+      multiple:true,
+      types:[{description:'PowerPoint files',accept:{'application/vnd.openxmlformats-officedocument.presentationml.presentation':['.pptx']}}]
+    });
   }catch(e){
     closeLnm();
     return;
@@ -1476,25 +1479,18 @@ async function loadNewMembers(){
 
   sub.textContent='Scanning…';
 
-  // Collect subfolder names in the directory
-  var folders=[];
-  for await(var entry of dirHandle.values()){
-    if(entry.kind==='directory') folders.push(entry.name);
-    else if(entry.kind==='file'&&/\.pptx$/i.test(entry.name)){
-      // Also treat top-level pptx as a name (strip extension)
-      folders.push(entry.name.replace(/\.pptx$/i,''));
-    }
-  }
+  // Candidate member names, one per selected file (strip extension)
+  var candidates=fileHandles.map(function(h){return h.name.replace(/\.pptx$/i,'');});
 
   // Known member names (lowercase) from the already-loaded MEMBERS object
   var knownNames=Object.values(MEMBERS||{}).map(function(m){return(m['Member Name']||m.name||'').toLowerCase().trim();});
 
-  var newOnes=folders.filter(function(f){
+  var newOnes=candidates.filter(function(f){
     return knownNames.indexOf(f.toLowerCase().trim())===-1;
   });
 
   if(newOnes.length===0){
-    content.innerHTML='<div class="lnm-none">✓ No new members found — all files are already loaded.</div>';
+    content.innerHTML='<div class="lnm-none">✓ No new members found — the selected file(s) are already loaded.</div>';
     sub.textContent='Scan complete';
     return;
   }
@@ -1593,7 +1589,7 @@ init();
 <div id="lnm-modal">
   <div class="lnm-panel">
     <div class="lnm-title">Load New Members</div>
-    <div class="lnm-sub" id="lnm-sub">Scanning Claire members folder…</div>
+    <div class="lnm-sub" id="lnm-sub">Select a member file to scan…</div>
     <div id="lnm-content"></div>
     <div id="lnm-form" style="display:none">
       <div class="lnm-field">
