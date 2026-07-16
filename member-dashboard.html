@@ -822,7 +822,7 @@ function renderSessions(m){
         <button class="crd-btn crd-edit" onclick="openCrud('session',${i})">Edit</button>
         <button class="crd-btn crd-del" onclick="confirmDeleteSession(${i})">Delete</button>
       </div>
-      <div class="stop"><span class="scat">${esc(s['Category']||'')}</span><span class="sdate">${esc(s['Date']||'')}</span></div>
+      <div class="stop"><span class="scat">${esc(s['Category']||'')}</span><span class="sdate">${esc(fmtDate(s['Date'])||'')}</span></div>
       <div class="stitle">${esc(title)}</div>
       ${who?`<div class="satt">Attendees: ${esc(who)}</div>`:''}
       ${out?`<div class="sout">${esc(out)}</div>`:''}
