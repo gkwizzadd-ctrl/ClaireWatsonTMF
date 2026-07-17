@@ -49,8 +49,9 @@
         "sheetName": { "__rl": true, "value": "Prospects", "mode": "name" },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["Company"],
+          "matchingColumns": ["row_number"],
           "value": {
+            "row_number":       "={{ ($json.body ?? $json).prospect['row_number'] }}",
             "Company":          "={{ ($json.body ?? $json).prospect['Company'] }}",
             "HQ":               "={{ ($json.body ?? $json).prospect['HQ'] }}",
             "Score":            "={{ ($json.body ?? $json).prospect['Score'] }}",
@@ -85,8 +86,9 @@
         "sheetName": { "__rl": true, "value": "Prospects", "mode": "name" },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["Company"],
+          "matchingColumns": ["row_number"],
           "value": {
+            "row_number": "={{ ($json.body ?? $json).prospect['row_number'] }}",
             "Company": "={{ ($json.body ?? $json).prospect['Company'] }}",
             "Status":  "Deleted"
           },

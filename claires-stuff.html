@@ -1394,6 +1394,7 @@ async function saveProspectEdit(){
   var payload={
     action:'update',
     prospect:{
+      'row_number':r['row_number'],
       'Company':r['Company'],
       'HQ':document.getElementById('pedit-hq').value.trim(),
       'Score':document.getElementById('pedit-score').value.trim(),
@@ -1431,9 +1432,14 @@ function confirmDeleteProspect(idx){
 
 async function deleteProspect(idx,r){
   try{
-    await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'delete',prospect:{'Company':r['Company']}})});
-  }catch(e){}
+    var resp=await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'delete',prospect:{'row_number':r['row_number'],'Company':r['Company']}})});
+    var data=await resp.json();
+    if(!resp.ok||!data.success)throw new Error(data&&data.error||'Delete failed');
+  }catch(e){
+    showPsToast('Delete failed: '+e.message,true);
+    return;
+  }
   var gi=allProspects.indexOf(r);
   if(gi!==-1)allProspects.splice(gi,1);
   try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
