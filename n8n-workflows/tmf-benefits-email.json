@@ -1,0 +1,64 @@
+{
+  "name": "TMF — Benefits Brief Email",
+  "nodes": [
+    {
+      "id": "be-001",
+      "name": "Webhook — Benefits Email",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-benefits-email",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "be-002",
+      "name": "Send Benefits Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ ($json.body ?? $json).to }}",
+        "subject": "=TM Forum Engagement Intelligence — Benefits Brief ({{ ($json.body ?? $json).recipient || 'Gregory Geodjenian' }})",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#003087;color:#ffffff;border-radius:8px;overflow:hidden;\"><div style=\"padding:32px 40px;\"><p style=\"margin:0;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.6);\">TM Forum &middot; Engagement Intelligence</p><h1 style=\"margin:10px 0 0;font-size:24px;font-weight:600;\">Benefits Brief</h1></div><div style=\"background:#ffffff;color:#2C3148;padding:36px 40px;\">{{ ($json.body ?? $json).note ? '<p style=\"font-size:14px;line-height:1.7;margin:0 0 22px;\">'+($json.body ?? $json).note+'</p>' : '' }}<p style=\"font-size:14px;line-height:1.7;margin:0 0 26px;\">A short brief prepared for <strong>{{ ($json.body ?? $json).recipient || 'you' }}</strong> on how TM Forum's Engagement Intelligence platform protects membership renewal, gives Engagement Managers real operational visibility, and keeps the Leadership Team confidently informed — in real time.</p><div style=\"text-align:center;margin:30px 0;\"><a href=\"{{ ($json.body ?? $json).pdfUrl }}\" style=\"display:inline-block;background:#D91241;color:#ffffff;text-decoration:none;padding:14px 34px;border-radius:4px;font-size:14px;font-weight:600;letter-spacing:0.03em;\">View the Benefits Brief →</a></div><p style=\"font-size:12px;color:#6B7280;line-height:1.6;margin-top:26px;\">Prepared by <strong>{{ ($json.body ?? $json).preparedBy || 'Claire Watson' }}</strong>, Engagement Manager, TM Forum.</p></div></div>",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account2"
+        }
+      }
+    },
+    {
+      "id": "be-003",
+      "name": "Respond — Sent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Benefits Email": { "main": [[{ "node": "Send Benefits Email", "type": "main", "index": 0 }]] },
+    "Send Benefits Email":      { "main": [[{ "node": "Respond — Sent",      "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

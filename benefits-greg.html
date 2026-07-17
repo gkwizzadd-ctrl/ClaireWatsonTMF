@@ -49,6 +49,48 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
 #actions button:hover { background: rgba(255,255,255,0.2); }
 #actions button.primary { background: var(--claire); border-color: var(--claire); }
 #actions button.primary:hover { background: #b80f35; }
+#actions a.abtn {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22);
+  color: #fff; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 7px 18px; cursor: pointer;
+  transition: background 0.18s; text-decoration: none; display: inline-flex; align-items: center;
+}
+#actions a.abtn:hover { background: rgba(255,255,255,0.2); }
+#actions a.abtn.primary { background: var(--claire); border-color: var(--claire); }
+#actions a.abtn.primary:hover { background: #b80f35; }
+
+/* ── Email modal (not printed) ── */
+#email-modal {
+  position: fixed; inset: 0; z-index: 10000; background: rgba(5,3,20,0.72);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+#email-modal.open { opacity: 1; pointer-events: all; }
+.em-panel {
+  background: #fff; width: 100%; max-width: 420px; border-radius: 10px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5); overflow: hidden;
+  transform: scale(0.96) translateY(10px); transition: transform 0.25s cubic-bezier(.34,1.46,.64,1);
+}
+#email-modal.open .em-panel { transform: scale(1) translateY(0); }
+.em-head { background: var(--tmf-blue); padding: 18px 24px; }
+.em-head .eye { font-family: var(--mono); font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+.em-head h3 { font-family: var(--serif); font-size: 19px; font-weight: 500; color: #fff; }
+.em-body { padding: 22px 24px; }
+.em-field { margin-bottom: 14px; }
+.em-field label { display: block; font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.em-field input, .em-field textarea {
+  width: 100%; padding: 9px 12px; border: 1.5px solid var(--rule); border-radius: 6px;
+  font-family: var(--sans); font-size: 13px; color: var(--body); outline: none; transition: border-color 0.15s;
+}
+.em-field input:focus, .em-field textarea:focus { border-color: var(--tmf-mid); }
+.em-field textarea { resize: vertical; min-height: 60px; }
+.em-status { font-family: var(--mono); font-size: 10px; margin-bottom: 10px; display: none; }
+.em-status.ok { color: #1a8a3f; display: block; }
+.em-status.err { color: var(--claire); display: block; }
+.em-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 0 24px 22px; }
+.em-cancel { background: none; border: 1px solid var(--rule); color: var(--muted); padding: 9px 18px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-family: var(--sans); }
+.em-send { background: var(--claire); border: none; color: #fff; padding: 9px 22px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 600; font-family: var(--sans); }
+.em-send:disabled { opacity: 0.5; cursor: default; }
 
 /* ── Page layout ── */
 #root { padding: 70px 0 40px; }
@@ -193,7 +235,7 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
 * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 @media print {
   body { background: white; }
-  #actions { display: none !important; }
+  #actions, #email-modal { display: none !important; }
   #root { padding-top: 0; }
   .page { box-shadow: none; margin: 0; width: 100%; min-height: 0; page-break-after: always; }
   .page:last-child { page-break-after: auto; }
@@ -205,8 +247,33 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
 <div id="actions">
   <span class="atitle">TM Forum · Engagement Intelligence — Benefits Brief</span>
   <div class="abtns">
-    <button class="primary" onclick="window.print()">↓ Save as PDF</button>
+    <a class="abtn primary" href="TM-Forum-Growth-Benefits-Geodjenian.pdf" download="TM Forum Engagement Intelligence — Gregory Geodjenian.pdf">⬇ Save Document</a>
+    <button onclick="openEmailModal()">✉ Email to Recipient</button>
     <button onclick="window.close()">✕ Close</button>
+  </div>
+</div>
+
+<div id="email-modal">
+  <div class="em-panel">
+    <div class="em-head">
+      <div class="eye">Share This Brief</div>
+      <h3>Email to a Recipient</h3>
+    </div>
+    <div class="em-body">
+      <div class="em-status" id="em-status"></div>
+      <div class="em-field">
+        <label>Recipient email</label>
+        <input type="email" id="em-to" placeholder="name@example.com" autocomplete="off">
+      </div>
+      <div class="em-field">
+        <label>Note (optional)</label>
+        <textarea id="em-note" placeholder="Add a short personal note…"></textarea>
+      </div>
+    </div>
+    <div class="em-foot">
+      <button class="em-cancel" onclick="closeEmailModal()">Cancel</button>
+      <button class="em-send" id="em-send-btn" onclick="sendBenefitsEmail()">Send</button>
+    </div>
   </div>
 </div>
 
@@ -220,7 +287,7 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
     </div>
     <div class="cover-fill">
     <div class="cover-content">
-      <div class="cover-portrait"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
+      <div class="cover-portrait"><img src="images/GregGeodjenian.jpg" alt="Gregory Geodjenian" style="object-position:center 20%"></div>
       <div class="cover-right">
         <div class="cover-tag">Prepared Exclusively For</div>
         <div class="cover-title">Gregory<br>Geodjenian</div>
@@ -324,5 +391,58 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
   </div>
 
 </div>
+
+<script>
+const BENEFITS_EMAIL_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-benefits-email';
+const PDF_URL = new URL('TM-Forum-Growth-Benefits-Geodjenian.pdf', window.location.href).href;
+
+function openEmailModal() {
+  document.getElementById('email-modal').classList.add('open');
+  document.getElementById('em-status').className = 'em-status';
+  document.getElementById('em-status').textContent = '';
+  setTimeout(() => document.getElementById('em-to').focus(), 50);
+}
+function closeEmailModal() {
+  document.getElementById('email-modal').classList.remove('open');
+}
+document.getElementById('email-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'email-modal') closeEmailModal();
+});
+
+async function sendBenefitsEmail() {
+  const to = document.getElementById('em-to').value.trim();
+  const note = document.getElementById('em-note').value.trim();
+  const status = document.getElementById('em-status');
+  const btn = document.getElementById('em-send-btn');
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    status.className = 'em-status err';
+    status.textContent = 'Please enter a valid email address.';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  status.className = 'em-status';
+  status.textContent = '';
+  try {
+    const resp = await fetch(BENEFITS_EMAIL_WH, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, note, pdfUrl: PDF_URL, recipient: 'Gregory Geodjenian', preparedBy: 'Claire Watson' })
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    status.className = 'em-status ok';
+    status.textContent = '✓ Sent to ' + to;
+    document.getElementById('em-to').value = '';
+    document.getElementById('em-note').value = '';
+    setTimeout(closeEmailModal, 1800);
+  } catch (e) {
+    status.className = 'em-status err';
+    status.textContent = 'Send failed — please try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send';
+  }
+}
+</script>
 </body>
 </html>
