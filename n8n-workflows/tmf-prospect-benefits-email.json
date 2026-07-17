@@ -1,0 +1,64 @@
+{
+  "name": "TMF — Prospect Benefits Brief Email",
+  "nodes": [
+    {
+      "id": "pbe-001",
+      "name": "Webhook — Prospect Benefits Email",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-prospect-benefits-email",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "pbe-002",
+      "name": "Send Prospect Benefits Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ ($json.body ?? $json).to }}",
+        "subject": "=TM Forum ODA — Benefits Brief for {{ ($json.body ?? $json).company || 'Your Organisation' }}",
+        "emailType": "html",
+        "message": "={{ ($json.body ?? $json).emailHtml }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "",
+          "name": "Gmail account2"
+        }
+      }
+    },
+    {
+      "id": "pbe-003",
+      "name": "Respond — Sent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Prospect Benefits Email": { "main": [[{ "node": "Send Prospect Benefits Email", "type": "main", "index": 0 }]] },
+    "Send Prospect Benefits Email":      { "main": [[{ "node": "Respond — Sent",                "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

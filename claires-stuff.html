@@ -224,6 +224,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pact-edit:hover{background:rgba(59,130,246,.4)}
 .pact-del{background:rgba(217,18,65,.18);color:rgba(255,100,120,.95)}
 .pact-del:hover{background:rgba(217,18,65,.38)}
+.pact-ben{background:rgba(80,200,120,.18);color:rgba(120,220,160,.95)}
+.pact-ben:hover{background:rgba(80,200,120,.36)}
 
 /* ─── PROSPECT EDIT MODAL ─── */
 .pedit-panel{max-width:580px}
@@ -1189,6 +1191,7 @@ function buildCard(r,i){
 
   return '<div class="pcard" onclick="openProspectModal('+i+')" style="animation-delay:'+(i*0.05)+'s">'+
     '<div class="pcard-actions">'+
+      '<button class="pact-btn pact-ben" onclick="event.stopPropagation();openProspectBenefits('+i+')">Benefits</button>'+
       '<button class="pact-btn pact-edit" onclick="event.stopPropagation();openProspectEdit('+i+')">Edit</button>'+
       '<button class="pact-btn pact-del" onclick="event.stopPropagation();confirmDeleteProspect('+i+')">Delete</button>'+
     '</div>'+
@@ -1421,6 +1424,17 @@ async function saveProspectEdit(){
   }finally{
     btn.disabled=false;btn.textContent='Save Changes';
   }
+}
+
+function openProspectBenefits(idx){
+  var r=_clickableProspects[idx];
+  if(!r)return;
+  openProspectBenefitsFor(r);
+}
+function openProspectBenefitsFor(r){
+  if(!r)return;
+  try{localStorage.setItem('tmf-prospect-benefits-data',JSON.stringify(r))}catch(e){}
+  window.open('prospect-benefits.html','_blank');
 }
 
 function confirmDeleteProspect(idx){
@@ -1676,6 +1690,7 @@ function copyAllEmail(){
       <button class="pmodal-close" onclick="closeProspectModal()">✕</button>
       <div id="pmodal-co" class="pmodal-co"></div>
       <div id="pmodal-meta" class="pmodal-meta"></div>
+      <button class="pact-btn pact-ben" style="margin-top:12px;padding:6px 14px;font-size:9px" onclick="openProspectBenefitsFor(_modalProspect)">✦ Generate ODA Benefits Brief</button>
     </div>
     <div class="pmodal-body">
       <div class="pmodal-col">
