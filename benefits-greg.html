@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TM Forum Engagement Intelligence — Prepared for Gregory Geodjenian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --tmf-blue:  #003087;
+  --tmf-mid:   #0060B8;
+  --tmf-light: #0080CC;
+  --tmf-cyan:  #00B8D9;
+  --claire:    #D91241;
+  --ink:       #0D0B4D;
+  --body:      #2C3148;
+  --muted:     #6B7280;
+  --rule:      #E2E6F0;
+  --bg:        #F7F9FC;
+  --white:     #FFFFFF;
+  --serif:     'Cormorant Garamond', Georgia, serif;
+  --sans:      'DM Sans', 'Segoe UI', sans-serif;
+  --mono:      'DM Mono', 'Courier New', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
+
+/* ── Actions bar (not printed) ── */
+#actions {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: var(--tmf-blue);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 54px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+#actions .atitle {
+  color: rgba(255,255,255,0.85); font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+#actions .abtns { display: flex; gap: 10px; }
+#actions button {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22);
+  color: #fff; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 7px 18px; cursor: pointer;
+  transition: background 0.18s;
+}
+#actions button:hover { background: rgba(255,255,255,0.2); }
+#actions button.primary { background: var(--claire); border-color: var(--claire); }
+#actions button.primary:hover { background: #b80f35; }
+
+/* ── Page layout ── */
+#root { padding: 70px 0 40px; }
+.page {
+  width: 210mm; min-height: 297mm;
+  background: var(--white);
+  margin: 0 auto 20px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+
+/* ── COVER PAGE ── */
+.cover-top-bar {
+  background: var(--tmf-blue); padding: 32px 44px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cover-top-bar .brand-text {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6);
+}
+.cover-top-bar .brand-text strong {
+  display: block; color: #fff; font-size: 19px; letter-spacing: 0.06em;
+  font-weight: 500; margin-top: 3px;
+}
+.cover-top-bar .brand-logo {
+  height: 44px; width: auto; display: block;
+  object-fit: contain; filter: invert(1); mix-blend-mode: screen;
+}
+.cover-fill { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+.cover-content {
+  display: flex; gap: 32px; padding: 0 44px; align-items: flex-start;
+}
+.cover-portrait {
+  flex-shrink: 0; width: 96px; height: 113px;
+  border-radius: 50%; overflow: hidden;
+  border: 2px solid var(--tmf-blue);
+  box-shadow: 0 8px 28px rgba(0,48,135,0.25);
+}
+.cover-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 8%; }
+.cover-right { flex: 1; }
+.cover-tag {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--claire); margin-bottom: 10px;
+}
+.cover-title {
+  font-family: var(--serif); font-size: 40px; font-weight: 500;
+  line-height: 1.06; color: var(--tmf-blue); letter-spacing: -0.02em; margin-bottom: 6px;
+}
+.cover-title2 {
+  font-family: var(--serif); font-size: 17px; font-style: italic; font-weight: 500;
+  color: var(--claire); margin-bottom: 16px;
+}
+.cover-subtitle {
+  font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 18px;
+}
+.cover-pullquote {
+  border-left: 3px solid var(--tmf-blue); padding: 12px 16px;
+  font-family: var(--serif); font-size: 14.5px; font-style: italic;
+  color: var(--body); line-height: 1.65; background: var(--bg);
+  margin-bottom: 8px;
+}
+.cover-by {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+}
+.cover-member-block {
+  margin: 0 44px;
+  background: var(--tmf-blue); padding: 20px 26px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px;
+}
+.cover-field label {
+  display: block; font-family: var(--mono); font-size: 7px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45); margin-bottom: 3px;
+}
+.cover-field span { font-family: var(--sans); font-size: 12.5px; color: #fff; font-weight: 500; }
+.cover-stats { margin: 0 44px; display: flex; }
+.cover-stat { flex: 1; text-align: center; padding: 14px 8px; border: 1px solid var(--rule); border-right: none; }
+.cover-stat:last-child { border-right: 1px solid var(--rule); }
+.cover-stat-n { font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--tmf-blue); line-height: 1; }
+.cover-stat-l { font-family: var(--mono); font-size: 7px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+/* ── SECTION HEADER (shared) ── */
+.sec-header {
+  background: linear-gradient(135deg, var(--tmf-blue) 0%, var(--tmf-mid) 100%);
+  padding: 26px 44px 20px;
+}
+.sec-eye { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+.sec-header h2 { font-family: var(--serif); font-size: 28px; font-weight: 500; color: #fff; letter-spacing: -0.01em; }
+.sec-header p { font-size: 11.5px; color: rgba(255,255,255,0.75); margin-top: 8px; line-height: 1.6; max-width: 520px; }
+
+/* ── BENEFIT GRID (page 2) ── */
+.ben-body { padding: 24px 44px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.ben-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.ben-card { min-height: 220px; justify-content: center; }
+.ben-card { border: 1px solid var(--rule); padding: 18px 20px; display: flex; flex-direction: column; }
+.ben-card.accent { border-top: 3px solid var(--claire); }
+.ben-card.blue { border-top: 3px solid var(--tmf-blue); }
+.ben-pain { font-family: var(--mono); font-size: 7px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+.ben-head { font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--tmf-blue); line-height: 1.2; margin-bottom: 10px; }
+.ben-card.accent .ben-head { color: var(--claire); }
+.ben-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ben-list li { display: flex; align-items: flex-start; gap: 7px; font-size: 11px; line-height: 1.5; color: var(--body); }
+.ben-list li::before { content: '▸'; color: var(--tmf-blue); flex-shrink: 0; margin-top: 1px; font-size: 9px; }
+.ben-card.accent .ben-list li::before { color: var(--claire); }
+
+/* ── CLOSING PAGE (page 3) ── */
+.close-body { padding: 26px 44px; flex: 1; display: flex; flex-direction: column; }
+.close-list { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.close-list li { display: flex; gap: 14px; align-items: flex-start; }
+.close-num {
+  font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--tmf-blue);
+  width: 30px; flex-shrink: 0; line-height: 1.3;
+}
+.close-txt { font-size: 12px; line-height: 1.6; color: var(--body); padding-top: 2px; }
+.close-txt strong { color: var(--ink); }
+
+.final-quote {
+  margin-top: auto; background: var(--ink); padding: 30px 36px; position: relative;
+}
+.final-quote::before { content: '"'; position: absolute; top: -6px; left: 20px; font-family: var(--serif); font-size: 90px; color: rgba(217,18,65,0.35); line-height: 1; }
+.final-quote p {
+  font-family: var(--serif); font-size: 19px; font-style: italic; font-weight: 500;
+  color: #fff; line-height: 1.5; position: relative; z-index: 1;
+}
+.final-quote p strong { color: var(--claire); font-style: normal; }
+
+.sig-bar { border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 22px; display: flex; align-items: center; gap: 12px; }
+.sig-avt { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--tmf-blue); }
+.sig-avt img { width: 100%; height: 100%; object-fit: cover; object-position: center 8%; }
+.sig-name { font-family: var(--serif); font-size: 15px; font-weight: 500; color: var(--tmf-blue); }
+.sig-title { font-family: var(--mono); font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+
+/* ── Page footer ── */
+.pg-footer {
+  padding: 9px 44px; border-top: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.pg-footer span { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.07em; color: var(--muted); }
+
+* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+@media print {
+  body { background: white; }
+  #actions { display: none !important; }
+  #root { padding-top: 0; }
+  .page { box-shadow: none; margin: 0; width: 100%; min-height: 0; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+}
+</style>
+</head>
+<body>
+
+<div id="actions">
+  <span class="atitle">TM Forum · Engagement Intelligence — Benefits Brief</span>
+  <div class="abtns">
+    <button class="primary" onclick="window.print()">↓ Save as PDF</button>
+    <button onclick="window.close()">✕ Close</button>
+  </div>
+</div>
+
+<div id="root">
+
+  <!-- Page 1: Cover -->
+  <div class="page">
+    <div class="cover-top-bar">
+      <div class="brand-text">TM Forum<strong>Engagement Intelligence</strong></div>
+      <img class="brand-logo" src="images/TMForum logo.png" alt="TM Forum">
+    </div>
+    <div class="cover-fill">
+    <div class="cover-content">
+      <div class="cover-portrait"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
+      <div class="cover-right">
+        <div class="cover-tag">Prepared Exclusively For</div>
+        <div class="cover-title">Gregory<br>Geodjenian</div>
+        <div class="cover-title2">EVP Growth, TM Forum</div>
+        <div class="cover-subtitle">A short brief on why an Engagement Intelligence platform belongs at the centre of how TM Forum protects and grows its membership.</div>
+        <div class="cover-pullquote">"You spent years making sure members joined TM Forum for the right reasons. This is the system that makes sure they never have a reason to leave."</div>
+        <div class="cover-by">Claire Watson &middot; Engagement Manager &middot; TM Forum</div>
+      </div>
+    </div>
+    <div class="cover-member-block">
+      <div class="cover-field"><label>Prepared for</label><span>Gregory Geodjenian</span></div>
+      <div class="cover-field"><label>Role</label><span>EVP Growth, TM Forum</span></div>
+      <div class="cover-field"><label>Subject</label><span>Engagement Intelligence Platform</span></div>
+      <div class="cover-field"><label>Prepared by</label><span>Claire Watson, Engagement Manager</span></div>
+    </div>
+    <div class="cover-stats">
+      <div class="cover-stat"><div class="cover-stat-n">2 min</div><div class="cover-stat-l">To see portfolio-wide<br>renewal risk</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">0</div><div class="cover-stat-l">Spreadsheets<br>required</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">24/7</div><div class="cover-stat-l">AI-powered member<br>engagement</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">1</div><div class="cover-stat-l">Single source<br>of truth</div></div>
+    </div>
+    </div>
+    <div class="pg-footer"><span>TM Forum Engagement Intelligence &middot; Prepared for Gregory Geodjenian</span><span>Page 1 of 3</span></div>
+  </div>
+
+  <!-- Page 2: Benefits grid -->
+  <div class="page">
+    <div class="sec-header">
+      <div class="sec-eye">Why This Matters To You</div>
+      <h2>Four Problems, Solved in One Platform</h2>
+      <p>Built and battle-tested on Claire's own portfolio — every feature below is live today, not a roadmap slide.</p>
+    </div>
+    <div class="ben-body">
+      <div class="ben-grid">
+        <div class="ben-card accent">
+          <div class="ben-pain">The Pain &middot; Membership Churn</div>
+          <div class="ben-head">See renewal risk before it becomes a lost member</div>
+          <ul class="ben-list">
+            <li>Live Low / Medium / High churn-risk scoring per account — built from real engagement signals, not guesswork</li>
+            <li>Renewal countdown alerts fire automatically inside a 90-day window, before it's a crisis</li>
+            <li>Auto-generated, specific next actions for every at-risk account — never a mystery what to do next</li>
+          </ul>
+        </div>
+        <div class="ben-card blue">
+          <div class="ben-pain">The Pain &middot; Team Oversight</div>
+          <div class="ben-head">Know what every Engagement Manager is doing — without asking</div>
+          <ul class="ben-list">
+            <li>Portfolio rolled up by Engagement Manager, Team and Region — filter to any slice in seconds</li>
+            <li>Real activity data — sessions, catalysts, pipeline, events — not self-reported status updates</li>
+            <li>Built to scale from one Engagement Manager today to a full team tomorrow, with zero re-architecture</li>
+          </ul>
+        </div>
+        <div class="ben-card blue">
+          <div class="ben-pain">The Pain &middot; Executive Visibility</div>
+          <div class="ben-head">Give your Leadership Team confidence at a glance</div>
+          <ul class="ben-list">
+            <li>One screen answers the four questions leadership always asks: accounts, at-risk count, renewals due, engagement level</li>
+            <li>Same live data your Engagement Managers use daily — nothing stale, nothing manually compiled for a meeting</li>
+            <li>A documented, consistent methodology behind every risk flag — a real answer when leadership asks "why is this account red?"</li>
+          </ul>
+        </div>
+        <div class="ben-card accent">
+          <div class="ben-pain">The Pain &middot; Time</div>
+          <div class="ben-head">Give your team back the hours lost to status-chasing</div>
+          <ul class="ben-list">
+            <li>Risk scores and next actions generate themselves from real activity — no more compiling weekly updates by hand</li>
+            <li>One login replaces a patchwork of spreadsheets, inboxes and calendars</li>
+            <li>An AI ODA Expert chatbot and gamified ODA Game handle first-line member engagement 24/7 — freeing your team for conversations that need a human</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="pg-footer"><span>TM Forum Engagement Intelligence &middot; Prepared for Gregory Geodjenian</span><span>Page 2 of 3</span></div>
+  </div>
+
+  <!-- Page 3: Closing -->
+  <div class="page">
+    <div class="sec-header">
+      <div class="sec-eye">Beyond The Brief</div>
+      <h2>A Few More Reasons This Matters</h2>
+    </div>
+    <div class="close-body">
+      <ul class="close-list">
+        <li><div class="close-num">01</div><div class="close-txt"><strong>Single source of truth.</strong> Every workflow across the platform writes to one Google Sheet. No fragmented spreadsheets, no shadow trackers, no "which version is current."</div></li>
+        <li><div class="close-num">02</div><div class="close-txt"><strong>Built to scale, today.</strong> The architecture already supports many Engagement Managers, many members, multiple Teams and Regions. This isn't a pilot that needs rebuilding to grow with TM Forum.</div></li>
+        <li><div class="close-num">03</div><div class="close-txt"><strong>TM Forum, practicing what it teaches.</strong> An ODA-minded, API-driven, AI-native internal tool is itself proof of the transformation story TM Forum tells its members every day.</div></li>
+        <li><div class="close-num">04</div><div class="close-txt"><strong>Faster ramp for every new Engagement Manager.</strong> Full account context — sessions, decision-making unit, catalysts, pipeline, maturity — is there from day one. No tribal knowledge required.</div></li>
+      </ul>
+      <div class="final-quote">
+        <p>Membership growth isn't only about the members you win — it's about never quietly losing the ones you already have. This platform turns renewal risk from a <strong>year-end surprise</strong> into a <strong>week-one forecast</strong>, gives your Engagement Managers the intelligence to act before it's too late, and gives your Leadership Team the confidence that comes from seeing everything, in real time, in one place.</p>
+      </div>
+      <div class="sig-bar">
+        <div class="sig-avt"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
+        <div>
+          <div class="sig-name">Claire Watson</div>
+          <div class="sig-title">Engagement Manager &middot; TM Forum &middot; Let's talk about rolling this out across the wider Membership team</div>
+        </div>
+      </div>
+    </div>
+    <div class="pg-footer"><span>TM Forum Engagement Intelligence &middot; Prepared for Gregory Geodjenian</span><span>Page 3 of 3</span></div>
+  </div>
+
+</div>
+</body>
+</html>
