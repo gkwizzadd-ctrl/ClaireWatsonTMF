@@ -85,17 +85,24 @@ body::before {
 .nav-private::after { display: none !important; }
 
 .nav-dropdown { position: relative; }
+/* Outer hit-area starts flush against the trigger (no gap) so hover never
+   drops out while crossing to the menu; padding-top creates the visual gap
+   without breaking the hoverable box. */
 .nav-dropdown-menu {
-  position: absolute; top: calc(100% + 10px); left: 50%;
-  transform: translateX(-50%) translateY(-6px);
-  background: #14113a; border: 1px solid rgba(217,18,65,0.28); border-radius: 10px;
-  padding: 6px; min-width: 180px; box-shadow: 0 12px 32px rgba(0,0,0,0.4);
-  opacity: 0; pointer-events: none; transition: opacity 0.18s, transform 0.18s;
+  position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  padding-top: 10px;
+  min-width: 180px;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s;
   z-index: 200;
 }
-.nav-dropdown:hover .nav-dropdown-menu {
-  opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0);
+.nav-dropdown:hover .nav-dropdown-menu { opacity: 1; pointer-events: all; }
+.nav-dropdown-menu-inner {
+  background: #14113a; border: 1px solid rgba(217,18,65,0.28); border-radius: 10px;
+  padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  transform: translateY(-6px); transition: transform 0.18s;
 }
+.nav-dropdown:hover .nav-dropdown-menu-inner { transform: translateY(0); }
 .nav-dropdown-menu a {
   display: block; padding: 9px 12px; border-radius: 6px;
   font-size: 11px !important; letter-spacing: 0.06em !important;
@@ -1009,8 +1016,10 @@ footer {
     <li class="nav-dropdown">
       <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">🎮 Games &amp; Quiz ▾</a>
       <div class="nav-dropdown-menu">
-        <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener">♟ ODA Chess</a>
-        <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener">🎓 TMF AI Quiz</a>
+        <div class="nav-dropdown-menu-inner">
+          <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener">♟ ODA Chess</a>
+          <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener">🎓 TMF AI Quiz</a>
+        </div>
       </div>
     </li>
   </ul>
