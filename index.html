@@ -1012,7 +1012,15 @@ footer {
     <li><a href="#contact">Contact</a></li>
     <li><a href="claires-stuff.html" class="nav-private">🔒 Claire's Stuff</a></li>
     <li><a href="gregs-stuff.html" class="nav-private">🔒 Greg's Stuff</a></li>
-    <li><a href="benefits-greg.html" target="_blank" rel="noopener" class="nav-private">📄 Benefits</a></li>
+    <li class="nav-dropdown">
+      <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">📄 Documents ▾</a>
+      <div class="nav-dropdown-menu">
+        <div class="nav-dropdown-menu-inner">
+          <a href="benefits-greg.html" target="_blank" rel="noopener">📄 Benefits</a>
+          <a href="roadmap-brief.html" target="_blank" rel="noopener">🗺 Roadmap</a>
+        </div>
+      </div>
+    </li>
     <li class="nav-dropdown">
       <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">🎮 Games &amp; Quiz ▾</a>
       <div class="nav-dropdown-menu">
@@ -1044,6 +1052,7 @@ footer {
   <a href="claires-stuff.html" style="color:rgba(217,18,65,0.85)">🔒 Claire's Stuff</a>
   <a href="gregs-stuff.html" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🔒 Greg's Stuff</a>
   <a href="benefits-greg.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📄 Benefits</a>
+  <a href="roadmap-brief.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🗺 Roadmap</a>
   <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">♟ ODA Chess</a>
   <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🎓 TMF AI Quiz</a>
 </div>
