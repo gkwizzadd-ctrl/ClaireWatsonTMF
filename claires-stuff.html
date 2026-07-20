@@ -1018,7 +1018,7 @@ function getFiltered(){
       r['Verdict']===activeFilter;
     if(!passTab)return false;
     if(!searchQuery)return true;
-    var hay=((r['Company']||'')+' '+(r['HQ']||'')+' '+(r['Primary Mission']||'')+' '+(r['Top Signals']||'')+' '+(r['Summary']||'')).toLowerCase();
+    var hay=((r['Company']||'')+' '+(r['HQ']||'')+' '+(r['Primay Mission']||'')+' '+(r['Top Signals']||'')+' '+(r['Summary']||'')).toLowerCase();
     return hay.indexOf(searchQuery)!==-1;
   });
 }
@@ -1166,7 +1166,7 @@ function buildCard(r,i){
   var score=parseFloat(r['Score'])||0;
   var company=r['Company']||'Unknown';
   var hq=r['HQ']||'';
-  var mission=r['Primary Mission']||'';
+  var mission=r['Primay Mission']||'';
   var summary=r['Summary']||'';
   var signals=(r['Top Signals']||'').split(',').map(function(s){return s.trim()}).filter(Boolean);
   var timing=r['Timing Hook']||'';
@@ -1373,7 +1373,7 @@ function openProspectEdit(idx){
   document.getElementById('pedit-hq').value=r['HQ']||'';
   document.getElementById('pedit-score').value=r['Score']||'';
   document.getElementById('pedit-verdict').value=r['Verdict']||'Moderate';
-  document.getElementById('pedit-mission').value=r['Primary Mission']||r['Primay Mission']||'';
+  document.getElementById('pedit-mission').value=r['Primay Mission']||'';
   document.getElementById('pedit-status').value=r['Status']||'New';
   document.getElementById('pedit-summary').value=r['Summary']||'';
   document.getElementById('pedit-signals').value=r['Top Signals']||'';
@@ -1402,7 +1402,7 @@ async function saveProspectEdit(){
       'HQ':document.getElementById('pedit-hq').value.trim(),
       'Score':document.getElementById('pedit-score').value.trim(),
       'Verdict':document.getElementById('pedit-verdict').value,
-      'Primary Mission':document.getElementById('pedit-mission').value,
+      'Primay Mission':document.getElementById('pedit-mission').value,
       'Status':document.getElementById('pedit-status').value,
       'Summary':document.getElementById('pedit-summary').value.trim(),
       'Top Signals':document.getElementById('pedit-signals').value.trim(),
@@ -1475,7 +1475,7 @@ function openProspectModal(idx){
   var score=parseFloat(r['Score'])||0;
   var company=r['Company']||'Unknown';
   var hq=r['HQ']||'';
-  var mission=r['Primary Mission']||r['Primay Mission']||'';
+  var mission=r['Primay Mission']||'';
   var summary=r['Summary']||'';
   var signals=(r['Top Signals']||'').split(',').map(function(s){return s.trim()}).filter(Boolean).slice(0,5);
   var timing=r['Timing Hook']||'';

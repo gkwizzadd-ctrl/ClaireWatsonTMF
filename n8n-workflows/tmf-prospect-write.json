@@ -56,7 +56,7 @@
             "HQ":               "={{ ($json.body ?? $json).prospect['HQ'] }}",
             "Score":            "={{ ($json.body ?? $json).prospect['Score'] }}",
             "Verdict":          "={{ ($json.body ?? $json).prospect['Verdict'] }}",
-            "Primary Mission":  "={{ ($json.body ?? $json).prospect['Primary Mission'] }}",
+            "Primay Mission":   "={{ ($json.body ?? $json).prospect['Primay Mission'] }}",
             "Status":           "={{ ($json.body ?? $json).prospect['Status'] }}",
             "Summary":          "={{ ($json.body ?? $json).prospect['Summary'] }}",
             "Top Signals":      "={{ ($json.body ?? $json).prospect['Top Signals'] }}",
