@@ -41,7 +41,7 @@
             "Slug":             "={{ ($json.body ?? $json).research.slug }}",
             "Score":            "={{ ($json.body ?? $json).research.score }}",
             "Verdict":          "={{ ($json.body ?? $json).research.verdict }}",
-            "Primay Mission":   "={{ ($json.body ?? $json).research.primaryMission }}",
+            "Primary Mission":  "={{ ($json.body ?? $json).research.primaryMission }}",
             "HQ":               "={{ ($json.body ?? $json).research.overview?.hq }}",
             "Summary":          "={{ ($json.body ?? $json).research.summary }}",
             "Top Signals":      "={{ (($json.body ?? $json).research.topSignals || []).join(', ') }}",
