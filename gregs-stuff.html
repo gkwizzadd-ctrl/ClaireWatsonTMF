@@ -342,7 +342,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
     </div>
 
-    <div id="em-groups"></div>
+    <div id="em-groups">
+      <div class="em-grid">
+        <div class="skel-card"></div>
+        <div class="skel-card"></div>
+        <div class="skel-card"></div>
+      </div>
+    </div>
     <div id="gs-empty" class="gs-empty" style="display:none">
       <div class="gs-empty-h" id="gs-empty-h">Unable to load data</div>
       <div class="gs-empty-p" id="gs-empty-msg"></div>
@@ -647,7 +653,10 @@ function accountCard(m){
 
     <div class="acard-footer">
       <div class="acard-notes">${m.overrideNotes?esc(m.overrideNotes):''}</div>
-      <button class="edit-ov-btn" onclick="openOverride('${esc(m.id)}')">Edit Override</button>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <a class="edit-ov-btn" href="member-dashboard.html?member=${encodeURIComponent(m.id)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">View Full Account →</a>
+        <button class="edit-ov-btn" onclick="openOverride('${esc(m.id)}')">Edit Override</button>
+      </div>
     </div>
   </div>`;
 }

@@ -45,6 +45,7 @@
             "Category":           "={{ ($json.body ?? $json).member['Category'] }}",
             "Renewal Year":       "={{ ($json.body ?? $json).member['Renewal Year'] }}",
             "Account Manager":    "={{ ($json.body ?? $json).member['Account Manager'] }}",
+            "Team":               "={{ ($json.body ?? $json).member['Team'] }}",
             "Status":             "={{ ($json.body ?? $json).member['Status'] }}",
             "Priority":           "={{ ($json.body ?? $json).member['Priority'] }}",
             "Bond / Revenue Notes": "={{ ($json.body ?? $json).member['Bond / Revenue Notes'] }}"

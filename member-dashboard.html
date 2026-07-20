@@ -643,7 +643,10 @@ function showError(err){
 }
 
 function renderDashboard(members){
-  if(!currentId)currentId=members[0].id;
+  if(!currentId){
+    const requested=new URLSearchParams(location.search).get('member');
+    currentId=(requested&&MEMBERS[requested])?requested:members[0].id;
+  }
   document.getElementById('main-content').innerHTML=buildDashboardHTML();
   buildPicker();
   renderMember(MEMBERS[currentId]);
@@ -1538,6 +1541,7 @@ async function submitNewMember(){
     'Category':document.getElementById('lnm-category').value,
     'Renewal Year':document.getElementById('lnm-renewal').value,
     'Account Manager':document.getElementById('lnm-am').value,
+    'Team':document.getElementById('lnm-team').value,
     'Status':document.getElementById('lnm-status').value,
     'Priority':document.getElementById('lnm-priority').value,
     'Bond / Revenue Notes':document.getElementById('lnm-bond').value
@@ -1640,6 +1644,12 @@ init();
           <input type="text" id="lnm-am" placeholder="Name">
         </div>
         <div class="lnm-field">
+          <label>Team</label>
+          <input type="text" id="lnm-team" placeholder="e.g. EMEA Team">
+        </div>
+      </div>
+      <div class="lnm-row">
+        <div class="lnm-field" style="grid-column:1/-1">
           <label>Status</label>
           <select id="lnm-status">
             <option value="">Select…</option>
