@@ -367,7 +367,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .tmfc-cancel:hover{background:rgba(255,255,255,.09)}
 
 /* ─── GLOBAL RADAR (MENA) ────────────────────────────────────── */
-.radar-section{margin-top:32px}
+.radar-section{margin-top:32px;scroll-margin-top:74px}
 .radar-map-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
 .radar-map-wrap{width:100%;background:rgba(0,0,0,.25);border-radius:9px;overflow:hidden}
 .radar-map-wrap svg{display:block;width:100%;height:auto}
@@ -432,6 +432,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <span class="tb-date" id="tb-date"></span>
     </div>
     <div class="tb-right">
+      <a href="#radar-section" class="tb-link" onclick="event.preventDefault();document.getElementById('radar-section').scrollIntoView({behavior:'smooth'})">🌍 Global Radar</a>
       <a href="/" class="tb-link">← Site</a>
       <button class="tb-logout" onclick="logout()">Log out</button>
     </div>
@@ -638,7 +639,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     </div><!-- /main-grid -->
 
     <!-- Global Radar (MENA) -->
-    <div class="radar-section">
+    <div class="radar-section" id="radar-section">
       <div class="pipe-header">
         <span class="pipe-title">🌍 Global Radar — MENA</span>
         <span class="pipe-live"><span class="pipe-live-dot"></span>Live from Sheets</span>
