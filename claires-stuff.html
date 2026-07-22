@@ -368,6 +368,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ─── GLOBAL RADAR (MENA) ────────────────────────────────────── */
 .radar-section{margin-top:32px;scroll-margin-top:74px}
+.radar-legend{display:flex;gap:8px;margin:12px 0 14px}
+.radar-leg-pill{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.55);background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:5px 13px}
+.radar-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .radar-map-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
 .radar-map-wrap{width:100%;background:rgba(0,0,0,.25);border-radius:9px;overflow:hidden}
 .radar-map-wrap svg{display:block;width:100%;height:auto}
@@ -638,12 +641,13 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div><!-- /sidebar -->
     </div><!-- /main-grid -->
 
-    <!-- Global Radar (MENA) -->
+    <!-- Global Radar (Africa & Middle East) -->
     <div class="radar-section" id="radar-section">
       <div class="pipe-header">
-        <span class="pipe-title">🌍 Global Radar — MENA</span>
+        <span class="pipe-title">🌍 Global Radar — Africa &amp; Middle East</span>
         <span class="pipe-live"><span class="pipe-live-dot"></span>Live from Sheets</span>
       </div>
+      <div class="radar-legend" id="radar-legend"></div>
       <div class="radar-map-panel">
         <div class="radar-map-wrap" id="radar-map-wrap"></div>
       </div>
@@ -657,7 +661,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="pmodal-panel radar-modal-panel">
     <div class="pmodal-head">
       <button class="pmodal-close" onclick="closeRadarCountry()">✕</button>
-      <div class="db-header-eye">Middle East &amp; North Africa</div>
+      <div class="db-header-eye" id="radar-country-region">Africa</div>
       <div class="pmodal-co" id="radar-country-title" style="font-size:26px"></div>
     </div>
     <div class="pmodal-body radar-modal-body">
@@ -1760,16 +1764,25 @@ function loadRadarMembers(){
     .catch(function(){/* Radar simply shows Prospects-only lists until Members load succeeds */});
 }
 
+function renderRadarLegend(){
+  var el=document.getElementById('radar-legend');
+  if(!el)return;
+  el.innerHTML=Object.keys(REGION_LABELS).map(function(r){
+    return '<span class="radar-leg-pill"><span class="radar-leg-dot" style="background:'+REGION_COLORS[r]+'"></span>'+esc(REGION_LABELS[r])+'</span>';
+  }).join('');
+}
+
 function renderRadarMap(){
   var wrap=document.getElementById('radar-map-wrap');
   if(!wrap||wrap.dataset.built||typeof d3==='undefined'||!window.WORLD_TOPO)return;
   wrap.dataset.built='1';
+  renderRadarLegend();
 
-  var width=760,height=460;
+  var width=760,height=720;
   var svg=d3.select(wrap).append('svg').attr('viewBox','0 0 '+width+' '+height);
   var geo=topojson.feature(WORLD_TOPO,WORLD_TOPO.objects.countries);
-  var menaFeatures=geo.features.filter(function(f){return !!MENA_COUNTRIES[f.id]});
-  var projection=d3.geoMercator().fitExtent([[16,16],[width-16,height-16]],{type:'FeatureCollection',features:menaFeatures});
+  var regionFeatures=geo.features.filter(function(f){return !!REGION_COUNTRIES[f.id]});
+  var projection=d3.geoMercator().fitExtent([[16,16],[width-16,height-16]],{type:'FeatureCollection',features:regionFeatures});
   var path=d3.geoPath(projection);
 
   var tooltip=document.createElement('div');
@@ -1778,23 +1791,51 @@ function renderRadarMap(){
   document.body.appendChild(tooltip);
 
   svg.selectAll('path.radar-country')
-    .data(menaFeatures)
+    .data(regionFeatures)
     .join('path')
     .attr('class','radar-country')
     .attr('d',path)
-    .attr('fill','#D91241')
-    .attr('fill-opacity',.45)
+    .attr('fill',function(d){return REGION_COLORS[REGION_COUNTRIES[d.id].region]})
+    .attr('fill-opacity',.55)
     .on('mouseenter',function(e,d){
-      var name=MENA_COUNTRIES[d.id];
+      var c=REGION_COUNTRIES[d.id];
       tooltip.style.display='block';
-      tooltip.innerHTML=esc(name)+'<div class="rt-sub">Click for prospects &amp; members</div>';
+      tooltip.innerHTML=esc(c.name)+'<div class="rt-sub">'+esc(REGION_LABELS[c.region])+' · Click for prospects &amp; members</div>';
     })
     .on('mousemove',function(e){
       tooltip.style.left=(e.clientX+14)+'px';
       tooltip.style.top=(e.clientY+14)+'px';
     })
     .on('mouseleave',function(){tooltip.style.display='none'})
-    .on('click',function(e,d){openRadarCountry(MENA_COUNTRIES[d.id])});
+    .on('click',function(e,d){var c=REGION_COUNTRIES[d.id];openRadarCountry(c.name,c.region)});
+
+  // Small island/city states render as near-invisible slivers at this scale — plot them as
+  // marker pins on top of the choropleth so they're always reliably hoverable/clickable.
+  svg.selectAll('circle.radar-marker')
+    .data(REGION_MICRO_MARKERS)
+    .join('circle')
+    .attr('class','radar-marker')
+    .attr('cx',function(d){return projection(d.coord)[0]})
+    .attr('cy',function(d){return projection(d.coord)[1]})
+    .attr('r',4.5)
+    .attr('fill',function(d){return REGION_COLORS[d.region]})
+    .attr('stroke','#fff')
+    .attr('stroke-width',1.5)
+    .style('cursor','pointer')
+    .on('mouseenter',function(e,d){
+      tooltip.style.display='block';
+      tooltip.innerHTML=esc(d.name)+'<div class="rt-sub">'+esc(REGION_LABELS[d.region])+' · Click for prospects &amp; members</div>';
+      d3.select(this).attr('r',6.5);
+    })
+    .on('mousemove',function(e){
+      tooltip.style.left=(e.clientX+14)+'px';
+      tooltip.style.top=(e.clientY+14)+'px';
+    })
+    .on('mouseleave',function(){
+      tooltip.style.display='none';
+      d3.select(this).attr('r',4.5);
+    })
+    .on('click',function(e,d){openRadarCountry(d.name,d.region)});
 }
 
 function countryMatches(rowCountry,rowFallback,target){
@@ -1836,9 +1877,10 @@ function renderRadarCountryLists(countryName){
   }).join(''):'<div class="radar-list-empty">No TM Forum members recorded for '+esc(countryName)+' yet.</div>';
 }
 
-function openRadarCountry(countryName){
+function openRadarCountry(countryName,region){
   radarCurrentCountry=countryName;
   document.getElementById('radar-country-title').textContent=countryName;
+  document.getElementById('radar-country-region').textContent=REGION_LABELS[region]||'';
   renderRadarCountryLists(countryName);
   document.getElementById('radar-country-modal').classList.add('open');
 }
