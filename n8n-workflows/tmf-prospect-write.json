@@ -54,6 +54,7 @@
             "row_number":       "={{ ($json.body ?? $json).prospect['row_number'] }}",
             "Company":          "={{ ($json.body ?? $json).prospect['Company'] }}",
             "HQ":               "={{ ($json.body ?? $json).prospect['HQ'] }}",
+            "Country":          "={{ ($json.body ?? $json).prospect['Country'] }}",
             "Score":            "={{ ($json.body ?? $json).prospect['Score'] }}",
             "Verdict":          "={{ ($json.body ?? $json).prospect['Verdict'] }}",
             "Primary Mission":  "={{ ($json.body ?? $json).prospect['Primary Mission'] }}",

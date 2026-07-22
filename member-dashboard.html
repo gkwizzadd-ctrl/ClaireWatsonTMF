@@ -1536,6 +1536,7 @@ async function submitNewMember(){
     'Member Name':name,
     'Region':document.getElementById('lnm-region').value,
     'HQ Country':document.getElementById('lnm-country').value,
+    'Country':document.getElementById('lnm-country-clean').value.trim(),
     'OPCO Count':document.getElementById('lnm-opco').value||'0',
     'Sectors':document.getElementById('lnm-sectors').value,
     'Category':document.getElementById('lnm-category').value,
@@ -1618,6 +1619,12 @@ init();
         <div class="lnm-field">
           <label>HQ Country</label>
           <input type="text" id="lnm-country" placeholder="e.g. Germany">
+        </div>
+      </div>
+      <div class="lnm-row">
+        <div class="lnm-field">
+          <label>Country <span style="opacity:.45;font-weight:400;font-size:8px">(for Global Radar — full name, e.g. "Saudi Arabia")</span></label>
+          <input type="text" id="lnm-country-clean" placeholder="e.g. United Arab Emirates">
         </div>
       </div>
       <div class="lnm-row">

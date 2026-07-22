@@ -43,6 +43,7 @@
             "Verdict":          "={{ ($json.body ?? $json).research.verdict }}",
             "Primary Mission":  "={{ ($json.body ?? $json).research.primaryMission }}",
             "HQ":               "={{ ($json.body ?? $json).research.overview?.hq }}",
+            "Country":          "={{ (($json.body ?? $json).research.overview?.hq || '').split(',').pop().replace(/\\(.*\\)/, '').trim() }}",
             "Summary":          "={{ ($json.body ?? $json).research.summary }}",
             "Top Signals":      "={{ (($json.body ?? $json).research.topSignals || []).join(', ') }}",
             "Key Contacts":     "={{ (($json.body ?? $json).research.keyContacts || []).map(c => c.name + ' — ' + c.title).join('; ') }}",

@@ -40,6 +40,7 @@
             "Member Name":        "={{ ($json.body ?? $json).member['Member Name'] }}",
             "Region":             "={{ ($json.body ?? $json).member['Region'] }}",
             "HQ Country":         "={{ ($json.body ?? $json).member['HQ Country'] }}",
+            "Country":            "={{ ($json.body ?? $json).member['Country'] }}",
             "OPCO Count":         "={{ ($json.body ?? $json).member['OPCO Count'] }}",
             "Sectors":            "={{ ($json.body ?? $json).member['Sectors'] }}",
             "Category":           "={{ ($json.body ?? $json).member['Category'] }}",
