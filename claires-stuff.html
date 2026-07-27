@@ -1971,9 +1971,12 @@ function renderRadarCountryLists(countryName){
   pEl.innerHTML=prospects.length?prospects.map(function(r){
     var verdict=(r['Verdict']||'').toLowerCase();
     var vClass=verdict==='strong'?'verdict-strong':verdict==='moderate'?'verdict-moderate':'verdict-weak';
+    var matchedMember=findMemberForCompany(r['Company']);
+    var isMember=!!matchedMember&&(matchedMember['Status']||'').trim().toLowerCase()!=='inactive';
     return '<div class="radar-list-item">'+
       '<div class="radar-list-top">'+
         '<div class="radar-list-name">'+esc(r['Company'])+'</div>'+
+        (isMember?'<span class="mem-badge mem-is-member">✓ Now a Member</span>':'')+
         (r['Verdict']?'<span class="pcard-verdict '+vClass+'">'+esc(r['Verdict'])+'</span>':'')+
       '</div>'+
       '<div class="radar-list-meta">'+esc(r['HQ']||'')+(r['Score']?' · Score '+esc(r['Score']):'')+'</div>'+
