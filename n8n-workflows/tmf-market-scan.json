@@ -1,0 +1,94 @@
+{
+  "name": "TMF — Global Radar Market Scan",
+  "nodes": [
+    {
+      "id": "tms-001",
+      "name": "Webhook — Market Scan",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-market-scan",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "tms-002",
+      "name": "Build Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 360],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nconst country = (body.country || '').trim();\nconst region = body.region || '';\nconst mode = body.mode === 'expanded' ? 'expanded' : 'incumbents';\nif (!country) throw new Error('No country provided');\n\nconst basePersona = `You are a telecom/satellite market analyst for Claire Watson's TM Forum Open Digital Architecture (ODA) membership prospecting team.`;\n\nconst schemaBlock = `Each pain point must be tagged with exactly one ODA mission from this fixed list: \"autonomous-networks\" (AI-driven, self-optimising network operations), \"ai-data\" (BSS/OSS AI monetisation, data platforms), \"composable-it\" (cloud-native IT, Open APIs, B2B/API marketplaces, vendor lock-in), \"business-assurance\" (revenue assurance, fraud, margin pressure), \"process-etom\" (business process transformation, ERP/systems consolidation).\n\nReturn ONLY valid JSON, no markdown wrapper, matching this exact schema:\n{\n  \"snapshot\": \"2-3 sentence market overview\",\n  \"operators\": [\n    {\n      \"name\": \"Operator name\",\n      \"type\": \"Telecom | Satellite | MVNO | Fixed/Broadband\",\n      \"tier\": \"Tier 1\",\n      \"ownership\": \"brief ownership structure\",\n      \"painPoints\": [ { \"cat\": \"autonomous-networks\", \"text\": \"specific pain point, 1-2 sentences\" } ]\n    }\n  ]\n}`;\n\nconst systemPrompt = mode === 'expanded'\n  ? `${basePersona}\n\nFor the given country, identify 3-6 real, currently-operating TIER 2 or TIER 3 challenger telecom operators, ALTERNATIVE NETWORK (altnet) fibre/cable broadband providers, and/or satellite/LEO operators — explicitly NOT the country's dominant Tier 1 incumbent(s), which have already been covered separately. Aim for coverage across these categories where real operators exist, not just one. Tag each operator's \"tier\" field with exactly one of: \"Tier 2\", \"Tier 3\", \"Altnet\", \"Satellite\" — whichever best fits.\n\nFor each, give 1-3 genuine, specific pain points grounded in real industry themes as of 2025-2026 (e.g. wholesale scaling pressure, funding/consolidation risk, network build pace, OSS/BSS immaturity as a fast-growing challenger, spectrum/licensing constraints) — not generic filler. Leave the snapshot field as an empty string; only the operators list matters for this scan.\n\n${schemaBlock}\n\nIf you have very limited or no reliable knowledge of Tier 2/3, altnet or satellite operators in this specific market, return an empty operators array rather than inventing details or substituting the incumbent.`\n  : `${basePersona}\n\nFor the given country, provide:\n1. A market snapshot: 2-3 sentences covering the competitive landscape, notable regulatory themes (spectrum policy, SATCOM licensing, open-access fibre mandates), and any current transformation momentum — grounded in real 2025-2026 developments, not generic filler.\n2. Identify 2-4 real, currently-operating TIER 1 incumbent/dominant national telecom operators (use your actual knowledge of this market). Tag each operator's \"tier\" field as \"Tier 1\". For each, give 1-3 genuine, specific pain points grounded in real industry themes for that operator as of 2025-2026 — not generic filler.\n\n${schemaBlock}\n\nIf you have very limited or no reliable knowledge of this market, return an empty string for snapshot and an empty operators array rather than inventing details.`;\n\nconst claudeBody = {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 3000,\n  system: systemPrompt,\n  messages: [{ role: 'user', content: `Country: ${country}${region ? ' (' + region + ')' : ''}\\n\\nReturn the JSON market scan.` }]\n};\n\nreturn [{ json: { country, claudeBody } }];"
+      }
+    },
+    {
+      "id": "tms-003",
+      "name": "Call Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 360],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.claudeBody) }}",
+        "options": { "timeout": 45000 }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "", "name": "Anthropic API" }
+      }
+    },
+    {
+      "id": "tms-004",
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 360],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst country = $('Build Prompt').first().json.country;\n\nif (item.error) {\n  return [{ json: { success: false, error: 'Claude API error: ' + (item.error.message || JSON.stringify(item.error)) } }];\n}\n\nconst raw = (item.content || []).find(c => c.type === 'text')?.text || '';\nif (!raw) {\n  return [{ json: { success: false, error: 'Empty response — please try again.' } }];\n}\n\nlet parsed;\ntry {\n  const cleaned = raw.replace(/^```json\\s*/i, '').replace(/\\s*```$/, '').trim();\n  parsed = JSON.parse(cleaned);\n} catch(e) {\n  return [{ json: { success: false, error: 'Could not parse market scan output. Raw: ' + raw.slice(0, 200) } }];\n}\n\nconst validCats = ['autonomous-networks', 'ai-data', 'composable-it', 'business-assurance', 'process-etom'];\nconst validTiers = ['Tier 1', 'Tier 2', 'Tier 3', 'Altnet', 'Satellite'];\nconst operators = (parsed.operators || []).map(op => ({\n  name: op.name || 'Unknown operator',\n  type: op.type || 'Telecom',\n  tier: validTiers.includes(op.tier) ? op.tier : 'Tier 2',\n  ownership: op.ownership || '',\n  painPoints: (op.painPoints || []).filter(pp => pp && pp.text).map(pp => ({\n    cat: validCats.includes(pp.cat) ? pp.cat : 'composable-it',\n    text: pp.text\n  }))\n})).filter(op => op.painPoints.length > 0);\n\nconst snapshot = typeof parsed.snapshot === 'string' ? parsed.snapshot : '';\n\nreturn [{ json: { success: true, country, snapshot, operators } }];"
+      }
+    },
+    {
+      "id": "tms-005",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Market Scan": { "main": [[{ "node": "Build Prompt", "type": "main", "index": 0 }]] },
+    "Build Prompt":          { "main": [[{ "node": "Call Claude",  "type": "main", "index": 0 }]] },
+    "Call Claude":           { "main": [[{ "node": "Parse Response", "type": "main", "index": 0 }]] },
+    "Parse Response":        { "main": [[{ "node": "Respond",       "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
