@@ -197,6 +197,27 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pmodal-co{font-family:var(--serif);font-size:30px;font-weight:500;color:#fff;line-height:1.1;margin-bottom:10px;padding-right:40px}
 .pmodal-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .pmodal-membership{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 14px;margin-top:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px}
+.persona-section{padding:22px 28px;border-top:1px solid rgba(255,255,255,.06)}
+.persona-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.persona-add-btn{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:6px 13px;border-radius:100px;border:1px solid rgba(130,180,255,.3);background:rgba(130,180,255,.1);color:rgba(150,190,255,.95);cursor:pointer;transition:background .15s}
+.persona-add-btn:hover{background:rgba(130,180,255,.2)}
+.persona-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.persona-grid{grid-template-columns:1fr}}
+.persona-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px}
+.persona-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:3px}
+.persona-name{font-family:var(--serif);font-size:15px;font-weight:500;color:#fff;line-height:1.25}
+.persona-title{font-size:11.5px;color:rgba(255,255,255,.5);margin-bottom:8px}
+.persona-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.persona-badge{font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;border-radius:100px;padding:3px 9px;border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.5)}
+.persona-badge.role-decider{background:rgba(217,18,65,.12);color:rgba(240,110,140,.95);border-color:rgba(217,18,65,.25)}
+.persona-badge.role-champion{background:rgba(80,200,120,.14);color:rgba(80,200,120,.95);border-color:rgba(80,200,120,.28)}
+.persona-badge.role-initiator{background:rgba(130,180,255,.12);color:rgba(150,190,255,.95);border-color:rgba(130,180,255,.28)}
+.persona-badge.engagement-high{background:rgba(80,200,120,.14);color:rgba(80,200,120,.95);border-color:rgba(80,200,120,.28)}
+.persona-badge.engagement-medium{background:rgba(245,158,11,.1);color:rgba(245,158,11,.9);border-color:rgba(245,158,11,.25)}
+.persona-badge.engagement-low{background:rgba(255,255,255,.05);color:rgba(255,255,255,.4)}
+.persona-meta{font-size:10.5px;color:rgba(255,255,255,.35);margin-bottom:6px}
+.persona-notes{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:8px}
+.persona-actions{display:flex;gap:8px}
 .mem-badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;flex-shrink:0}
 .mem-is-member{background:rgba(80,200,120,.14);color:rgba(80,200,120,.95);border:1px solid rgba(80,200,120,.28)}
 .mem-not-member{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.12)}
@@ -749,6 +770,10 @@ var PROSPECT_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-w
 var MEMBER_MEMBERSHIP_UPDATE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-membership-update';
 var MEMBER_ADD_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-add';
 var _editMembershipMember=null;
+var PROSPECT_CONTACTS_READ_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-contacts-read';
+var PROSPECT_CONTACTS_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-contacts-write';
+var allProspectPersonas=[];
+var _personaEditId=null;
 var PROSPECT_SS_KEY='cwclaires-prospects';
 var allProspects=[];
 var activeFilter='all';
@@ -844,6 +869,7 @@ function initDashboard(){
   loadProspects();
   initTmfContacts();
   loadRadarMembers();
+  loadProspectPersonas();
   renderRadarMap();
 }
 
@@ -1656,6 +1682,7 @@ function openProspectModal(idx){
   footEl.style.display=footHtml?'block':'none';
 
   renderMembershipStrip(company);
+  renderPersonaSection(company);
 
   document.getElementById('prospect-modal').classList.add('open');
   document.body.style.overflow='hidden';
@@ -1757,6 +1784,146 @@ async function saveMembershipEdit(){
     showPsToast('Save failed: '+e.message,true);
   }finally{
     btn.disabled=false;btn.textContent='Save Membership';
+  }
+}
+
+/* ─── Registered Personas — structured, multi-record decision-maker profiles per prospect
+   (Full Name, Title, Email, Function Category, Mission Alignment, Decision Role, Engagement
+   Level, Last Contacted, Notes), matching the richness the "Contacts" tab already has for
+   Members. Keyed by Company name (like membership matching) rather than Slug, since Slug isn't
+   reliably populated on older prospect rows. Additive to the existing flat "Key Contacts" field
+   pulled from research — that keeps working as-is; this is a separate, editable layer on top. ── */
+function loadProspectPersonas(){
+  fetch(PROSPECT_CONTACTS_READ_WH,{redirect:'follow'})
+    .then(function(r){return r.json()})
+    .then(function(data){
+      allProspectPersonas=(data.contacts||[]).filter(function(p){return p['Full Name']});
+      if(_modalProspect)renderPersonaSection(_modalProspect['Company']||'');
+    })
+    .catch(function(){/* Personas section simply shows empty until this succeeds */});
+}
+
+function personasForCompany(company){
+  var needle=(company||'').trim().toLowerCase();
+  if(!needle)return[];
+  return allProspectPersonas.filter(function(p){return(p['Company']||'').trim().toLowerCase()===needle});
+}
+
+function renderPersonaSection(company){
+  var personas=personasForCompany(company);
+  document.getElementById('persona-count').textContent=personas.length?'('+personas.length+')':'';
+  var gridEl=document.getElementById('persona-grid');
+  var emptyEl=document.getElementById('persona-empty');
+  if(!personas.length){
+    gridEl.innerHTML='';
+    emptyEl.style.display='block';
+    return;
+  }
+  emptyEl.style.display='none';
+  gridEl.innerHTML=personas.map(function(p){
+    var roleClass=p['Decision Role']?'role-'+p['Decision Role'].toLowerCase():'';
+    var engClass=p['Engagement Level']?'engagement-'+p['Engagement Level'].toLowerCase():'';
+    var badges=[];
+    if(p['Decision Role'])badges.push('<span class="persona-badge '+roleClass+'">'+esc(p['Decision Role'])+'</span>');
+    if(p['Engagement Level'])badges.push('<span class="persona-badge '+engClass+'">'+esc(p['Engagement Level'])+' engagement</span>');
+    if(p['Mission Alignment'])badges.push('<span class="persona-badge">'+esc(p['Mission Alignment'])+'</span>');
+    var metaParts=[];
+    if(p['Function Category'])metaParts.push(esc(p['Function Category']));
+    if(p['Last Contacted'])metaParts.push('Last contacted '+esc(p['Last Contacted']));
+    return '<div class="persona-card">'+
+      '<div class="persona-card-head"><div class="persona-name">'+esc(p['Full Name'])+'</div></div>'+
+      (p['Title']?'<div class="persona-title">'+esc(p['Title'])+'</div>':'')+
+      (badges.length?'<div class="persona-badges">'+badges.join('')+'</div>':'')+
+      (metaParts.length?'<div class="persona-meta">'+metaParts.join(' · ')+'</div>':'')+
+      (p['Notes']?'<div class="persona-notes">'+esc(p['Notes'])+'</div>':'')+
+      '<div class="persona-actions">'+
+        '<button class="crd-btn crd-edit" onclick="openPersonaEdit(\''+esc(p['Record ID'])+'\')">Edit</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openPersonaEdit(recordId){
+  _personaEditId=recordId||null;
+  var p=recordId?allProspectPersonas.find(function(x){return x['Record ID']===recordId}):null;
+  document.getElementById('persona-modal-eyebrow').textContent=p?'Edit Persona':'Add Persona';
+  document.getElementById('persona-company-label').textContent=(_modalProspect&&_modalProspect['Company'])||'';
+  document.getElementById('persona-name').value=p?(p['Full Name']||''):'';
+  document.getElementById('persona-title').value=p?(p['Title']||''):'';
+  document.getElementById('persona-email').value=p?(p['Email']||''):'';
+  document.getElementById('persona-last-contacted').value=p?(p['Last Contacted']||''):'';
+  document.getElementById('persona-function').value=p?(p['Function Category']||''):'';
+  document.getElementById('persona-mission').value=p?(p['Mission Alignment']||''):'';
+  document.getElementById('persona-decision-role').value=p?(p['Decision Role']||''):'';
+  document.getElementById('persona-engagement').value=p?(p['Engagement Level']||''):'';
+  document.getElementById('persona-notes').value=p?(p['Notes']||''):'';
+  document.getElementById('persona-delete-btn').style.display=p?'inline-block':'none';
+  document.getElementById('persona-edit-modal').classList.add('open');
+  document.getElementById('persona-name').focus();
+}
+
+function closePersonaEdit(){
+  document.getElementById('persona-edit-modal').classList.remove('open');
+  _personaEditId=null;
+}
+
+async function savePersonaEdit(){
+  var name=document.getElementById('persona-name').value.trim();
+  if(!name){document.getElementById('persona-name').focus();return}
+  var company=(_modalProspect&&_modalProspect['Company'])||'';
+  var contact={
+    'Company':company,
+    'Full Name':name,
+    'Title':document.getElementById('persona-title').value.trim(),
+    'Email':document.getElementById('persona-email').value.trim(),
+    'Function Category':document.getElementById('persona-function').value.trim(),
+    'Mission Alignment':document.getElementById('persona-mission').value,
+    'Decision Role':document.getElementById('persona-decision-role').value,
+    'Engagement Level':document.getElementById('persona-engagement').value,
+    'Last Contacted':document.getElementById('persona-last-contacted').value,
+    'Notes':document.getElementById('persona-notes').value.trim(),
+    'Record ID':_personaEditId||('pc_'+Date.now())
+  };
+  var btn=document.getElementById('persona-save-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    var action=_personaEditId?'update':'add';
+    var resp=await fetch(PROSPECT_CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:action,contact:contact})});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Save failed');
+    if(_personaEditId){
+      var idx=allProspectPersonas.findIndex(function(x){return x['Record ID']===_personaEditId});
+      if(idx!==-1)allProspectPersonas[idx]=contact;else allProspectPersonas.push(contact);
+    }else{
+      allProspectPersonas.push(contact);
+    }
+    closePersonaEdit();
+    renderPersonaSection(company);
+    showPsToast('Persona saved');
+  }catch(e){
+    showPsToast('Save failed: '+e.message,true);
+  }finally{
+    btn.disabled=false;btn.textContent='Save Persona';
+  }
+}
+
+async function deletePersona(){
+  if(!_personaEditId)return;
+  if(!confirm('Remove this persona?'))return;
+  var company=(_modalProspect&&_modalProspect['Company'])||'';
+  var recordId=_personaEditId;
+  try{
+    var resp=await fetch(PROSPECT_CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'delete',contact:{'Record ID':recordId}})});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Delete failed');
+    allProspectPersonas=allProspectPersonas.filter(function(x){return x['Record ID']!==recordId});
+    closePersonaEdit();
+    renderPersonaSection(company);
+    showPsToast('Persona removed');
+  }catch(e){
+    showPsToast('Delete failed: '+e.message,true);
   }
 }
 
@@ -2235,7 +2402,97 @@ function closeRadarCountry(){
         <div id="pmodal-contacts"></div>
       </div>
     </div>
+    <div class="persona-section">
+      <div class="persona-head">
+        <div class="pmodal-sec-title" style="margin-bottom:0">Registered Personas <span class="radar-col-count" id="persona-count"></span></div>
+        <button class="persona-add-btn" onclick="openPersonaEdit(null)">+ Add Persona</button>
+      </div>
+      <div id="persona-grid" class="persona-grid"></div>
+      <div id="persona-empty" class="radar-list-empty" style="display:none">No personas registered yet — click + Add Persona to log a decision-maker.</div>
+    </div>
     <div id="pmodal-foot" class="pmodal-foot" style="display:none"></div>
+  </div>
+</div>
+<!-- Persona Edit Modal -->
+<div id="persona-edit-modal" class="pmodal-overlay" onclick="if(event.target===this)closePersonaEdit()">
+  <div class="pmodal-panel pedit-panel" style="max-width:560px">
+    <div class="pmodal-head">
+      <button class="pmodal-close" onclick="closePersonaEdit()">✕</button>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.13em;color:rgba(255,255,255,.28);text-transform:uppercase;margin-bottom:8px" id="persona-modal-eyebrow">Add Persona</div>
+      <div id="persona-company-label" class="pmodal-co" style="font-size:22px"></div>
+    </div>
+    <div class="pedit-body">
+      <input type="hidden" id="persona-record-id">
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Full Name <span>*</span></label>
+          <input id="persona-name" type="text" placeholder="Ahmed Khalil">
+        </div>
+        <div class="pefield">
+          <label>Title</label>
+          <input id="persona-title" type="text" placeholder="Chief Technology Officer">
+        </div>
+      </div>
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Email</label>
+          <input id="persona-email" type="email" placeholder="name@company.com">
+        </div>
+        <div class="pefield">
+          <label>Last Contacted</label>
+          <input id="persona-last-contacted" type="date">
+        </div>
+      </div>
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Function Category <span style="opacity:.6;font-weight:400;font-size:8px;color:rgba(255,255,255,.45)">e.g. SLT &amp; C-suite</span></label>
+          <input id="persona-function" type="text" placeholder="SLT & C-suite">
+        </div>
+        <div class="pefield">
+          <label>Mission Alignment</label>
+          <select id="persona-mission">
+            <option value=""></option>
+            <option>Autonomous Networks</option>
+            <option>AI & Data</option>
+            <option>Composable IT & Ecosystems</option>
+            <option>Business Assurance</option>
+            <option>Business Process/eTOM</option>
+            <option>Multiple Missions</option>
+          </select>
+        </div>
+      </div>
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Decision Role</label>
+          <select id="persona-decision-role">
+            <option value=""></option>
+            <option>Decider</option>
+            <option>Champion</option>
+            <option>Initiator</option>
+            <option>Influencer</option>
+            <option>Blocker</option>
+          </select>
+        </div>
+        <div class="pefield">
+          <label>Engagement Level</label>
+          <select id="persona-engagement">
+            <option value=""></option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="pefield">
+        <label>Notes</label>
+        <textarea id="persona-notes" rows="3" placeholder="Context, next steps, how this person fits the deal…"></textarea>
+      </div>
+    </div>
+    <div class="pedit-foot">
+      <button class="pedit-cancel" id="persona-delete-btn" style="color:rgba(217,18,65,.8);border-color:rgba(217,18,65,.3);display:none" onclick="deletePersona()">Delete</button>
+      <button class="pedit-cancel" onclick="closePersonaEdit()">Cancel</button>
+      <button id="persona-save-btn" class="pedit-save" onclick="savePersonaEdit()">Save Persona</button>
+    </div>
   </div>
 </div>
 <!-- Prospect Edit Modal -->

@@ -1,0 +1,69 @@
+{
+  "name": "TMF — Prospect Contacts Read",
+  "nodes": [
+    {
+      "id": "pcr-001",
+      "name": "Webhook — Get Prospect Contacts",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "tmf-prospect-contacts-read",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "pcr-002",
+      "name": "Read Prospect Contacts Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Prospect Contacts", "mode": "name" },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "pcr-003",
+      "name": "Filter & Format",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 360],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json).filter(r => r['Record ID'] && r.Deleted !== 'TRUE' && r.Deleted !== true);\nreturn [{ json: { success: true, contacts: rows } }];"
+      }
+    },
+    {
+      "id": "pcr-004",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Get Prospect Contacts": { "main": [[{ "node": "Read Prospect Contacts Sheet", "type": "main", "index": 0 }]] },
+    "Read Prospect Contacts Sheet":    { "main": [[{ "node": "Filter & Format",               "type": "main", "index": 0 }]] },
+    "Filter & Format":                 { "main": [[{ "node": "Respond",                        "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
