@@ -218,6 +218,20 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .persona-meta{font-size:10.5px;color:rgba(255,255,255,.35);margin-bottom:6px}
 .persona-notes{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:8px}
 .persona-actions{display:flex;gap:8px}
+.persona-touchpoints{margin:8px 0;padding-top:8px;border-top:1px dashed rgba(255,255,255,.1)}
+.persona-tp-item{display:flex;gap:8px;font-size:10.5px;color:rgba(255,255,255,.55);padding:3px 0;line-height:1.5}
+.persona-tp-date{font-family:var(--mono);font-size:9px;color:rgba(150,190,255,.75);flex-shrink:0;white-space:nowrap}
+.persona-tp-more{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.35);cursor:pointer;padding:3px 0;background:none;border:none;text-align:left}
+.persona-tp-more:hover{color:rgba(255,255,255,.6)}
+.persona-tp-add-btn{font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:rgba(150,190,255,.85);background:none;border:none;cursor:pointer;padding:3px 0}
+.persona-tp-add-btn:hover{color:#fff}
+.persona-tp-form{display:flex;gap:6px;align-items:flex-start;margin-top:6px;flex-wrap:wrap}
+.persona-tp-form input[type=date]{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:6px;color:rgba(255,255,255,.85);font-size:10.5px;padding:5px 7px;font-family:var(--sans);width:130px}
+.persona-tp-form input[type=text]{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:6px;color:rgba(255,255,255,.85);font-size:10.5px;padding:5px 7px;font-family:var(--sans);flex:1;min-width:120px}
+.persona-tp-form-actions{display:flex;gap:5px}
+.persona-tp-save,.persona-tp-cancel{font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;padding:5px 9px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.14)}
+.persona-tp-save{background:rgba(80,200,120,.16);color:rgba(80,200,120,.95);border-color:rgba(80,200,120,.3)}
+.persona-tp-cancel{background:transparent;color:rgba(255,255,255,.5)}
 .mem-badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;flex-shrink:0}
 .mem-is-member{background:rgba(80,200,120,.14);color:rgba(80,200,120,.95);border:1px solid rgba(80,200,120,.28)}
 .mem-not-member{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.12)}
@@ -1821,6 +1835,7 @@ function renderPersonaSection(company){
   }
   emptyEl.style.display='none';
   gridEl.innerHTML=personas.map(function(p){
+    var rid=esc(p['Record ID']);
     var roleClass=p['Decision Role']?'role-'+p['Decision Role'].toLowerCase():'';
     var engClass=p['Engagement Level']?'engagement-'+p['Engagement Level'].toLowerCase():'';
     var badges=[];
@@ -1836,11 +1851,81 @@ function renderPersonaSection(company){
       (badges.length?'<div class="persona-badges">'+badges.join('')+'</div>':'')+
       (metaParts.length?'<div class="persona-meta">'+metaParts.join(' · ')+'</div>':'')+
       (p['Notes']?'<div class="persona-notes">'+esc(p['Notes'])+'</div>':'')+
+      renderTouchpointsBlock(p)+
       '<div class="persona-actions">'+
-        '<button class="crd-btn crd-edit" onclick="openPersonaEdit(\''+esc(p['Record ID'])+'\')">Edit</button>'+
+        '<button class="crd-btn crd-edit" onclick="openPersonaEdit(\''+rid+'\')">Edit</button>'+
       '</div>'+
     '</div>';
   }).join('');
+}
+
+/* ─── Touchpoint timeline — a running log of dated interactions per persona, replacing the old
+   single "Last Contacted" field with real history. Stored as a JSON array in the persona's
+   Touchpoints column so no extra sheet tab is needed. Every write sends the FULL persona object
+   (not a partial patch) since the update operation maps every column — a partial payload would
+   silently blank the other fields, the same gotcha avoided elsewhere in this app. ─── */
+var _tpExpanded={};
+
+function parseTouchpoints(p){
+  try{var arr=JSON.parse(p['Touchpoints']||'[]');return Array.isArray(arr)?arr:[]}catch(e){return[]}
+}
+
+function renderTouchpointsBlock(p){
+  var rid=esc(p['Record ID']);
+  var tps=parseTouchpoints(p).slice().sort(function(a,b){return(b.date||'').localeCompare(a.date||'')});
+  var expanded=!!_tpExpanded[p['Record ID']];
+  var show=expanded?tps:tps.slice(0,2);
+  var itemsHtml=show.map(function(t){
+    return '<div class="persona-tp-item"><span class="persona-tp-date">'+esc(t.date||'')+'</span><span>'+esc(t.note||'')+'</span></div>';
+  }).join('');
+  var moreHtml=tps.length>2?
+    '<button class="persona-tp-more" onclick="_tpExpanded[\''+rid+'\']='+(!expanded)+';renderPersonaSection((_modalProspect&&_modalProspect.Company)||\'\')">'+
+      (expanded?'Show less':'+ '+(tps.length-2)+' earlier touchpoint'+(tps.length-2===1?'':'s'))+
+    '</button>':'';
+  return '<div class="persona-touchpoints" id="persona-tp-block-'+rid+'">'+
+    itemsHtml+moreHtml+
+    '<div id="persona-tp-form-'+rid+'"></div>'+
+    '<button class="persona-tp-add-btn" onclick="showTouchpointForm(\''+rid+'\')">🕒 + Add Touchpoint</button>'+
+  '</div>';
+}
+
+function showTouchpointForm(recordId){
+  var el=document.getElementById('persona-tp-form-'+recordId);
+  if(!el)return;
+  var today=new Date().toISOString().slice(0,10);
+  el.innerHTML='<div class="persona-tp-form">'+
+    '<input type="date" id="tp-date-'+recordId+'" value="'+today+'">'+
+    '<input type="text" id="tp-note-'+recordId+'" placeholder="What happened — call, email, meeting…">'+
+    '<div class="persona-tp-form-actions">'+
+      '<button class="persona-tp-cancel" onclick="document.getElementById(\'persona-tp-form-'+recordId+'\').innerHTML=\'\'">Cancel</button>'+
+      '<button class="persona-tp-save" onclick="addTouchpoint(\''+recordId+'\')">Save</button>'+
+    '</div>'+
+  '</div>';
+  document.getElementById('tp-note-'+recordId).focus();
+}
+
+async function addTouchpoint(recordId){
+  var p=allProspectPersonas.find(function(x){return x['Record ID']===recordId});
+  if(!p)return;
+  var date=document.getElementById('tp-date-'+recordId).value;
+  var note=document.getElementById('tp-note-'+recordId).value.trim();
+  if(!date||!note)return;
+  var tps=parseTouchpoints(p);
+  tps.push({date:date,note:note});
+  var updated=Object.assign({},p,{'Touchpoints':JSON.stringify(tps),'Last Contacted':date});
+  try{
+    var resp=await fetch(PROSPECT_CONTACTS_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'update',contact:updated})});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Save failed');
+    var idx=allProspectPersonas.findIndex(function(x){return x['Record ID']===recordId});
+    if(idx!==-1)allProspectPersonas[idx]=updated;
+    _tpExpanded[recordId]=true;
+    renderPersonaSection((_modalProspect&&_modalProspect['Company'])||'');
+    showPsToast('Touchpoint logged');
+  }catch(e){
+    showPsToast('Save failed: '+e.message,true);
+  }
 }
 
 function openPersonaEdit(recordId){
@@ -1882,7 +1967,8 @@ async function savePersonaEdit(){
     'Engagement Level':document.getElementById('persona-engagement').value,
     'Last Contacted':document.getElementById('persona-last-contacted').value,
     'Notes':document.getElementById('persona-notes').value.trim(),
-    'Record ID':_personaEditId||('pc_'+Date.now())
+    'Record ID':_personaEditId||('pc_'+Date.now()),
+    'Touchpoints':(function(){var existing=_personaEditId?allProspectPersonas.find(function(x){return x['Record ID']===_personaEditId}):null;return existing?(existing['Touchpoints']||''):''})()
   };
   var btn=document.getElementById('persona-save-btn');
   btn.disabled=true;btn.textContent='Saving…';

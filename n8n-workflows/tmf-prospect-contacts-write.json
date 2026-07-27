@@ -54,6 +54,7 @@
             "Engagement Level":   "={{ ($json.body ?? $json).contact['Engagement Level'] }}",
             "Last Contacted":     "={{ ($json.body ?? $json).contact['Last Contacted'] }}",
             "Notes":              "={{ ($json.body ?? $json).contact['Notes'] }}",
+            "Touchpoints":        "={{ ($json.body ?? $json).contact['Touchpoints'] }}",
             "Record ID":          "={{ ($json.body ?? $json).contact['Record ID'] }}",
             "Deleted":            ""
           },
@@ -105,6 +106,7 @@
             "Engagement Level":   "={{ ($json.body ?? $json).contact['Engagement Level'] }}",
             "Last Contacted":     "={{ ($json.body ?? $json).contact['Last Contacted'] }}",
             "Notes":              "={{ ($json.body ?? $json).contact['Notes'] }}",
+            "Touchpoints":        "={{ ($json.body ?? $json).contact['Touchpoints'] }}",
             "Record ID":          "={{ ($json.body ?? $json).contact['Record ID'] }}"
           },
           "schema": []
