@@ -1,0 +1,58 @@
+{
+  "name": "TMF — Member Membership Update (Status / Category / Renewal)",
+  "nodes": [
+    {
+      "id": "mmu-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-member-membership-update",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "mmu-002",
+      "name": "Update Membership Fields",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Members", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Member ID"],
+          "value": {
+            "Member ID":    "={{ ($json.body ?? $json).memberId }}",
+            "Category":     "={{ ($json.body ?? $json).category }}",
+            "Renewal Year": "={{ ($json.body ?? $json).renewalYear }}",
+            "Status":       "={{ ($json.body ?? $json).status }}"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "mmu-003",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    }
+  ],
+  "connections": {
+    "Webhook":                   { "main": [[{ "node": "Update Membership Fields", "type": "main", "index": 0 }]] },
+    "Update Membership Fields":  { "main": [[{ "node": "Respond",                  "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
