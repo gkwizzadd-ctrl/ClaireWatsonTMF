@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand concept — TM Forum Lego Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:     #0D0B4D;
+  --ink-mid: #2E0C4B;
+  --crimson: #D91241;
+  --crim-mid:#A81043;
+  --off:     #F4F5FA;
+  --muted:   #9699A5;
+  --white:   #FFFFFF;
+  --serif:   'Cormorant Garamond', Georgia, serif;
+  --sans:    'DM Sans', system-ui, sans-serif;
+  --mono:    'DM Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family: var(--sans);
+  background: var(--off);
+  color: var(--ink);
+}
+body::before{
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+.section-label{
+  max-width:1120px; margin:0 auto; padding:64px 32px 20px;
+  font-family: var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color: var(--muted);
+}
+.section-label span{ color: var(--ink); font-weight:500; }
+
+/* ── The mark: two interlocking rounded "studs" — spaghetti (curve) resolving into Lego (grid) ── */
+.mark{
+  position:relative; flex-shrink:0;
+}
+.mark svg{ display:block; }
+
+/* ── 1. Dark nav lockup, matching live site nav ── */
+.stage-nav{
+  height:68px; padding:0 40px;
+  background: rgba(13,11,77,0.98);
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.brand-lockup{ display:flex; align-items:center; gap:14px; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.1; }
+.brand-eyebrow{
+  font-family: var(--mono); font-size:8.5px; letter-spacing:.18em; text-transform:uppercase;
+  color: rgba(255,255,255,0.45); margin-bottom:3px;
+}
+.brand-name{
+  font-family: var(--serif); font-size:21px; font-weight:500; letter-spacing:.01em; color:#fff;
+}
+.brand-name em{ font-style:italic; color: var(--crimson); font-weight:500; }
+.nav-fake-links{ display:flex; gap:32px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.5); }
+
+/* ── 2. Hero lockup, large, on light ground ── */
+.stage-hero{
+  padding:80px 56px 88px;
+  display:flex; flex-direction:column; align-items:flex-start; gap:26px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(217,18,65,0.07), transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(13,11,77,0.06), transparent 50%),
+    var(--white);
+}
+.hero-eyebrow{
+  font-family: var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color: var(--muted);
+  display:flex; align-items:center; gap:10px;
+}
+.hero-eyebrow::before{
+  content:''; width:22px; height:1px; background: var(--crimson);
+}
+.hero-name{
+  font-family: var(--serif); font-size:78px; font-weight:500; letter-spacing:-.02em; line-height:.98; color: var(--ink);
+}
+.hero-name em{ font-style:italic; color: var(--crimson); }
+.hero-sub{
+  font-family: var(--sans); font-size:16px; font-weight:400; line-height:1.7; color:#54566a; max-width:520px;
+}
+.hero-strap{
+  font-family: var(--serif); font-style:italic; font-size:19px; color: var(--ink-mid); opacity:.85;
+  border-left:2px solid rgba(217,18,65,.4); padding-left:16px; margin-top:6px;
+}
+
+/* ── 3. Compact badge, for documents / footers ── */
+.stage-badge{
+  padding:56px; background: var(--ink); display:flex; gap:48px; flex-wrap:wrap; align-items:center;
+}
+.badge{
+  display:inline-flex; align-items:center; gap:11px;
+  padding:10px 18px 10px 12px; border-radius:999px;
+  border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.03);
+}
+.badge .brand-eyebrow{ margin-bottom:1px; }
+.badge .brand-name{ font-size:15px; }
+.badge-light{ background: var(--white); border-color: rgba(13,11,77,0.1); }
+.badge-light .brand-eyebrow{ color: var(--muted); }
+.badge-light .brand-name{ color: var(--ink); }
+
+/* ── 4. Monogram alone (favicon / app icon scale) ── */
+.stage-icons{
+  padding:56px; background: var(--off); display:flex; gap:28px; align-items:center; flex-wrap:wrap;
+}
+.icon-tile{
+  width:72px; height:72px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(155deg, var(--ink) 0%, var(--ink-mid) 100%);
+  box-shadow: 0 14px 28px -10px rgba(13,11,77,0.45);
+}
+.icon-tile.on-light{ background: var(--white); border:1px solid rgba(13,11,77,0.08); box-shadow:0 10px 24px -12px rgba(13,11,77,0.18); }
+
+.divider{ height:1px; background: rgba(13,11,77,0.08); max-width:1120px; margin:0 auto; }
+.wrap{ max-width:1120px; margin:0 auto; }
+</style>
+</head>
+<body>
+
+<div class="section-label">01 — <span>Nav bar lockup</span> (drop-in replacement for the current "Claire Watson" mark)</div>
+<div class="wrap stage-nav">
+  <div class="brand-lockup">
+    <div class="mark">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+        <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#g1)"/>
+        <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.55)"/>
+        <rect x="15" y="18.5" width="11" height="7.5" rx="2.5" fill="rgba(255,255,255,0.12)"/>
+        <defs>
+          <linearGradient id="g1" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#D91241"/><stop offset="1" stop-color="#0D0B4D"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand-eyebrow">TM Forum</span>
+      <span class="brand-name">Lego <em>Line</em></span>
+    </div>
+  </div>
+  <div class="nav-fake-links">
+    <span>About Claire</span><span>ODA</span><span>Engage</span>
+  </div>
+</div>
+
+<div class="section-label" style="padding-top:56px;">02 — <span>Hero lockup</span> — full portal introduction, large scale</div>
+<div class="wrap stage-hero">
+  <div class="hero-eyebrow">TM Forum · Guided by Claire Watson</div>
+  <div class="hero-name">Lego <em>Line</em></div>
+  <p class="hero-sub">A guided path through Open Digital Architecture — where the tangle of legacy telecom systems resolves, piece by piece, into something built to snap together.</p>
+  <p class="hero-strap">Applying the TM Forum's ODA is like turning spaghetti into Lego.</p>
+</div>
+
+<div class="section-label" style="padding-top:56px;">03 — <span>Compact badge</span> — footers, PDFs, engagement plan header</div>
+<div class="wrap stage-badge">
+  <div class="badge">
+    <div class="mark">
+      <svg width="22" height="22" viewBox="0 0 30 30" fill="none">
+        <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#g2)"/>
+        <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+      <svg width="0" height="0"><defs><linearGradient id="g2" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse"><stop stop-color="#D91241"/><stop offset="1" stop-color="#0D0B4D"/></linearGradient></defs></svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand-eyebrow">TM Forum</span>
+      <span class="brand-name">Lego Line</span>
+    </div>
+  </div>
+  <div class="badge badge-light">
+    <div class="mark">
+      <svg width="22" height="22" viewBox="0 0 30 30" fill="none">
+        <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#g3)"/>
+        <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+      <svg width="0" height="0"><defs><linearGradient id="g3" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse"><stop stop-color="#D91241"/><stop offset="1" stop-color="#0D0B4D"/></linearGradient></defs></svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand-eyebrow">TM Forum</span>
+      <span class="brand-name">Lego Line</span>
+    </div>
+  </div>
+</div>
+
+<div class="section-label" style="padding-top:56px;">04 — <span>Monogram</span> — favicon / app-icon scale</div>
+<div class="wrap stage-icons">
+  <div class="icon-tile">
+    <svg width="34" height="34" viewBox="0 0 30 30" fill="none">
+      <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#g4)"/>
+      <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.6)"/>
+    </svg>
+    <svg width="0" height="0"><defs><linearGradient id="g4" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse"><stop stop-color="#D91241"/><stop offset="1" stop-color="#fff"/></linearGradient></defs></svg>
+  </div>
+  <div class="icon-tile on-light">
+    <svg width="34" height="34" viewBox="0 0 30 30" fill="none">
+      <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#g5)"/>
+      <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.55)"/>
+    </svg>
+    <svg width="0" height="0"><defs><linearGradient id="g5" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse"><stop stop-color="#D91241"/><stop offset="1" stop-color="#0D0B4D"/></linearGradient></defs></svg>
+  </div>
+</div>
+
+</body>
+</html>

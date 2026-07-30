@@ -201,6 +201,24 @@ body::before {
   content: ''; display: block; width: 32px; height: 1px; background: var(--crimson); flex-shrink: 0;
 }
 
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 11px;
+  padding: 8px 16px 8px 11px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.03);
+  margin-bottom: 22px;
+}
+.hero-badge-mark { flex-shrink: 0; display: block; }
+.hero-badge-text { display: flex; flex-direction: column; line-height: 1.1; }
+.hero-badge-eyebrow {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: rgba(255,255,255,0.42);
+  margin-bottom: 2px;
+}
+.hero-badge-name {
+  font-family: var(--serif); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.01em; color: #fff;
+}
+
 .hero-h1 {
   font-family: var(--serif); font-size: clamp(44px, 6vw, 76px);
   font-weight: 500; letter-spacing: -0.02em; line-height: 1.05;
@@ -1061,15 +1079,31 @@ footer {
 <section id="hero">
   <div class="container">
     <div class="hero-inner">
-      <div class="hero-eye r">Open Architecture. Digital Transformation. Real Results.</div>
-      <h1 class="hero-h1 r d1">
+      <div class="hero-badge r">
+        <svg class="hero-badge-mark" width="20" height="20" viewBox="0 0 30 30" fill="none">
+          <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#heroBadgeGrad)"/>
+          <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.55)"/>
+          <defs>
+            <linearGradient id="heroBadgeGrad" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#D91241"/><stop offset="1" stop-color="#0D0B4D"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="hero-badge-text">
+          <span class="hero-badge-eyebrow">TM Forum program</span>
+          <span class="hero-badge-name">Lego Line</span>
+        </span>
+      </div>
+      <div class="hero-eye r d1">Open Architecture. Digital Transformation. Real Results.</div>
+      <h1 class="hero-h1 r d2">
         Guiding telecoms<br>
         through the <em>ODA journey.</em>
       </h1>
-      <p class="hero-sub r d2">
+      <p class="hero-sub r d3">
         Claire Watson helps communication service providers unlock the full potential of the TM Forum Open Digital Architecture — translating complex standards into practical transformation roadmaps that simplify operations and accelerate growth.
       </p>
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;" class="r d3">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;" class="r d4">
         <a href="#services" class="hero-link">Explore ODA expertise <span class="arr">→</span></a>
         <button onclick="ODAGame.open()" style="background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🎯 The ODA Game</button>
       </div>
