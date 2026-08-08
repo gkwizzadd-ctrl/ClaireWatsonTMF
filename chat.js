@@ -2,7 +2,9 @@
 (function () {
   const CHAT_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/claire-agent';
   const FORM_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/custom-contact';
-  const SESSION = 'cw-' + Math.random().toString(36).slice(2, 10);
+  // Not const -- resetChat() below issues a fresh id so a reset conversation is also a fresh
+  // session server-side (n8n's memory keys off this), not just a visually-cleared transcript.
+  let SESSION = 'cw-' + Math.random().toString(36).slice(2, 10);
 
   const TOPICS = [
     { icon: '🏛️', label: 'What is ODA?',              desc: 'Overview of the Open Digital Architecture',          value: 'Give me a concise overview of the TM Forum Open Digital Architecture and why it matters for telecoms.' },
@@ -14,6 +16,8 @@
   ];
 
   const SYSTEM_CONTEXT = `You are Claire's team at TM Forum. You speak exclusively about TM Forum's Open Digital Architecture. Every answer must draw only from TM Forum standards: the ODA canvas and components, eTOM Business Process Framework, SID Information Framework, TM Forum Open APIs, ODA maturity models, and AI-native network operations. If asked about any specific vendor platform or product, redirect the conversation back to the relevant TM Forum standard. Keep every response to 2 sentences maximum. No bullet points, no lists, no headers — plain prose only. If more detail is needed, invite the user to contact Claire directly.`;
+
+  const GREETING = 'Hi there! This is Claire\'s team. We\'re here to help you explore the TM Forum Open Digital Architecture and how it can transform your BSS/OSS operations. What would you like to know?';
 
   const CSS = `
     #oda-chat-btn {
@@ -60,6 +64,12 @@
       transition: color 0.15s;
     }
     #oda-chat-close:hover { color: #fff; }
+    #oda-chat-reset {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      cursor: pointer; font-size: 16px; line-height: 1; padding: 4px;
+      transition: color 0.15s, transform 0.25s ease;
+    }
+    #oda-chat-reset:hover { color: #fff; transform: rotate(-70deg); }
     #oda-contact-shortcut {
       background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
       color: rgba(255,255,255,0.8); border-radius: 20px;
@@ -202,6 +212,7 @@
         <div class="hd-sub">Claire Watson · TM Forum</div>
       </div>
       <button id="oda-contact-shortcut">Contact Claire</button>
+      <button id="oda-chat-reset" title="Reset conversation">↺</button>
       <button id="oda-chat-close">×</button>
     </div>
     <div id="oda-chat-body"></div>
@@ -395,15 +406,31 @@
     body.scrollTop = body.scrollHeight;
   }
 
+  // Clears the visible transcript and all conversation state, and issues a fresh session id --
+  // n8n's memory keys off SESSION, so this is a genuinely new conversation server-side too, not
+  // just a visually-cleared one.
+  function resetChat() {
+    body.innerHTML = '';
+    chatHistory = [];
+    responseCount = 0;
+    contactPromptShown = false;
+    usedTopics = new Set();
+    hideContactForm();
+    SESSION = 'cw-' + Math.random().toString(36).slice(2, 10);
+    addMsg(GREETING, 'bot');
+    showTopics();
+  }
+
   btn.onclick = () => {
     modal.classList.toggle('open');
     if (modal.classList.contains('open') && body.children.length === 0) {
-      addMsg('Hi there! This is Claire\'s team. We\'re here to help you explore the TM Forum Open Digital Architecture and how it can transform your BSS/OSS operations. What would you like to know?', 'bot');
+      addMsg(GREETING, 'bot');
       showTopics();
     }
   };
 
   modal.querySelector('#oda-chat-close').onclick = () => modal.classList.remove('open');
+  modal.querySelector('#oda-chat-reset').onclick = resetChat;
   modal.querySelector('#oda-contact-shortcut').onclick = showContactForm;
 
   form.onsubmit = async (e) => {
