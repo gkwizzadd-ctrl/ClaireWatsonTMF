@@ -253,6 +253,18 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
 }
 .step-obj p { font-size: 12.5px; line-height: 1.62; color: var(--body); }
 
+/* "Other" free-text answer from the questionnaire -- quoted in the member's own words,
+   so it doesn't just vanish when their situation doesn't fit one of the 5 preset options. */
+.step-note {
+  background: rgba(217,18,65,0.05); border-left: 3px solid var(--claire);
+  padding: 12px 15px; margin-bottom: 14px;
+}
+.step-note-eye {
+  font-family: var(--mono); font-size: 7px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--claire); margin-bottom: 5px;
+}
+.step-note p { font-size: 12.5px; line-height: 1.62; color: var(--body); font-style: italic; }
+
 .acts-eye {
   font-family: var(--mono); font-size: 7px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--muted); margin-bottom: 9px;
@@ -603,6 +615,7 @@ function buildPlan() {
   STEPS.forEach((st, i) => {
     const s = scores[i] || 3;
     const c = isOp ? st.op : st.vd;
+    const otherNote = Array.isArray(D.otherAnswers) ? String(D.otherAnswers[i] || '').trim() : '';
     pages.push(`
     <div class="page">
       <div class="step-header">
@@ -626,6 +639,11 @@ function buildPlan() {
               <div class="step-obj-eye">Objective &middot; ${track}</div>
               <p>${escH(c.obj)}</p>
             </div>
+            ${otherNote ? `
+            <div class="step-note">
+              <div class="step-note-eye">In ${escH(D.name || 'your')}'s own words</div>
+              <p>&ldquo;${escH(otherNote)}&rdquo;</p>
+            </div>` : ''}
             <div class="acts-eye">Key Activities</div>
             <ul class="acts">
               ${c.acts.map(a=>`<li>${escH(a)}</li>`).join('')}
