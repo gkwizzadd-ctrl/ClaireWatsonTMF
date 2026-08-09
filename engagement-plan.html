@@ -343,14 +343,19 @@ body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
   .cover-member-block { grid-template-columns: 1fr; }
   .cover-portrait { align-self: center; }
 }
+/* While html2canvas rasterises each .page for the PDF, drop the on-screen shadow/margin so
+   the captured image is a clean edge-to-edge page rather than including the drop-shadow gutter. */
+body.pdf-capturing .page { box-shadow: none !important; margin: 0 !important; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
 <div id="actions">
   <span class="atitle">TM Forum · Personal Engagement Plan</span>
   <div class="abtns">
-    <button class="primary" onclick="window.print()">↓ Save as PDF</button>
+    <button class="primary" id="pdf-download-btn" onclick="downloadPdf()">↓ Download PDF</button>
     <button onclick="window.close()">✕ Close</button>
   </div>
 </div>
@@ -641,6 +646,39 @@ function buildPlan() {
   });
 
   root.innerHTML = pages.join('');
+}
+
+// ── PDF download — rasterises each .page via html2canvas and stitches them into one
+// jsPDF document, so the visitor gets a real file (their browser's own print/save-as-PDF
+// dialog otherwise depends on them picking the right destination, which is easy to get wrong). ──
+async function downloadPdf() {
+  const btn = document.getElementById('pdf-download-btn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Generating…';
+  btn.disabled = true;
+  document.body.classList.add('pdf-capturing');
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pages = document.querySelectorAll('#plan-root .page');
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = (canvas.height * pageWidth) / canvas.width;
+      if (i > 0) doc.addPage();
+      doc.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+    }
+    const safeCompany = String((D && D.company) || 'Your-Organisation').replace(/[^a-z0-9]+/gi, '-');
+    doc.save(`TM-Forum-Engagement-Plan-${safeCompany}.pdf`);
+  } catch (err) {
+    console.error(err);
+    alert('Something went wrong generating the PDF. Please try again, or use your browser\'s Print > Save as PDF option instead.');
+  } finally {
+    document.body.classList.remove('pdf-capturing');
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
 }
 
 // ── Entry point — must run after all const declarations above ─────────────────
