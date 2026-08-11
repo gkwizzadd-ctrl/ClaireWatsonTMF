@@ -903,11 +903,12 @@ async function loadDashboard(){
     try{
       var hash=await sha256(pw);
       var r=await fetch(PW_CHECK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hash:hash})});
+      if(!r.ok) throw new Error('webhook not reachable');
       var d=await r.json();
       if(d.valid){grant()}else{deny('Incorrect password.')}
     }catch(e){
       var h2=await sha256(pw);
-      var def=await sha256('EngageOps2026!');
+      var def=await sha256('Clubbers007');
       if(h2===def){grant()}else{deny('Incorrect password.')}
     }
   });
