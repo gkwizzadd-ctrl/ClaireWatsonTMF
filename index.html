@@ -198,6 +198,16 @@ body::before {
   transition: color 0.2s;
 }
 .mobile-nav a:hover { color: var(--crimson); }
+.mobile-nav-group { display: flex; flex-direction: column; align-items: center; }
+.mobile-nav-toggle-caret { display: inline-block; transition: transform 0.25s ease; }
+.mobile-nav-toggle.open .mobile-nav-toggle-caret { transform: rotate(180deg); }
+.mobile-nav-sub {
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  max-height: 0; overflow: hidden; margin-top: 0;
+  transition: max-height 0.3s ease, margin-top 0.3s ease;
+}
+.mobile-nav-sub.open { max-height: 200px; margin-top: 20px; }
+.mobile-nav-sub a { font-size: 19px; }
 
 /* ── Hero ── */
 #hero {
@@ -1123,8 +1133,13 @@ footer {
   <a href="#about"     onclick="closeMobile()">About</a>
   <a href="#testimonials-home" onclick="closeMobile()">Testimonials</a>
   <a href="#contact"   onclick="closeMobile()">Contact</a>
-  <a href="claires-stuff.html" style="color:rgba(217,18,65,0.85)">🔒 Claire's Stuff</a>
-  <a href="gregs-stuff.html" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🔒 Greg's Stuff</a>
+  <div class="mobile-nav-group">
+    <a href="#" class="mobile-nav-toggle" id="mobile-stuff-toggle" style="color:rgba(217,18,65,0.85)" onclick="toggleMobileStuff(event)">🔒 Stuff <span class="mobile-nav-toggle-caret">▾</span></a>
+    <div class="mobile-nav-sub" id="mobile-stuff-sub">
+      <a href="claires-stuff.html" onclick="closeMobile()">Claire's Stuff</a>
+      <a href="gregs-stuff.html" onclick="closeMobile()">Greg's Stuff</a>
+    </div>
+  </div>
   <a href="https://tmf-case-studies.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📚 Case Studies</a>
   <a href="benefits-greg.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📄 Benefits</a>
   <a href="roadmap-brief.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🗺 Roadmap</a>
@@ -1495,6 +1510,11 @@ footer {
   function closeHiw() { document.getElementById('hiw-modal').classList.remove('open'); }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHiw(); });
   function closeMobile() { mobileNav.classList.remove('open'); hbg.setAttribute('aria-expanded', false); }
+  function toggleMobileStuff(e) {
+    e.preventDefault();
+    document.getElementById('mobile-stuff-toggle').classList.toggle('open');
+    document.getElementById('mobile-stuff-sub').classList.toggle('open');
+  }
 
   /* Bulb / Thought of the Month modal */
   function openBulb() {
