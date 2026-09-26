@@ -37,12 +37,7 @@
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            { "name": "query", "value": "={{ $json.query }}" },
-            { "name": "limit", "value": 5 }
-          ]
-        },
+        "contentType": "raw", "rawContentType": "application/json", "body": "={{ JSON.stringify({ query: $json.query, limit: 5 }) }}",
         "options": { "timeout": 15000 }
       },
       "credentials": {
