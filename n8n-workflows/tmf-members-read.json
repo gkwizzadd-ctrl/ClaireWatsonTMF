@@ -1,0 +1,89 @@
+{
+  "name": "TMF — Read Members",
+  "nodes": [
+    {
+      "id": "mr-read-0001",
+      "name": "Webhook — Get Members",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "tmf-members-read",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "mr-read-0002",
+      "name": "Read Members Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "mr-read-0003",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 360],
+      "parameters": {
+        "jsCode": "// alwaysOutputData emits a placeholder for an empty sheet, and a header-only sheet can hand back the header row mapped onto itself ('Member Name': 'Member Name') -- drop both, and any row without a name.\nconst rows = $input.all()\n  .map(item => item.json)\n  .filter(r => r['Member Name'] && r['Member Name'] !== 'Member Name');\n// Same shape the old Apps Script read returned for this tab, so the page needs no other change.\nreturn [{ json: { success: true, Members: rows } }];"
+      }
+    },
+    {
+      "id": "mr-read-0004",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 360],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — Get Members": {
+      "main": [[{ "node": "Read Members Sheet", "type": "main", "index": 0 }]]
+    },
+    "Read Members Sheet": {
+      "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]]
+    },
+    "Format Response": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

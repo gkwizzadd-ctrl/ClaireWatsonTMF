@@ -825,6 +825,20 @@ var activeSort='score';
 
 /* ─── GLOBAL RADAR (MENA) ────────────────────────────────────── */
 var MEMBERS_DATA_URL='https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrFn6JtkR8XDxYSUA7vVo4rJAGLxNdA4zS1dMj-lovI19dpx/exec';
+/* Members are read through an n8n workflow (a direct Google Sheets read, ~1-3s). The Apps Script above is far slower
+   (~40s) and is kept only as a fallback if the workflow is unreachable or not yet activated. */
+var MEMBERS_READ_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-members-read';
+function fetchMembersData(){
+  var ctl=new AbortController();
+  var timer=setTimeout(function(){ctl.abort()},20000);
+  return fetch(MEMBERS_READ_WH,{signal:ctl.signal})
+    .then(function(r){clearTimeout(timer);if(!r.ok)throw new Error('http '+r.status);return r.json()})
+    .then(function(d){if(!d||!Array.isArray(d.Members))throw new Error('unexpected shape');return d})
+    .catch(function(){
+      clearTimeout(timer);
+      return fetch(MEMBERS_DATA_URL,{redirect:'follow'}).then(function(r){return r.json()});
+    });
+}
 var allMembersRadar=[];
 /* The Members read is a Google Apps Script web app that takes ~40s. To keep the Member badge truthful the list is
    cached in localStorage (shown instantly), updated optimistically the moment a change is saved, and a slow read that
@@ -1812,7 +1826,7 @@ function renderMembershipStrip(companyName){
   if(!el)return;
   if(!_membersLoaded){
     el.innerHTML='<span class="mem-badge mem-not-member">Checking…</span>'+
-      '<div class="pmodal-membership-detail">Loading the Members list (the first load can take up to a minute).</div>';
+      '<div class="pmodal-membership-detail">Loading the Members list…</div>';
     return;
   }
   var m=findMemberForCompany(companyName);
@@ -2277,8 +2291,7 @@ function copyAllEmail(){
 /* ─── GLOBAL RADAR (MENA) — map, country drill-down, member/non-member split ── */
 function loadRadarMembers(){
   var startedAt=Date.now();
-  return fetch(MEMBERS_DATA_URL,{redirect:'follow'})
-    .then(function(r){return r.json()})
+  return fetchMembersData()
     .then(function(data){
       /* A membership change was saved after this (slow) request began: its answer predates the change, so drop it
          and read again rather than showing the old Member / Non-Member value. */
