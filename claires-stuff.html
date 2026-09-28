@@ -160,6 +160,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .status-pill{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px}
 .status-new{background:rgba(59,130,246,.1);color:rgba(130,180,255,.8);border:1px solid rgba(59,130,246,.2)}
 .status-contacted{background:rgba(139,92,246,.1);color:rgba(167,139,250,.8);border:1px solid rgba(139,92,246,.2)}
+.status-member{background:rgba(80,200,120,.12);color:rgba(80,200,120,.95);border:1px solid rgba(80,200,120,.28)}
 .status-other{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
 .pcard-contacts-row{display:flex}
 .contact-av{width:22px;height:22px;border-radius:50%;background:rgba(0,48,135,.6);border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;color:rgba(130,180,255,.9);margin-left:-4px}
@@ -806,7 +807,6 @@ var MARKET_SCAN_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-market-scan';
 var PROSPECT_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-write';
 var MEMBER_MEMBERSHIP_UPDATE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-membership-update';
 var MEMBER_ADD_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-add';
-var _editMembershipMember=null;
 var PROSPECT_CONTACTS_READ_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-contacts-read';
 var PROSPECT_CONTACTS_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-contacts-write';
 var allProspectPersonas=[];
@@ -1426,7 +1426,7 @@ function buildCard(r,i){
       '<div class="pcard-titlerow"><div class="pcard-company">'+esc(company)+'</div><span class="pcard-chev" aria-hidden="true">⌄</span></div>'+
       (hq?'<div class="pcard-hq">'+esc(hq)+'</div>':'')+
       '<div class="pcard-footer pcard-footer--head">'+
-        '<span class="status-pill '+stClass+'">'+esc(status)+'</span>'+
+        '<span><span class="status-pill '+stClass+'">'+esc(status)+'</span>'+(isMemberYes(r)?' <span class="status-pill status-member">Member</span>':'')+'</span>'+
         (contactAvatars?'<div class="pcard-contacts-row">'+contactAvatars+'</div>':'')+
       '</div>'+
     '</div>'+
@@ -1634,6 +1634,7 @@ function openProspectEdit(idx){
   document.getElementById('pedit-verdict').value=r['Verdict']||'Moderate';
   document.getElementById('pedit-mission').value=r['Primary Mission']||'';
   document.getElementById('pedit-status').value=r['Status']||'New';
+  document.getElementById('pedit-member').value=isMemberYes(r)?'Yes':'No';
   document.getElementById('pedit-summary').value=r['Summary']||'';
   document.getElementById('pedit-signals').value=r['Top Signals']||'';
   document.getElementById('pedit-contacts').value=r['Key Contacts']||'';
@@ -1667,7 +1668,8 @@ async function saveProspectEdit(){
       'Summary':document.getElementById('pedit-summary').value.trim(),
       'Top Signals':document.getElementById('pedit-signals').value.trim(),
       'Key Contacts':document.getElementById('pedit-contacts').value.trim(),
-      'Timing Hook':document.getElementById('pedit-timing').value.trim()
+      'Timing Hook':document.getElementById('pedit-timing').value.trim(),
+      'Member':document.getElementById('pedit-member').value
     }
   };
   try{
@@ -1821,105 +1823,54 @@ function findMemberForCompany(companyName){
   return findMembersForCompany(companyName)[0]||null;
 }
 
-function renderMembershipStrip(companyName){
+/* ─── Member Yes/No — a plain field on the prospect's own row (the "Member" column of the Prospects sheet), set by hand.
+   Shown as a pill on the card, in the edit form, and as a one-click toggle in the detail panel. ─── */
+function isMemberYes(r){
+  return /^(yes|y|true|member)$/i.test(String((r&&r['Member'])||'').trim());
+}
+
+function renderMembershipStrip(){
   var el=document.getElementById('pmodal-membership');
-  if(!el)return;
-  if(!_membersLoaded){
-    el.innerHTML='<span class="mem-badge mem-not-member">Checking…</span>'+
-      '<div class="pmodal-membership-detail">Loading the Members list…</div>';
-    return;
-  }
-  var m=findMemberForCompany(companyName);
-  var isMember=!!m&&memberIsActive(m);
-  var badge=isMember
-    ?'<span class="mem-badge mem-is-member">Member</span>'
-    :'<span class="mem-badge mem-not-member">Non-Member</span>';
-  var detailParts=[];
-  if(isMember){
-    detailParts.push('Renews <b>'+esc(m['Renewal Year']||'—')+'</b>');
-    detailParts.push('Category <b>'+esc(m['Category']||'—')+'</b>');
-  }
-  el.innerHTML=badge+
-    '<div class="pmodal-membership-detail">'+detailParts.join('<span style="opacity:.25">·</span>')+'</div>'+
-    '<button class="mem-edit-link" onclick="openMembershipEdit()">✎ Edit</button>';
+  if(!el||!_modalProspect)return;
+  var yes=isMemberYes(_modalProspect);
+  var noColumn=!allProspects.some(function(p){return 'Member' in p});
+  el.innerHTML='<span class="mem-badge '+(yes?'mem-is-member':'mem-not-member')+'">Member: '+(yes?'Yes':'No')+'</span>'+
+    '<div class="pmodal-membership-detail">'+(noColumn
+      ?'<span style="color:rgba(245,158,11,.85)">Add a “Member” column to the Prospects sheet so this can be saved.</span>'
+      :'Set by hand — change it any time.')+'</div>'+
+    '<button class="mem-edit-link" onclick="toggleProspectMember()">'+(yes?'Mark as not a member':'Mark as a member')+'</button>';
 }
 
-function openMembershipEdit(){
-  if(!_modalProspect)return;
-  var company=_modalProspect['Company']||'';
-  if(!_membersLoaded){showPsToast('Members list is still loading — try again in a moment',true);return}
-  _editMembershipMember=findMemberForCompany(company);
-  var isMember=!!_editMembershipMember&&memberIsActive(_editMembershipMember);
-  document.getElementById('medit-company-label').textContent=company;
-  document.getElementById('medit-status').value=isMember?'Member':'Non-Member';
-  document.getElementById('medit-renewal').value=_editMembershipMember?(_editMembershipMember['Renewal Year']||''):'';
-  document.getElementById('medit-category').value=_editMembershipMember?(_editMembershipMember['Category']||''):'';
-  document.getElementById('medit-note').textContent=_editMembershipMember
-    ?'Matched to an existing Members-tab row ('+(_editMembershipMember['Member ID']||'')+'). Saving updates that row.'
-    :'No existing Members-tab row for this company yet. Setting this to Member will add a new row.';
-  document.getElementById('membership-edit-modal').classList.add('open');
+function prospectPayload(r,changes){
+  var p={
+    'row_number':r['row_number'],'Company':r['Company'],'HQ':r['HQ']||'','Country':r['Country']||'',
+    'Score':r['Score']||'','Verdict':r['Verdict']||'','Primary Mission':r['Primary Mission']||'',
+    'Status':r['Status']||'New','Summary':r['Summary']||'','Top Signals':r['Top Signals']||'',
+    'Key Contacts':r['Key Contacts']||'','Timing Hook':r['Timing Hook']||'','Member':isMemberYes(r)?'Yes':'No'
+  };
+  for(var k in changes)p[k]=changes[k];
+  return p;
 }
 
-function closeMembershipEdit(){
-  document.getElementById('membership-edit-modal').classList.remove('open');
-}
-
-function slugifyMemberId(name){
-  var base=(name||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)||'MBR';
-  return base+'-'+Date.now().toString(36).toUpperCase().slice(-5);
-}
-
-async function postMember(url,body){
-  var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  var data=await resp.json();
-  if(!data.success)throw new Error(data.error||'Save failed');
-}
-
-async function saveMembershipEdit(){
-  if(!_modalProspect)return;
-  if(!_membersLoaded){showPsToast('Members list is still loading — try again in a moment',true);return}
-  var company=_modalProspect['Company']||'';
-  var status=document.getElementById('medit-status').value;
-  var renewal=document.getElementById('medit-renewal').value.trim();
-  var category=document.getElementById('medit-category').value.trim();
-  var btn=document.getElementById('medit-save-btn');
-  btn.disabled=true;btn.textContent='Saving…';
+/* Optimistic: the pill and the panel change instantly; if the save fails they change back. */
+async function toggleProspectMember(){
+  var r=_modalProspect;
+  if(!r)return;
+  var prev=r['Member'];
+  var next=isMemberYes(r)?'No':'Yes';
+  r['Member']=next;
+  renderMembershipStrip();renderProspects();
   try{
-    var hits=findMembersForCompany(company);
-    var existing=hits[0]||null;
-    if(status==='Member'){
-      if(existing){
-        await postMember(MEMBER_MEMBERSHIP_UPDATE_WH,{memberId:existing['Member ID'],category:category,renewalYear:renewal,status:'Active'});
-        existing['Category']=category;existing['Renewal Year']=renewal;existing['Status']='Active';
-      }else{
-        var memberId=slugifyMemberId(company);
-        var row={'Member ID':memberId,'Member Name':company,
-          'HQ Country':_modalProspect['HQ']||'','Country':_modalProspect['Country']||'',
-          'Category':category,'Renewal Year':renewal,'Status':'New Member'};
-        await postMember(MEMBER_ADD_WH,{member:row});
-        allMembersRadar.push(row);
-      }
-    }else{
-      /* Non-destructive downgrade: every active row for this company becomes "Inactive" (the rows are kept). */
-      for(var i=0;i<hits.length;i++){
-        var h=hits[i];
-        if(!memberIsActive(h))continue;
-        await postMember(MEMBER_MEMBERSHIP_UPDATE_WH,{memberId:h['Member ID'],category:h['Category']||'',renewalYear:h['Renewal Year']||'',status:'Inactive'});
-        h['Status']='Inactive';
-      }
-    }
-    /* Show the saved value straight away; the ~40s sheet read then confirms it in the background. */
-    _membersWrittenAt=Date.now();
-    cacheMembers();
-    closeMembershipEdit();
-    renderMembershipStrip(company);
-    if(radarCurrentCountry)renderRadarCountryLists(radarCurrentCountry);
-    showPsToast('Membership updated');
-    loadRadarMembers();
+    var resp=await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'update',prospect:prospectPayload(r,{'Member':next})})});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Save failed');
+    try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
+    showPsToast('Member set to '+next);
   }catch(e){
+    r['Member']=prev;
+    renderMembershipStrip();renderProspects();
     showPsToast('Save failed: '+e.message,true);
-  }finally{
-    btn.disabled=false;btn.textContent='Save Membership';
   }
 }
 
@@ -2755,6 +2706,13 @@ function closeRadarCountry(){
         </div>
       </div>
       <div class="pefield">
+        <label>Member? <span style="opacity:.55;font-weight:400;text-transform:none;letter-spacing:0">(Yes / No, set by hand)</span></label>
+        <select id="pedit-member">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div class="pefield">
         <label>Primary ODA Mission</label>
         <select id="pedit-mission">
           <option value=""></option>
@@ -2788,41 +2746,6 @@ function closeRadarCountry(){
     </div>
   </div>
 </div>
-<!-- Membership Edit Modal -->
-<div id="membership-edit-modal" class="pmodal-overlay" onclick="if(event.target===this)closeMembershipEdit()">
-  <div class="pmodal-panel pedit-panel" style="max-width:460px">
-    <div class="pmodal-head">
-      <button class="pmodal-close" onclick="closeMembershipEdit()">✕</button>
-      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.13em;color:rgba(255,255,255,.28);text-transform:uppercase;margin-bottom:8px">Edit Membership</div>
-      <div id="medit-company-label" class="pmodal-co" style="font-size:22px"></div>
-    </div>
-    <div class="pedit-body">
-      <div class="pefield">
-        <label>Membership Status</label>
-        <select id="medit-status">
-          <option value="Non-Member">Non-Member</option>
-          <option value="Member">Member</option>
-        </select>
-      </div>
-      <div class="pedit-row">
-        <div class="pefield">
-          <label>Renewal Date <span style="opacity:.45;font-weight:400;font-size:8px">(if Member)</span></label>
-          <input id="medit-renewal" type="text" placeholder="e.g. 10/11/2026 or TBD">
-        </div>
-        <div class="pefield">
-          <label>Member Category <span style="opacity:.45;font-weight:400;font-size:8px">(if Member)</span></label>
-          <input id="medit-category" type="text" placeholder="e.g. Corporate A3">
-        </div>
-      </div>
-      <div id="medit-note" style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.5"></div>
-    </div>
-    <div class="pedit-foot">
-      <button class="pedit-cancel" onclick="closeMembershipEdit()">Cancel</button>
-      <button id="medit-save-btn" class="pedit-save" onclick="saveMembershipEdit()">Save Membership</button>
-    </div>
-  </div>
-</div>
-
 <!-- Email Draft Modal -->
 <div id="email-modal" class="pmodal-overlay" style="z-index:950" onclick="if(event.target===this)closeEmailModal()">
   <div class="pmodal-panel emodal-panel">

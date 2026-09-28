@@ -62,7 +62,8 @@
             "Summary":          "={{ ($json.body ?? $json).prospect['Summary'] }}",
             "Top Signals":      "={{ ($json.body ?? $json).prospect['Top Signals'] }}",
             "Key Contacts":     "={{ ($json.body ?? $json).prospect['Key Contacts'] }}",
-            "Timing Hook":      "={{ ($json.body ?? $json).prospect['Timing Hook'] }}"
+            "Timing Hook":      "={{ ($json.body ?? $json).prospect['Timing Hook'] }}",
+            "Member":           "={{ ($json.body ?? $json).prospect['Member'] }}"
           },
           "schema": []
         },
