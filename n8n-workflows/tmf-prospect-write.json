@@ -63,7 +63,9 @@
             "Top Signals":      "={{ ($json.body ?? $json).prospect['Top Signals'] }}",
             "Key Contacts":     "={{ ($json.body ?? $json).prospect['Key Contacts'] }}",
             "Timing Hook":      "={{ ($json.body ?? $json).prospect['Timing Hook'] }}",
-            "Member":           "={{ ($json.body ?? $json).prospect['Member'] }}"
+            "Member":           "={{ ($json.body ?? $json).prospect['Member'] }}",
+            "Member Category":  "={{ ($json.body ?? $json).prospect['Member Category'] }}",
+            "Member Expiry":    "={{ ($json.body ?? $json).prospect['Member Expiry'] }}"
           },
           "schema": []
         },

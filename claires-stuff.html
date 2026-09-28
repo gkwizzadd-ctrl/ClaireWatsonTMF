@@ -243,6 +243,16 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .pmodal-membership-detail b{color:rgba(255,255,255,.82);font-weight:600}
 .mem-edit-link{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(130,180,255,.85);cursor:pointer;background:none;border:none;padding:0;flex-shrink:0}
 .mem-edit-link:hover{color:#fff;text-decoration:underline}
+.mem-fields{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;flex:1 1 100%;margin-top:2px}
+.mem-fields label{display:flex;flex-direction:column;gap:4px;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35)}
+.mem-fields input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:6px;color:rgba(255,255,255,.88);font-size:12.5px;padding:7px 10px;font-family:var(--sans);outline:none;min-width:150px;color-scheme:dark}
+.mem-fields input:focus{border-color:rgba(130,180,255,.4)}
+.mem-save-btn{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(130,180,255,.18);border:1px solid rgba(130,180,255,.4);border-radius:6px;padding:8px 14px;cursor:pointer}
+.mem-save-btn:hover,.mem-save-btn:focus-visible{background:rgba(130,180,255,.3);outline:none}
+.mem-save-btn:disabled{opacity:.5;cursor:default}
+.status-exp-ok{background:rgba(255,255,255,.06);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.14)}
+.status-exp-soon{background:rgba(245,158,11,.12);color:rgba(245,158,11,.95);border:1px solid rgba(245,158,11,.32)}
+.status-exp-expired{background:rgba(217,18,65,.12);color:rgba(255,120,140,.95);border:1px solid rgba(217,18,65,.35)}
 .pmodal-body{display:grid;grid-template-columns:1fr 1fr;border-top:0}
 .pmodal-col{padding:22px 28px}
 .pmodal-col+.pmodal-col{border-left:1px solid rgba(255,255,255,.06)}
@@ -1362,7 +1372,7 @@ function buildCard(r,i){
       '<div class="pcard-titlerow"><div class="pcard-company">'+esc(company)+'</div><span class="pcard-chev" aria-hidden="true">⌄</span></div>'+
       (hq?'<div class="pcard-hq">'+esc(hq)+'</div>':'')+
       '<div class="pcard-footer pcard-footer--head">'+
-        '<span><span class="status-pill '+stClass+'">'+esc(status)+'</span>'+(isMemberYes(r)?' <span class="status-pill status-member">Member</span>':'')+'</span>'+
+        '<span><span class="status-pill '+stClass+'">'+esc(status)+'</span>'+(isMemberYes(r)?' <span class="status-pill status-member">Member'+(r['Member Category']?' · '+esc(r['Member Category']):'')+'</span>'+memberExpiryPill(r):'')+'</span>'+
         (contactAvatars?'<div class="pcard-contacts-row">'+contactAvatars+'</div>':'')+
       '</div>'+
     '</div>'+
@@ -1571,6 +1581,8 @@ function openProspectEdit(idx){
   document.getElementById('pedit-mission').value=r['Primary Mission']||'';
   document.getElementById('pedit-status').value=r['Status']||'New';
   document.getElementById('pedit-member').value=isMemberYes(r)?'Yes':'No';
+  document.getElementById('pedit-mcat').value=r['Member Category']||'';
+  document.getElementById('pedit-mexp').value=memberExpiryISO(r['Member Expiry']);
   document.getElementById('pedit-summary').value=r['Summary']||'';
   document.getElementById('pedit-signals').value=r['Top Signals']||'';
   document.getElementById('pedit-contacts').value=r['Key Contacts']||'';
@@ -1605,7 +1617,9 @@ async function saveProspectEdit(){
       'Top Signals':document.getElementById('pedit-signals').value.trim(),
       'Key Contacts':document.getElementById('pedit-contacts').value.trim(),
       'Timing Hook':document.getElementById('pedit-timing').value.trim(),
-      'Member':document.getElementById('pedit-member').value
+      'Member':document.getElementById('pedit-member').value,
+      'Member Category':document.getElementById('pedit-mcat').value.trim(),
+      'Member Expiry':document.getElementById('pedit-mexp').value
     }
   };
   try{
@@ -1736,16 +1750,52 @@ function isMemberYes(r){
   return /^(yes|y|true|member)$/i.test(String((r&&r['Member'])||'').trim());
 }
 
+/* Membership details on the prospect's row: "Member Category" (free text, e.g. Corporate A3) and "Member Expiry" (stored as YYYY-MM-DD). */
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function memberExpiryISO(v){
+  var t=String(v==null?'':v).trim();
+  if(!t)return '';
+  var m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2);
+  m=t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
+  if(m)return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
+  return '';
+}
+function fmtExpiry(iso){
+  var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?(parseInt(m[3],10)+' '+MON[parseInt(m[2],10)-1]+' '+m[1]):'';
+}
+function expiryState(iso){
+  var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m)return '';
+  var now=new Date();now.setHours(0,0,0,0);
+  var days=Math.round((new Date(+m[1],+m[2]-1,+m[3])-now)/86400000);
+  return days<0?'expired':(days<=90?'soon':'ok');
+}
+function memberExpiryPill(r){
+  var iso=memberExpiryISO(r&&r['Member Expiry']);
+  if(!iso)return '';
+  var st=expiryState(iso);
+  return ' <span class="status-pill status-exp-'+st+'">'+(st==='expired'?'Expired ':'Expires ')+fmtExpiry(iso)+'</span>';
+}
+
 function renderMembershipStrip(){
   var el=document.getElementById('pmodal-membership');
   if(!el||!_modalProspect)return;
-  var yes=isMemberYes(_modalProspect);
-  var noColumn=!allProspects.some(function(p){return 'Member' in p});
+  var r=_modalProspect;
+  var yes=isMemberYes(r);
+  var noColumn=!allProspects.some(function(p){return 'Member' in p&&'Member Category' in p&&'Member Expiry' in p});
+  var iso=memberExpiryISO(r['Member Expiry']);
   el.innerHTML='<span class="mem-badge '+(yes?'mem-is-member':'mem-not-member')+'">Member: '+(yes?'Yes':'No')+'</span>'+
     '<div class="pmodal-membership-detail">'+(noColumn
-      ?'<span style="color:rgba(245,158,11,.85)">Add a “Member” column to the Prospects sheet so this can be saved.</span>'
-      :'Set by hand — change it any time.')+'</div>'+
-    '<button class="mem-edit-link" onclick="toggleProspectMember()">'+(yes?'Mark as not a member':'Mark as a member')+'</button>';
+      ?'<span style="color:rgba(245,158,11,.85)">Add “Member”, “Member Category” and “Member Expiry” columns to the Prospects sheet so these can be saved.</span>'
+      :(yes?'Category and expiry date are set by hand — change them any time.':'Set by hand — change it any time.'))+'</div>'+
+    '<button class="mem-edit-link" onclick="toggleProspectMember()">'+(yes?'Mark as not a member':'Mark as a member')+'</button>'+
+    (yes?'<div class="mem-fields">'+
+      '<label>Member category<input id="mem-cat" type="text" list="mem-cat-list" placeholder="e.g. Corporate A3" value="'+esc(r['Member Category']||'')+'"></label>'+
+      '<label>Expiry date<input id="mem-exp" type="date" value="'+esc(iso)+'"></label>'+
+      '<button class="mem-save-btn" id="mem-save-btn" onclick="saveMembershipDetails()">Save membership</button>'+
+      '</div>':'');
 }
 
 function prospectPayload(r,changes){
@@ -1753,10 +1803,36 @@ function prospectPayload(r,changes){
     'row_number':r['row_number'],'Company':r['Company'],'HQ':r['HQ']||'','Country':r['Country']||'',
     'Score':r['Score']||'','Verdict':r['Verdict']||'','Primary Mission':r['Primary Mission']||'',
     'Status':r['Status']||'New','Summary':r['Summary']||'','Top Signals':r['Top Signals']||'',
-    'Key Contacts':r['Key Contacts']||'','Timing Hook':r['Timing Hook']||'','Member':isMemberYes(r)?'Yes':'No'
+    'Key Contacts':r['Key Contacts']||'','Timing Hook':r['Timing Hook']||'','Member':isMemberYes(r)?'Yes':'No',
+    'Member Category':r['Member Category']||'','Member Expiry':memberExpiryISO(r['Member Expiry'])
   };
   for(var k in changes)p[k]=changes[k];
   return p;
+}
+
+async function saveMembershipDetails(){
+  var r=_modalProspect;
+  if(!r)return;
+  var cat=document.getElementById('mem-cat').value.trim();
+  var exp=document.getElementById('mem-exp').value;
+  var prevCat=r['Member Category'],prevExp=r['Member Expiry'];
+  var btn=document.getElementById('mem-save-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    var resp=await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'update',prospect:prospectPayload(r,{'Member Category':cat,'Member Expiry':exp})})});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Save failed');
+    r['Member Category']=cat;r['Member Expiry']=exp;
+    try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
+    renderMembershipStrip();renderProspects();
+    showPsToast('Membership saved');
+  }catch(e){
+    r['Member Category']=prevCat;r['Member Expiry']=prevExp;
+    var b2=document.getElementById('mem-save-btn');
+    if(b2){b2.disabled=false;b2.textContent='Save membership'}
+    showPsToast('Save failed: '+e.message,true);
+  }
 }
 
 /* Optimistic: the pill and the panel change instantly; if the save fails they change back. */
@@ -2313,6 +2389,20 @@ function copyAllEmail(){
           <option value="Yes">Yes</option>
         </select>
       </div>
+      <div class="pedit-row">
+        <div class="pefield">
+          <label>Member category</label>
+          <input id="pedit-mcat" type="text" list="mem-cat-list" placeholder="e.g. Corporate A3">
+        </div>
+        <div class="pefield">
+          <label>Membership expiry date</label>
+          <input id="pedit-mexp" type="date" style="color-scheme:dark">
+        </div>
+      </div>
+      <datalist id="mem-cat-list">
+        <option value="Corporate A1"></option><option value="Corporate A2"></option><option value="Corporate A3"></option>
+        <option value="Corporate B1"></option><option value="Corporate B2"></option><option value="Corporate B3"></option>
+      </datalist>
       <div class="pefield">
         <label>Primary ODA Mission</label>
         <select id="pedit-mission">
