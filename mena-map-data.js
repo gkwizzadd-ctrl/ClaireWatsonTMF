@@ -1,4 +1,4 @@
-/* Africa & Middle East Map Data — Global Radar (Claire Watson / TM Forum)
+/* Africa, Middle East & India/Pakistan Map Data — Global Radar (Claire Watson / TM Forum)
    Country list + region split (topojson IDs match world-atlas 50m data, same dataset as
    world-topo.js), sourced from the Alvatross project's dataviz-validated Africa/Middle East
    classification and colors, plus a name-normalization table so Sheet values like "UAE",
@@ -6,6 +6,8 @@
    map's canonical country names.
 */
 window.REGION_COUNTRIES = {
+  '356': { name: 'India', region: 'indopak' },
+  '586': { name: 'Pakistan', region: 'indopak' },
   '012': { name: 'Algeria', region: 'africa' },
   '024': { name: 'Angola', region: 'africa' },
   '048': { name: 'Bahrain', region: 'middleeast' },
@@ -80,8 +82,17 @@ window.REGION_COUNTRIES = {
   '716': { name: 'Zimbabwe', region: 'africa' }
 };
 
-window.REGION_COLORS = { africa: '#c98500', middleeast: '#d55181' };
-window.REGION_LABELS = { africa: 'Africa', middleeast: 'Middle East' };
+window.REGION_COLORS = { africa: '#c98500', middleeast: '#d55181', indopak: '#2f9e8f' };
+
+/* The three map views on the Global Radar page. Each fits its own map to its regions' countries; every other
+   country is drawn as dim, non-clickable context so the region still reads geographically. */
+window.RADAR_VIEWS = {
+  africa:     { label: 'Africa',           regions: ['africa'],     width: 760, height: 720 },
+  middleeast: { label: 'Middle East',      regions: ['middleeast'], width: 760, height: 620 },
+  indopak:    { label: 'India & Pakistan', regions: ['indopak'],    width: 760, height: 680 }
+};
+window.RADAR_VIEW_ORDER = ['africa', 'middleeast', 'indopak'];
+window.REGION_LABELS = { africa: 'Africa', middleeast: 'Middle East', indopak: 'India & Pakistan' };
 
 /* Small island/city states render as near-invisible slivers even zoomed to Africa+ME scale —
    plotted as marker pins on top of the choropleth so they're always reliably clickable.
@@ -100,6 +111,8 @@ window.REGION_MICRO_MARKERS = [
    map's canonical name. Case-insensitive, trims whitespace. Falls back to the trimmed input
    unchanged if no alias matches — so an exact canonical name still works even if not listed here. */
 window.COUNTRY_ALIASES = {
+  'india': 'India', 'republic of india': 'India', 'bharat': 'India',
+  'pakistan': 'Pakistan', 'islamic republic of pakistan': 'Pakistan',
   'algeria': 'Algeria',
   'angola': 'Angola',
   'bahrain': 'Bahrain',

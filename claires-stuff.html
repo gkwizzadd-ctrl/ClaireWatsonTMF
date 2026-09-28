@@ -538,7 +538,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <span class="tb-date" id="tb-date"></span>
     </div>
     <div class="tb-right">
-      <a href="#radar-section" class="tb-link" onclick="event.preventDefault();document.getElementById('radar-section').scrollIntoView({behavior:'smooth'})">🌍 Global Radar</a>
+      <a href="radar.html" class="tb-link">🌍 Global Radar</a>
       <a href="https://tmf-case-studies.vercel.app/case-studies/tcts/training-match.html" class="tb-link" target="_blank" rel="noopener">🔬 Match Training to Challenges</a>
       <a href="/" class="tb-link">← Site</a>
       <button class="tb-logout" onclick="logout()">Log out</button>
@@ -738,57 +738,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div><!-- /sidebar -->
     </div><!-- /main-grid -->
 
-    <!-- Global Radar (Africa & Middle East) -->
-    <div class="radar-section" id="radar-section">
-      <div class="pipe-header">
-        <span class="pipe-title">🌍 Global Radar — Africa &amp; Middle East</span>
-        <span class="pipe-live"><span class="pipe-live-dot"></span>Live from Sheets</span>
-      </div>
-      <div class="radar-legend" id="radar-legend"></div>
-      <div class="radar-map-panel">
-        <div class="radar-map-wrap" id="radar-map-wrap"></div>
-      </div>
-    </div>
-
   </div><!-- /db-body -->
 </div><!-- /dashboard -->
 
-<!-- ── Global Radar country modal ─────────────────────────── -->
-<div id="radar-country-modal" class="pmodal-overlay" onclick="if(event.target===this)closeRadarCountry()">
-  <div class="pmodal-panel radar-modal-panel">
-    <div class="pmodal-head">
-      <button class="pmodal-close" onclick="closeRadarCountry()">✕</button>
-      <div class="db-header-eye" id="radar-country-region">Africa</div>
-      <div class="pmodal-co" id="radar-country-title" style="font-size:26px"></div>
-    </div>
-    <div class="radar-ops-section">
-      <div class="radar-ops-head">
-        <div class="pmodal-sec-title" style="margin-bottom:0">Market Operators</div>
-        <button class="radar-expand-btn" id="radar-expand-btn" onclick="scanForExpandedOperators()">🔍 Scan for Tier 2/3, Altnets &amp; Satellite</button>
-      </div>
-      <div id="radar-ops-snapshot" class="radar-ops-snapshot" style="display:none"></div>
-      <div id="radar-ops-loading" class="radar-ops-loading" style="display:none">Scanning market for incumbent operators…</div>
-      <div id="radar-ops-empty" class="radar-list-empty" style="display:none">No operator data available for this market yet.</div>
-      <div id="radar-ops-grid" class="radar-ops-grid"></div>
-      <div id="radar-expand-status" class="radar-expand-status"></div>
-    </div>
-    <div class="pmodal-body radar-modal-body">
-      <div class="pmodal-col">
-        <div class="pmodal-sec-title">Prospects <span class="radar-col-count" id="radar-prospects-count"></span></div>
-        <div id="radar-col-prospects"></div>
-      </div>
-      <div class="pmodal-col">
-        <div class="pmodal-sec-title">TM Forum Members <span class="radar-col-count" id="radar-members-count"></span></div>
-        <div id="radar-col-members"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
-<script src="world-topo.js"></script>
-<script src="mena-map-data.js"></script>
 
 <script>
 /* ─── SHARED HELPER ─────────────────────────────────────────── */
@@ -797,10 +749,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 /* ─── PROSPECT PIPELINE GLOBALS (must be before IIFE so pre-render works on return visits) ── */
 var SHEET_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospects-read';
 var RESEARCH_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-research';
-var MARKET_SCAN_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-market-scan';
 var PROSPECT_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-write';
-var MEMBER_MEMBERSHIP_UPDATE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-membership-update';
-var MEMBER_ADD_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-add';
 var PROSPECT_CONTACTS_READ_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-contacts-read';
 var PROSPECT_CONTACTS_WRITE_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-prospect-contacts-write';
 var allProspectPersonas=[];
@@ -817,35 +766,6 @@ var _clickableProspects=[];
 var searchQuery='';
 var activeSort='score';
 
-/* ─── GLOBAL RADAR (MENA) ────────────────────────────────────── */
-var MEMBERS_DATA_URL='https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrFn6JtkR8XDxYSUA7vVo4rJAGLxNdA4zS1dMj-lovI19dpx/exec';
-/* Members are read through an n8n workflow (a direct Google Sheets read, ~1-3s). The Apps Script above is far slower
-   (~40s) and is kept only as a fallback if the workflow is unreachable or not yet activated. */
-var MEMBERS_READ_WH='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-members-read';
-function fetchMembersData(){
-  var ctl=new AbortController();
-  var timer=setTimeout(function(){ctl.abort()},20000);
-  return fetch(MEMBERS_READ_WH,{signal:ctl.signal})
-    .then(function(r){clearTimeout(timer);if(!r.ok)throw new Error('http '+r.status);return r.json()})
-    .then(function(d){if(!d||!Array.isArray(d.Members))throw new Error('unexpected shape');return d})
-    .catch(function(){
-      clearTimeout(timer);
-      return fetch(MEMBERS_DATA_URL,{redirect:'follow'}).then(function(r){return r.json()});
-    });
-}
-var allMembersRadar=[];
-/* The Members read is a Google Apps Script web app that takes ~40s. To keep the Member badge truthful the list is
-   cached in localStorage (shown instantly), updated optimistically the moment a change is saved, and a slow read that
-   started before the last save is discarded instead of overwriting it. */
-var MEMBERS_SS_KEY='cwclaires-members';
-var _membersLoaded=false;
-var _membersWrittenAt=0;
-try{
-  var _mc=JSON.parse(localStorage.getItem(MEMBERS_SS_KEY)||'null');
-  if(Array.isArray(_mc)&&_mc.length){allMembersRadar=_mc;_membersLoaded=true}
-}catch(e){}
-function cacheMembers(){try{localStorage.setItem(MEMBERS_SS_KEY,JSON.stringify(allMembersRadar))}catch(e){}}
-var radarCurrentCountry=null;
 
 /* ─── PASSWORD GATE ─────────────────────────────────────────── */
 (function(){
@@ -924,9 +844,16 @@ function initDashboard(){
   loadNotes();
   loadProspects();
   initTmfContacts();
-  loadRadarMembers();
   loadProspectPersonas();
-  renderRadarMap();
+  /* Global Radar (radar.html) hands an operator over as ?research=<name>: fill the box and run the research. */
+  try{
+    var rq=new URLSearchParams(window.location.search).get('research');
+    if(rq){
+      history.replaceState(null,'',window.location.pathname);
+      var rin=document.getElementById('prospect-input');
+      if(rin){rin.value=rq;rin.scrollIntoView({behavior:'smooth',block:'center'});runProspectResearch()}
+    }
+  }catch(e){}
 }
 
 /* ─── TMF CONTACTS ──────────────────────────────────────────── */
@@ -1803,35 +1730,6 @@ function openProspectModal(idx){
   document.body.style.overflow='hidden';
 }
 
-/* ─── Membership status — matches the prospect's Company name against the same "Members" tab
-   (already loaded into allMembersRadar for Global Radar) that Claire tracks renewals/category
-   in, so a prospect that has since become a paying member shows that immediately, and any
-   prospect can be promoted to Member (or a member's details corrected) without leaving the
-   panel. Non-destructive: downgrading to Non-Member sets Status to "Inactive" rather than
-   deleting the sheet row. ─── */
-function memberIsActive(m){return (m['Status']||'').trim().toLowerCase()!=='inactive'}
-
-/* Every Members-tab row that matches the company, best first: exact name, then active rows, then the most
-   complete row. (The sheet can hold duplicates for one company, e.g. from repeated saves before this list
-   refreshed, so callers must not assume a single match.) */
-function findMembersForCompany(companyName){
-  var needle=(companyName||'').trim().toLowerCase();
-  if(!needle)return[];
-  var hits=allMembersRadar.filter(function(m){
-    var name=(m['Member Name']||'').trim().toLowerCase();
-    return name&&(name===needle||name.indexOf(needle)!==-1||needle.indexOf(name)!==-1);
-  });
-  function rank(m){
-    var name=(m['Member Name']||'').trim().toLowerCase();
-    return (name===needle?4:0)+(memberIsActive(m)?2:0)+((m['Category']&&m['Renewal Year'])?1:0);
-  }
-  hits.sort(function(a,b){return rank(b)-rank(a)});
-  return hits;
-}
-function findMemberForCompany(companyName){
-  return findMembersForCompany(companyName)[0]||null;
-}
-
 /* ─── Member Yes/No — a plain field on the prospect's own row (the "Member" column of the Prospects sheet), set by hand.
    Shown as a pill on the card, in the edit form, and as a one-click toggle in the detail panel. ─── */
 function isMemberYes(r){
@@ -2248,312 +2146,6 @@ function copyAllEmail(){
   });
 }
 
-/* ─── GLOBAL RADAR (MENA) — map, country drill-down, member/non-member split ── */
-function loadRadarMembers(){
-  var startedAt=Date.now();
-  return fetchMembersData()
-    .then(function(data){
-      /* A membership change was saved after this (slow) request began: its answer predates the change, so drop it
-         and read again rather than showing the old Member / Non-Member value. */
-      if(_membersWrittenAt>startedAt){loadRadarMembers();return}
-      allMembersRadar=(data['Members']||[]).filter(function(r){return r['Member Name']});
-      _membersLoaded=true;
-      cacheMembers();
-      if(radarCurrentCountry)renderRadarCountryLists(radarCurrentCountry);
-      if(_modalProspect)renderMembershipStrip(_modalProspect['Company']||'');
-    })
-    .catch(function(){/* Radar simply shows Prospects-only lists until Members load succeeds */});
-}
-
-function renderRadarLegend(){
-  var el=document.getElementById('radar-legend');
-  if(!el)return;
-  el.innerHTML=Object.keys(REGION_LABELS).map(function(r){
-    return '<span class="radar-leg-pill"><span class="radar-leg-dot" style="background:'+REGION_COLORS[r]+'"></span>'+esc(REGION_LABELS[r])+'</span>';
-  }).join('');
-}
-
-function renderRadarMap(){
-  var wrap=document.getElementById('radar-map-wrap');
-  if(!wrap||wrap.dataset.built||typeof d3==='undefined'||!window.WORLD_TOPO)return;
-  wrap.dataset.built='1';
-  renderRadarLegend();
-
-  var width=760,height=720;
-  var svg=d3.select(wrap).append('svg').attr('viewBox','0 0 '+width+' '+height);
-  var geo=topojson.feature(WORLD_TOPO,WORLD_TOPO.objects.countries);
-  var regionFeatures=geo.features.filter(function(f){return !!REGION_COUNTRIES[f.id]});
-  var projection=d3.geoMercator().fitExtent([[16,16],[width-16,height-16]],{type:'FeatureCollection',features:regionFeatures});
-  var path=d3.geoPath(projection);
-
-  var tooltip=document.createElement('div');
-  tooltip.className='radar-tooltip';
-  tooltip.id='radar-tooltip';
-  document.body.appendChild(tooltip);
-
-  svg.selectAll('path.radar-country')
-    .data(regionFeatures)
-    .join('path')
-    .attr('class','radar-country')
-    .attr('d',path)
-    .attr('fill',function(d){return REGION_COLORS[REGION_COUNTRIES[d.id].region]})
-    .attr('fill-opacity',.55)
-    .on('mouseenter',function(e,d){
-      var c=REGION_COUNTRIES[d.id];
-      tooltip.style.display='block';
-      tooltip.innerHTML=esc(c.name)+'<div class="rt-sub">'+esc(REGION_LABELS[c.region])+' · Click for prospects &amp; members</div>';
-    })
-    .on('mousemove',function(e){
-      tooltip.style.left=(e.clientX+14)+'px';
-      tooltip.style.top=(e.clientY+14)+'px';
-    })
-    .on('mouseleave',function(){tooltip.style.display='none'})
-    .on('click',function(e,d){var c=REGION_COUNTRIES[d.id];openRadarCountry(c.name,c.region)});
-
-  // Small island/city states render as near-invisible slivers at this scale — plot them as
-  // marker pins on top of the choropleth so they're always reliably hoverable/clickable.
-  svg.selectAll('circle.radar-marker')
-    .data(REGION_MICRO_MARKERS)
-    .join('circle')
-    .attr('class','radar-marker')
-    .attr('cx',function(d){return projection(d.coord)[0]})
-    .attr('cy',function(d){return projection(d.coord)[1]})
-    .attr('r',4.5)
-    .attr('fill',function(d){return REGION_COLORS[d.region]})
-    .attr('stroke','#fff')
-    .attr('stroke-width',1.5)
-    .style('cursor','pointer')
-    .on('mouseenter',function(e,d){
-      tooltip.style.display='block';
-      tooltip.innerHTML=esc(d.name)+'<div class="rt-sub">'+esc(REGION_LABELS[d.region])+' · Click for prospects &amp; members</div>';
-      d3.select(this).attr('r',6.5);
-    })
-    .on('mousemove',function(e){
-      tooltip.style.left=(e.clientX+14)+'px';
-      tooltip.style.top=(e.clientY+14)+'px';
-    })
-    .on('mouseleave',function(){
-      tooltip.style.display='none';
-      d3.select(this).attr('r',4.5);
-    })
-    .on('click',function(e,d){openRadarCountry(d.name,d.region)});
-}
-
-function countryMatches(rowCountry,rowFallback,target){
-  var c=normalizeCountryName(rowCountry);
-  if(c&&c===target)return true;
-  if(!c&&rowFallback){
-    var lastPart=String(rowFallback).split(',').pop().replace(/\(.*\)/,'').trim();
-    return normalizeCountryName(lastPart)===target;
-  }
-  return false;
-}
-
-function renderRadarCountryLists(countryName){
-  var prospects=allProspects.filter(function(r){return countryMatches(r['Country'],r['HQ'],countryName)});
-  var members=allMembersRadar.filter(function(r){return countryMatches(r['Country'],r['HQ Country'],countryName)});
-
-  document.getElementById('radar-prospects-count').textContent=prospects.length?'('+prospects.length+')':'';
-  document.getElementById('radar-members-count').textContent=members.length?'('+members.length+')':'';
-
-  var pEl=document.getElementById('radar-col-prospects');
-  pEl.innerHTML=prospects.length?prospects.map(function(r){
-    var verdict=(r['Verdict']||'').toLowerCase();
-    var vClass=verdict==='strong'?'verdict-strong':verdict==='moderate'?'verdict-moderate':'verdict-weak';
-    var matchedMember=findMemberForCompany(r['Company']);
-    var isMember=!!matchedMember&&(matchedMember['Status']||'').trim().toLowerCase()!=='inactive';
-    return '<div class="radar-list-item">'+
-      '<div class="radar-list-top">'+
-        '<div class="radar-list-name">'+esc(r['Company'])+'</div>'+
-        (isMember?'<span class="mem-badge mem-is-member">✓ Now a Member</span>':'')+
-        (r['Verdict']?'<span class="pcard-verdict '+vClass+'">'+esc(r['Verdict'])+'</span>':'')+
-      '</div>'+
-      '<div class="radar-list-meta">'+esc(r['HQ']||'')+(r['Score']?' · Score '+esc(r['Score']):'')+'</div>'+
-    '</div>';
-  }).join(''):'<div class="radar-list-empty">No prospects recorded for '+esc(countryName)+' yet.</div>';
-
-  var mEl=document.getElementById('radar-col-members');
-  mEl.innerHTML=members.length?members.map(function(r){
-    return '<div class="radar-list-item">'+
-      '<div class="radar-list-top"><div class="radar-list-name">'+esc(r['Member Name'])+'</div></div>'+
-      '<div class="radar-list-meta">'+esc(r['Region']||'')+(r['Renewal Year']?' · Renews '+esc(r['Renewal Year']):'')+'</div>'+
-    '</div>';
-  }).join(''):'<div class="radar-list-empty">No TM Forum members recorded for '+esc(countryName)+' yet.</div>';
-}
-
-/* ─── Market Operators — mirrors the same seed-or-scan + on-demand expansion pattern already
-   proven in the Alvatross Command Centre's Global Radar: open a country and immediately see its
-   Tier 1 incumbents (one cheap AI call, cached per country), then optionally drill down into
-   Tier 2/3 challengers, altnets and satellite operators via a second, explicitly-triggered call.
-   Pain points are tagged to TM Forum's 5 ODA missions so "Why ODA matters here" can show the
-   actual value prop instead of a generic pitch. ─── */
-var ODA_MISSIONS={
-  'autonomous-networks':{icon:'🤖',label:'Autonomous Networks'},
-  'ai-data':{icon:'🧠',label:'AI & Data'},
-  'composable-it':{icon:'🧩',label:'Composable IT & Ecosystems'},
-  'business-assurance':{icon:'🛡️',label:'Business Assurance'},
-  'process-etom':{icon:'🔄',label:'Business Process / eTOM'}
-};
-var ODA_CORRELATION={
-  'autonomous-networks':{title:'Autonomous Networks maturity ladder',body:'TM Forum\'s AN Levels 1–5 framework gives a proven roadmap to self-optimising, self-healing networks — Catalyst projects and peer benchmarking accelerate the journey.'},
-  'ai-data':{title:'AI & Data mission',body:'ODA\'s AI & Data assets help monetise AI across BSS/OSS through data platforms and AI factories — access to peer-tested use cases speeds up internal buy-in.'},
-  'composable-it':{title:'Composable IT & Ecosystems',body:'50+ Open APIs and the ODA Canvas/Components reference architecture reduce integration costs and vendor lock-in for a cloud-native stack.'},
-  'business-assurance':{title:'Business Assurance',body:'TM Forum frameworks for revenue assurance, fraud management, and data quality directly address margin pressure and revenue leakage.'},
-  'process-etom':{title:'Business Process / eTOM',body:'The eTOM standard gives a proven blueprint for large-scale process transformation and ERP/systems consolidation, avoiding reinventing from scratch.'}
-};
-var radarCountryOpsCache={};
-var radarCurrentOps=[];
-var radarExpandScanned={};
-
-function tierClass(tier){
-  return 'tier-'+String(tier||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^tier-/,'');
-}
-
-function renderRadarOpsGrid(operators){
-  radarCurrentOps=operators;
-  var gridEl=document.getElementById('radar-ops-grid');
-  var emptyEl=document.getElementById('radar-ops-empty');
-  if(!operators.length){
-    gridEl.innerHTML='';
-    emptyEl.style.display='block';
-    return;
-  }
-  emptyEl.style.display='none';
-  gridEl.innerHTML=operators.map(function(op,i){
-    return '<div class="radar-op-card">'+
-      '<div class="radar-op-head">'+
-        '<div class="radar-op-name">'+esc(op.name)+'</div>'+
-        '<div class="radar-op-badges">'+
-          '<span class="radar-op-tier '+tierClass(op.tier)+'">'+esc(op.tier||'Tier 1')+'</span>'+
-          '<span class="radar-op-type">'+esc(op.type||'Telecom')+'</span>'+
-        '</div>'+
-      '</div>'+
-      (op.ownership?'<div class="radar-op-owner">'+esc(op.ownership)+'</div>':'')+
-      '<div>'+op.painPoints.map(function(pp){
-        var mission=ODA_MISSIONS[pp.cat]||{icon:'•',label:pp.cat};
-        return '<div class="radar-pain-item"><span class="radar-pain-cat" title="'+esc(mission.label)+'">'+mission.icon+'</span><span>'+esc(pp.text)+'</span></div>';
-      }).join('')+'</div>'+
-      '<div class="radar-op-actions">'+
-        '<button class="radar-correlate-btn" onclick="toggleRadarCorrelate('+i+')">🔗 Why ODA Matters Here</button>'+
-        '<button class="radar-correlate-btn primary" onclick="researchOperatorFromRadar('+i+')">🔬 Research This Operator</button>'+
-      '</div>'+
-      '<div class="radar-correlate-panel" id="radar-op-corr-'+i+'"></div>'+
-    '</div>';
-  }).join('');
-}
-
-function toggleRadarCorrelate(i){
-  var panel=document.getElementById('radar-op-corr-'+i);
-  var isOpen=panel.classList.contains('open');
-  if(isOpen){panel.classList.remove('open');panel.innerHTML='';return}
-  var op=radarCurrentOps[i];
-  var cats=[];
-  op.painPoints.forEach(function(pp){if(cats.indexOf(pp.cat)===-1)cats.push(pp.cat)});
-  panel.innerHTML=cats.map(function(cat){
-    var corr=ODA_CORRELATION[cat];
-    if(!corr)return'';
-    return '<div class="radar-corr-block"><div class="radar-corr-title">'+esc((ODA_MISSIONS[cat]||{}).label||cat)+' → '+esc(corr.title)+'</div><div class="radar-corr-body">'+esc(corr.body)+'</div></div>';
-  }).join('');
-  panel.classList.add('open');
-}
-
-function researchOperatorFromRadar(i){
-  var op=radarCurrentOps[i];
-  closeRadarCountry();
-  var input=document.getElementById('prospect-input');
-  input.value=op.name;
-  input.scrollIntoView({behavior:'smooth',block:'center'});
-  runProspectResearch();
-}
-
-function loadRadarOperators(countryName,regionLabel){
-  var cache=radarCountryOpsCache[countryName];
-  if(cache){
-    document.getElementById('radar-ops-snapshot').style.display=cache.snapshot?'block':'none';
-    document.getElementById('radar-ops-snapshot').textContent=cache.snapshot||'';
-    renderRadarOpsGrid(cache.operators);
-    document.getElementById('radar-expand-btn').textContent=radarExpandScanned[countryName]?'🔄 Re-scan for Tier 2/3, Altnets & Satellite':'🔍 Scan for Tier 2/3, Altnets & Satellite';
-    return;
-  }
-  document.getElementById('radar-ops-grid').innerHTML='';
-  document.getElementById('radar-ops-empty').style.display='none';
-  document.getElementById('radar-ops-snapshot').style.display='none';
-  document.getElementById('radar-ops-loading').style.display='block';
-  document.getElementById('radar-expand-btn').disabled=true;
-
-  fetch(MARKET_SCAN_WH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({country:countryName,region:regionLabel,mode:'incumbents'})})
-    .then(function(r){return r.text()})
-    .then(function(text){
-      document.getElementById('radar-ops-loading').style.display='none';
-      document.getElementById('radar-expand-btn').disabled=false;
-      var d;
-      try{d=JSON.parse(text)}catch(e){throw new Error('Unexpected response')}
-      if(!d.success)throw new Error(d.error||'Market scan failed');
-      radarCountryOpsCache[countryName]={operators:d.operators||[],snapshot:d.snapshot||''};
-      if(d.snapshot){document.getElementById('radar-ops-snapshot').style.display='block';document.getElementById('radar-ops-snapshot').textContent=d.snapshot}
-      renderRadarOpsGrid(d.operators||[]);
-    })
-    .catch(function(err){
-      document.getElementById('radar-ops-loading').style.display='none';
-      document.getElementById('radar-expand-btn').disabled=false;
-      document.getElementById('radar-ops-empty').style.display='block';
-      document.getElementById('radar-ops-empty').textContent='Could not scan this market — has tmf-market-scan been imported into n8n yet? ('+err.message+')';
-      console.error(err);
-    });
-}
-
-function scanForExpandedOperators(){
-  var country=radarCurrentCountry;
-  if(!country)return;
-  var region=document.getElementById('radar-country-region').textContent;
-  var btn=document.getElementById('radar-expand-btn');
-  var status=document.getElementById('radar-expand-status');
-  var wasRescan=!!radarExpandScanned[country];
-  btn.disabled=true;
-  btn.textContent=wasRescan?'🔄 Re-scanning…':'🔍 Scanning…';
-  status.textContent='';
-
-  fetch(MARKET_SCAN_WH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({country:country,region:region,mode:'expanded'})})
-    .then(function(r){return r.text()})
-    .then(function(text){
-      var d;
-      try{d=JSON.parse(text)}catch(e){throw new Error('Unexpected response')}
-      if(!d.success)throw new Error(d.error||'Expanded scan failed');
-      var newOps=d.operators||[];
-      var cache=radarCountryOpsCache[country]||{operators:[],snapshot:''};
-      var existingNames={};
-      cache.operators.forEach(function(op){existingNames[(op.name||'').toLowerCase().trim()]=true});
-      var added=newOps.filter(function(op){return!existingNames[(op.name||'').toLowerCase().trim()]});
-      var merged=cache.operators.concat(added);
-      radarCountryOpsCache[country]={operators:merged,snapshot:cache.snapshot};
-      renderRadarOpsGrid(merged);
-      radarExpandScanned[country]=true;
-      btn.disabled=false;
-      btn.textContent='🔄 Re-scan for Tier 2/3, Altnets & Satellite';
-      status.textContent=added.length>0?('✓ Found '+added.length+' additional operator'+(added.length===1?'':'s')):'No additional Tier 2/3, altnet or satellite operators surfaced for this market.';
-    })
-    .catch(function(err){
-      btn.disabled=false;
-      btn.textContent=wasRescan?'🔄 Re-scan for Tier 2/3, Altnets & Satellite':'🔍 Scan for Tier 2/3, Altnets & Satellite';
-      status.textContent='Scan failed: '+err.message;
-      console.error(err);
-    });
-}
-
-function openRadarCountry(countryName,region){
-  radarCurrentCountry=countryName;
-  document.getElementById('radar-country-title').textContent=countryName;
-  var regionLabel=REGION_LABELS[region]||'';
-  document.getElementById('radar-country-region').textContent=regionLabel;
-  document.getElementById('radar-expand-status').textContent='';
-  renderRadarCountryLists(countryName);
-  loadRadarOperators(countryName,regionLabel);
-  document.getElementById('radar-country-modal').classList.add('open');
-}
-
-function closeRadarCountry(){
-  document.getElementById('radar-country-modal').classList.remove('open');
-}
 </script>
 
 <!-- Prospect Detail Modal -->
