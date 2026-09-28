@@ -296,6 +296,26 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ps-toast.ok{background:rgba(80,200,120,.18);border:1px solid rgba(80,200,120,.35);color:rgba(80,200,120,.95)}
 .ps-toast.err{background:rgba(217,18,65,.16);border:1px solid rgba(217,18,65,.3);color:rgba(255,100,120,.95)}
 .pcard{transition:background .15s,border-color .15s,transform .15s,box-shadow .15s}
+
+/* ─── ACCORDION PROSPECT CARDS: header (verdict, score, company, HQ, status, contacts) always visible,
+       the brief (mission, summary, signals, timing hook) pulls down on click ─── */
+.prospect-grid{align-items:start}
+.pcard{cursor:default}
+.pcard-head{cursor:pointer;outline:none;border-radius:8px}
+.pcard-head:focus-visible{box-shadow:0 0 0 2px rgba(130,180,255,.55);}
+.pcard-titlerow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.pcard-chev{flex:none;margin-top:4px;font-size:14px;line-height:1;color:rgba(255,255,255,.35);transition:transform .22s cubic-bezier(.34,1.56,.64,1),color .18s}
+.pcard-head:hover .pcard-chev{color:rgba(255,255,255,.7)}
+.pcard.is-open .pcard-chev{transform:rotate(180deg);color:rgba(130,180,255,.9)}
+.pcard-footer--head{border-top:none;padding-top:2px;margin-top:0}
+.pcard-body-wrap{display:grid;grid-template-rows:minmax(0,0fr);transition:grid-template-rows .26s ease}
+.pcard.is-open .pcard-body-wrap{grid-template-rows:minmax(0,1fr)}
+.pcard-body{overflow:hidden;min-height:0}
+.pcard.is-open .pcard-body{padding-top:12px;border-top:1px solid rgba(255,255,255,.06);margin-top:10px}
+.pcard.is-open .pcard-summary{display:block;-webkit-line-clamp:unset;overflow:visible}
+.pcard-open{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;border-radius:100px;border:1px solid rgba(130,180,255,.3);background:rgba(59,130,246,.1);color:rgba(130,180,255,.95);cursor:pointer;transition:background .15s,border-color .15s}
+.pcard-open:hover,.pcard-open:focus-visible{background:rgba(59,130,246,.22);border-color:rgba(130,180,255,.6);outline:none}
+@media (prefers-reduced-motion:reduce){.pcard-body-wrap,.pcard-chev{transition:none}}
 .contact-card{cursor:pointer;border-radius:8px;padding:10px 8px;margin:0 -8px;transition:background .15s}
 .contact-card:hover{background:rgba(255,255,255,.05)}
 .contact-card:hover .contact-email-cta{opacity:1}
@@ -576,6 +596,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
             <option value="za">Z → A</option>
             <option value="status">Status</option>
           </select>
+          <button class="ftab" id="pcards-toggle-all" onclick="toggleAllPcards()" title="Open or close every prospect card on this page">Expand all</button>
           <input id="pipe-search" class="pipe-search" type="text" placeholder="Search…" oninput="setSearch(this.value)" autocomplete="off">
         </div>
 
@@ -805,6 +826,17 @@ var activeSort='score';
 /* ─── GLOBAL RADAR (MENA) ────────────────────────────────────── */
 var MEMBERS_DATA_URL='https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrFn6JtkR8XDxYSUA7vVo4rJAGLxNdA4zS1dMj-lovI19dpx/exec';
 var allMembersRadar=[];
+/* The Members read is a Google Apps Script web app that takes ~40s. To keep the Member badge truthful the list is
+   cached in localStorage (shown instantly), updated optimistically the moment a change is saved, and a slow read that
+   started before the last save is discarded instead of overwriting it. */
+var MEMBERS_SS_KEY='cwclaires-members';
+var _membersLoaded=false;
+var _membersWrittenAt=0;
+try{
+  var _mc=JSON.parse(localStorage.getItem(MEMBERS_SS_KEY)||'null');
+  if(Array.isArray(_mc)&&_mc.length){allMembersRadar=_mc;_membersLoaded=true}
+}catch(e){}
+function cacheMembers(){try{localStorage.setItem(MEMBERS_SS_KEY,JSON.stringify(allMembersRadar))}catch(e){}}
 var radarCurrentCountry=null;
 
 /* ─── PASSWORD GATE ─────────────────────────────────────────── */
@@ -1317,6 +1349,7 @@ function renderProspects(){
 
   _clickableProspects=pageRows;
   grid.innerHTML=pageRows.map(function(r,i){return buildCard(r,i)}).join('');
+  syncToggleAllLabel();
 
   /* pagination controls */
   var pagEl=document.getElementById('pipe-pagination');
@@ -1330,6 +1363,9 @@ function renderProspects(){
     pagEl.style.display='none';
   }
 }
+
+var _openProspects={};
+function prospectKey(r){return String(r['row_number']||r['Company']||'')}
 
 function buildCard(r,i){
   var verdict=(r['Verdict']||'').trim();
@@ -1359,28 +1395,66 @@ function buildCard(r,i){
     return '<span class="signal-pill">'+esc(s)+'</span>';
   }).join('');
 
-  return '<div class="pcard" onclick="openProspectModal('+i+')" style="animation-delay:'+(i*0.05)+'s">'+
+  var isOpen=!!_openProspects[prospectKey(r)];
+
+  return '<div class="pcard'+(isOpen?' is-open':'')+'" data-key="'+esc(prospectKey(r))+'" style="animation-delay:'+(i*0.05)+'s">'+
     '<div class="pcard-actions">'+
       '<button class="pact-btn pact-ben" onclick="event.stopPropagation();openProspectBenefits('+i+')">Benefits</button>'+
       '<button class="pact-btn pact-edit" onclick="event.stopPropagation();openProspectEdit('+i+')">Edit</button>'+
       '<button class="pact-btn pact-del" onclick="event.stopPropagation();confirmDeleteProspect('+i+')">Delete</button>'+
     '</div>'+
     '<div class="pcard-accent" style="background:'+accentColor+'"></div>'+
-    '<div class="pcard-top">'+
-      '<span class="pcard-verdict '+vClass+'">'+esc(verdict||'Unrated')+'</span>'+
-      '<span class="pcard-score '+sClass+'">'+score+' / 30</span>'+
+    '<div class="pcard-head" role="button" tabindex="0" aria-expanded="'+(isOpen?'true':'false')+'" onclick="togglePcard(this)" onkeydown="pcardKey(event,this)">'+
+      '<div class="pcard-top">'+
+        '<span class="pcard-verdict '+vClass+'">'+esc(verdict||'Unrated')+'</span>'+
+        '<span class="pcard-score '+sClass+'">'+score+' / 30</span>'+
+      '</div>'+
+      '<div class="pcard-titlerow"><div class="pcard-company">'+esc(company)+'</div><span class="pcard-chev" aria-hidden="true">⌄</span></div>'+
+      (hq?'<div class="pcard-hq">'+esc(hq)+'</div>':'')+
+      '<div class="pcard-footer pcard-footer--head">'+
+        '<span class="status-pill '+stClass+'">'+esc(status)+'</span>'+
+        (contactAvatars?'<div class="pcard-contacts-row">'+contactAvatars+'</div>':'')+
+      '</div>'+
     '</div>'+
-    '<div class="pcard-company">'+esc(company)+'</div>'+
-    (hq?'<div class="pcard-hq">'+esc(hq)+'</div>':'')+
-    (mission?'<div class="pcard-mission">'+esc(mission)+'</div>':'')+
-    (summary?'<div class="pcard-summary">'+esc(summary)+'</div>':'')+
-    (signalPills?'<div class="pcard-signals">'+signalPills+'</div>':'')+
-    (timing?'<div class="pcard-timing">⚡ '+esc(timing)+'</div>':'')+
-    '<div class="pcard-footer">'+
-      '<span class="status-pill '+stClass+'">'+esc(status)+'</span>'+
-      (contactAvatars?'<div class="pcard-contacts-row">'+contactAvatars+'</div>':'')+
-    '</div>'+
+    '<div class="pcard-body-wrap"><div class="pcard-body">'+
+      (mission?'<div class="pcard-mission">'+esc(mission)+'</div>':'')+
+      (summary?'<div class="pcard-summary">'+esc(summary)+'</div>':'')+
+      (signalPills?'<div class="pcard-signals">'+signalPills+'</div>':'')+
+      (timing?'<div class="pcard-timing">⚡ '+esc(timing)+'</div>':'')+
+      '<button type="button" class="pcard-open" onclick="event.stopPropagation();openProspectModal('+i+')">Open full brief →</button>'+
+    '</div></div>'+
   '</div>';
+}
+
+function setPcardOpen(card,open){
+  card.classList.toggle('is-open',open);
+  var head=card.querySelector('.pcard-head');
+  if(head)head.setAttribute('aria-expanded',open?'true':'false');
+  var key=card.getAttribute('data-key');
+  if(open)_openProspects[key]=true;else delete _openProspects[key];
+}
+function togglePcard(head){
+  var card=head.closest('.pcard');
+  if(!card)return;
+  setPcardOpen(card,!card.classList.contains('is-open'));
+  syncToggleAllLabel();
+}
+function pcardKey(e,head){
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();togglePcard(head)}
+}
+function toggleAllPcards(){
+  var cards=Array.prototype.slice.call(document.querySelectorAll('#pipe-grid .pcard'));
+  if(!cards.length)return;
+  var anyClosed=cards.some(function(c){return !c.classList.contains('is-open')});
+  cards.forEach(function(c){setPcardOpen(c,anyClosed)});
+  syncToggleAllLabel();
+}
+function syncToggleAllLabel(){
+  var btn=document.getElementById('pcards-toggle-all');
+  if(!btn)return;
+  var cards=document.querySelectorAll('#pipe-grid .pcard');
+  var anyClosed=Array.prototype.some.call(cards,function(c){return !c.classList.contains('is-open')});
+  btn.textContent=(cards.length&&!anyClosed)?'Collapse all':'Expand all';
 }
 
 /* ─── PROSPECT RESEARCH ENGINE ──────────────────────────────── */
@@ -1710,19 +1784,39 @@ function openProspectModal(idx){
    prospect can be promoted to Member (or a member's details corrected) without leaving the
    panel. Non-destructive: downgrading to Non-Member sets Status to "Inactive" rather than
    deleting the sheet row. ─── */
-function findMemberForCompany(companyName){
+function memberIsActive(m){return (m['Status']||'').trim().toLowerCase()!=='inactive'}
+
+/* Every Members-tab row that matches the company, best first: exact name, then active rows, then the most
+   complete row. (The sheet can hold duplicates for one company, e.g. from repeated saves before this list
+   refreshed, so callers must not assume a single match.) */
+function findMembersForCompany(companyName){
   var needle=(companyName||'').trim().toLowerCase();
-  if(!needle)return null;
-  return allMembersRadar.find(function(m){
+  if(!needle)return[];
+  var hits=allMembersRadar.filter(function(m){
     var name=(m['Member Name']||'').trim().toLowerCase();
     return name&&(name===needle||name.indexOf(needle)!==-1||needle.indexOf(name)!==-1);
-  })||null;
+  });
+  function rank(m){
+    var name=(m['Member Name']||'').trim().toLowerCase();
+    return (name===needle?4:0)+(memberIsActive(m)?2:0)+((m['Category']&&m['Renewal Year'])?1:0);
+  }
+  hits.sort(function(a,b){return rank(b)-rank(a)});
+  return hits;
+}
+function findMemberForCompany(companyName){
+  return findMembersForCompany(companyName)[0]||null;
 }
 
 function renderMembershipStrip(companyName){
   var el=document.getElementById('pmodal-membership');
+  if(!el)return;
+  if(!_membersLoaded){
+    el.innerHTML='<span class="mem-badge mem-not-member">Checking…</span>'+
+      '<div class="pmodal-membership-detail">Loading the Members list (the first load can take up to a minute).</div>';
+    return;
+  }
   var m=findMemberForCompany(companyName);
-  var isMember=!!m&&(m['Status']||'').trim().toLowerCase()!=='inactive';
+  var isMember=!!m&&memberIsActive(m);
   var badge=isMember
     ?'<span class="mem-badge mem-is-member">Member</span>'
     :'<span class="mem-badge mem-not-member">Non-Member</span>';
@@ -1739,8 +1833,9 @@ function renderMembershipStrip(companyName){
 function openMembershipEdit(){
   if(!_modalProspect)return;
   var company=_modalProspect['Company']||'';
+  if(!_membersLoaded){showPsToast('Members list is still loading — try again in a moment',true);return}
   _editMembershipMember=findMemberForCompany(company);
-  var isMember=!!_editMembershipMember&&(_editMembershipMember['Status']||'').trim().toLowerCase()!=='inactive';
+  var isMember=!!_editMembershipMember&&memberIsActive(_editMembershipMember);
   document.getElementById('medit-company-label').textContent=company;
   document.getElementById('medit-status').value=isMember?'Member':'Non-Member';
   document.getElementById('medit-renewal').value=_editMembershipMember?(_editMembershipMember['Renewal Year']||''):'';
@@ -1760,8 +1855,15 @@ function slugifyMemberId(name){
   return base+'-'+Date.now().toString(36).toUpperCase().slice(-5);
 }
 
+async function postMember(url,body){
+  var resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  var data=await resp.json();
+  if(!data.success)throw new Error(data.error||'Save failed');
+}
+
 async function saveMembershipEdit(){
   if(!_modalProspect)return;
+  if(!_membersLoaded){showPsToast('Members list is still loading — try again in a moment',true);return}
   var company=_modalProspect['Company']||'';
   var status=document.getElementById('medit-status').value;
   var renewal=document.getElementById('medit-renewal').value.trim();
@@ -1769,33 +1871,37 @@ async function saveMembershipEdit(){
   var btn=document.getElementById('medit-save-btn');
   btn.disabled=true;btn.textContent='Saving…';
   try{
+    var hits=findMembersForCompany(company);
+    var existing=hits[0]||null;
     if(status==='Member'){
-      if(_editMembershipMember){
-        var resp=await fetch(MEMBER_MEMBERSHIP_UPDATE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({memberId:_editMembershipMember['Member ID'],category:category,renewalYear:renewal,status:'Active'})});
-        var data=await resp.json();
-        if(!data.success)throw new Error(data.error||'Update failed');
+      if(existing){
+        await postMember(MEMBER_MEMBERSHIP_UPDATE_WH,{memberId:existing['Member ID'],category:category,renewalYear:renewal,status:'Active'});
+        existing['Category']=category;existing['Renewal Year']=renewal;existing['Status']='Active';
       }else{
         var memberId=slugifyMemberId(company);
-        var resp2=await fetch(MEMBER_ADD_WH,{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({member:{
-            'Member ID':memberId,'Member Name':company,
-            'HQ Country':_modalProspect['HQ']||'','Country':_modalProspect['Country']||'',
-            'Category':category,'Renewal Year':renewal,'Status':'New Member'
-          }})});
-        var data2=await resp2.json();
-        if(!data2.success)throw new Error(data2.error||'Add failed');
+        var row={'Member ID':memberId,'Member Name':company,
+          'HQ Country':_modalProspect['HQ']||'','Country':_modalProspect['Country']||'',
+          'Category':category,'Renewal Year':renewal,'Status':'New Member'};
+        await postMember(MEMBER_ADD_WH,{member:row});
+        allMembersRadar.push(row);
       }
-    }else if(_editMembershipMember){
-      var resp3=await fetch(MEMBER_MEMBERSHIP_UPDATE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({memberId:_editMembershipMember['Member ID'],category:_editMembershipMember['Category']||'',renewalYear:_editMembershipMember['Renewal Year']||'',status:'Inactive'})});
-      var data3=await resp3.json();
-      if(!data3.success)throw new Error(data3.error||'Update failed');
+    }else{
+      /* Non-destructive downgrade: every active row for this company becomes "Inactive" (the rows are kept). */
+      for(var i=0;i<hits.length;i++){
+        var h=hits[i];
+        if(!memberIsActive(h))continue;
+        await postMember(MEMBER_MEMBERSHIP_UPDATE_WH,{memberId:h['Member ID'],category:h['Category']||'',renewalYear:h['Renewal Year']||'',status:'Inactive'});
+        h['Status']='Inactive';
+      }
     }
+    /* Show the saved value straight away; the ~40s sheet read then confirms it in the background. */
+    _membersWrittenAt=Date.now();
+    cacheMembers();
     closeMembershipEdit();
-    loadRadarMembers();
-    setTimeout(function(){renderMembershipStrip(company)},600);
+    renderMembershipStrip(company);
+    if(radarCurrentCountry)renderRadarCountryLists(radarCurrentCountry);
     showPsToast('Membership updated');
+    loadRadarMembers();
   }catch(e){
     showPsToast('Save failed: '+e.message,true);
   }finally{
@@ -2170,11 +2276,18 @@ function copyAllEmail(){
 
 /* ─── GLOBAL RADAR (MENA) — map, country drill-down, member/non-member split ── */
 function loadRadarMembers(){
-  fetch(MEMBERS_DATA_URL,{redirect:'follow'})
+  var startedAt=Date.now();
+  return fetch(MEMBERS_DATA_URL,{redirect:'follow'})
     .then(function(r){return r.json()})
     .then(function(data){
+      /* A membership change was saved after this (slow) request began: its answer predates the change, so drop it
+         and read again rather than showing the old Member / Non-Member value. */
+      if(_membersWrittenAt>startedAt){loadRadarMembers();return}
       allMembersRadar=(data['Members']||[]).filter(function(r){return r['Member Name']});
+      _membersLoaded=true;
+      cacheMembers();
       if(radarCurrentCountry)renderRadarCountryLists(radarCurrentCountry);
+      if(_modalProspect)renderMembershipStrip(_modalProspect['Company']||'');
     })
     .catch(function(){/* Radar simply shows Prospects-only lists until Members load succeeds */});
 }
