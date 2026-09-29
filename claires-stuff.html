@@ -121,6 +121,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .ftab-member.active{background:rgba(80,200,120,.12);border-color:rgba(80,200,120,.28);color:rgba(80,200,120,.95)}
 .ftab-count{margin-left:6px;opacity:.6}
 .ftab-new.active{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:rgba(130,180,255,.9)}
+.ftab-exp.active{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.28);color:rgba(245,158,11,.95)}
+.ftab-exp1.active{background:rgba(217,18,65,.1);border-color:rgba(217,18,65,.3);color:rgba(255,120,140,.95)}
 .pipe-search{margin-left:auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:100px;color:rgba(255,255,255,.75);font-family:var(--mono);font-size:9px;letter-spacing:.04em;padding:5px 12px 5px 28px;outline:none;width:110px;transition:width .25s,border-color .2s,background .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center}
 .pipe-search:focus{border-color:rgba(130,180,255,.35);background-color:rgba(255,255,255,.08);width:190px}
 .pipe-search::placeholder{color:rgba(255,255,255,.22)}
@@ -605,6 +607,9 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <button class="ftab ftab-new" data-filter="new" onclick="setFilter('new')">New</button>
           <button class="ftab ftab-member" data-filter="member" onclick="setFilter('member')" title="Prospects marked Member = Yes">Members<span id="cnt-member" class="ftab-count"></span></button>
           <button class="ftab" data-filter="nonmember" onclick="setFilter('nonmember')" title="Prospects not yet members">Non-members<span id="cnt-nonmember" class="ftab-count"></span></button>
+          <button class="ftab ftab-exp1" data-filter="exp1" onclick="setFilter('exp1')" title="Members expiring within 1 month (or already expired)">Expiring &lt;1mo<span id="cnt-exp1" class="ftab-count"></span></button>
+          <button class="ftab ftab-exp" data-filter="exp3" onclick="setFilter('exp3')" title="Members expiring within 3 months (or already expired)">Expiring &lt;3mo<span id="cnt-exp3" class="ftab-count"></span></button>
+          <button class="ftab ftab-exp" data-filter="exp6" onclick="setFilter('exp6')" title="Members expiring within 6 months (or already expired)">Expiring &lt;6mo<span id="cnt-exp6" class="ftab-count"></span></button>
           <select class="sort-sel" onchange="setSort(this.value)" title="Sort by">
             <option value="score">↓ Score</option>
             <option value="az">A → Z</option>
@@ -1163,6 +1168,23 @@ function updateMemberCounts(){
   var a=document.getElementById('cnt-member'),b=document.getElementById('cnt-nonmember');
   if(a)a.textContent='('+yes+')';
   if(b)b.textContent='('+(allProspects.length-yes)+')';
+  ['exp1','exp3','exp6'].forEach(function(f){
+    var el=document.getElementById('cnt-'+f);
+    if(el)el.textContent='('+allProspects.filter(function(r){return withinExpiryWindow(r,f)}).length+')';
+  });
+}
+
+/* "Expiring <Nmo": members with a parseable expiry date that's within N months from today, including
+   ones already past due — a lapsed member still needs the renewal call. */
+function withinExpiryWindow(r,f){
+  if(!isMemberYes(r))return false;
+  var iso=memberExpiryISO(r['Member Expiry']);
+  if(!iso)return false;
+  var m=iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  var now=new Date();now.setHours(0,0,0,0);
+  var days=Math.round((new Date(+m[1],+m[2]-1,+m[3])-now)/86400000);
+  var limit=f==='exp1'?30:f==='exp3'?90:180;
+  return days<=limit;
 }
 
 function getFiltered(){
@@ -1171,6 +1193,7 @@ function getFiltered(){
       activeFilter==='new'?(r['Status']||'').toLowerCase()==='new':
       activeFilter==='member'?isMemberYes(r):
       activeFilter==='nonmember'?!isMemberYes(r):
+      (activeFilter==='exp1'||activeFilter==='exp3'||activeFilter==='exp6')?withinExpiryWindow(r,activeFilter):
       r['Verdict']===activeFilter;
     if(!passTab)return false;
     if(!searchQuery)return true;
@@ -1292,6 +1315,7 @@ function renderProspects(){
       :activeFilter==='all'?'No prospects in the pipeline yet'
       :activeFilter==='member'?'No prospects are marked as members yet'
       :activeFilter==='nonmember'?'Every prospect is marked as a member'
+      :(activeFilter==='exp1'||activeFilter==='exp3'||activeFilter==='exp6')?'No members expiring in that window'
       :'No '+activeFilter.toLowerCase()+' prospects yet';
     grid.innerHTML='<div class="pipe-empty">'+
       '<div class="pipe-empty-icon">◉</div>'+
