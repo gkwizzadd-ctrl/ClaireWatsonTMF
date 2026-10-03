@@ -251,6 +251,18 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mem-save-btn{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:rgba(130,180,255,.18);border:1px solid rgba(130,180,255,.4);border-radius:6px;padding:8px 14px;cursor:pointer}
 .mem-save-btn:hover,.mem-save-btn:focus-visible{background:rgba(130,180,255,.3);outline:none}
 .mem-save-btn:disabled{opacity:.5;cursor:default}
+.tmf-sugg{margin-top:14px;padding:12px 14px;background:rgba(130,180,255,.05);border:1px solid rgba(130,180,255,.18);border-radius:8px}
+.tmf-sugg-head{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(130,180,255,.8);margin-bottom:8px}
+.tmf-sugg-note{font-size:10.5px;color:rgba(245,158,11,.8);margin-bottom:8px;line-height:1.55}
+.tmf-sugg-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.tmf-sugg-item:last-child{border-bottom:none}
+.tmf-sugg-name{font-size:12.5px;color:rgba(255,255,255,.85);font-weight:500}
+.tmf-sugg-meta{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.35);margin-top:2px}
+.tmf-sugg-actions{display:flex;gap:6px;flex-shrink:0}
+.tmf-sugg-confirm{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:6px;border:1px solid rgba(80,200,120,.3);background:rgba(80,200,120,.12);color:rgba(80,200,120,.9);cursor:pointer;transition:background .15s}
+.tmf-sugg-confirm:hover{background:rgba(80,200,120,.22)}
+.tmf-sugg-dismiss{font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);cursor:pointer;transition:background .15s}
+.tmf-sugg-dismiss:hover{background:rgba(255,255,255,.09)}
 .status-exp-ok{background:rgba(255,255,255,.06);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.14)}
 .status-exp-soon{background:rgba(245,158,11,.12);color:rgba(245,158,11,.95);border:1px solid rgba(245,158,11,.32)}
 .status-exp-expired{background:rgba(217,18,65,.12);color:rgba(255,120,140,.95);border:1px solid rgba(217,18,65,.35)}
@@ -1772,6 +1784,7 @@ function openProspectModal(idx){
   footEl.style.display=footHtml?'block':'none';
 
   renderMembershipStrip(company);
+  renderTmfSuggestion();
   renderPersonaSection(company);
 
   document.getElementById('prospect-modal').classList.add('open');
@@ -1838,10 +1851,103 @@ function prospectPayload(r,changes){
     'Score':r['Score']||'','Verdict':r['Verdict']||'','Primary Mission':r['Primary Mission']||'',
     'Status':r['Status']||'New','Summary':r['Summary']||'','Top Signals':r['Top Signals']||'',
     'Key Contacts':r['Key Contacts']||'','Timing Hook':r['Timing Hook']||'','Member':isMemberYes(r)?'Yes':'No',
-    'Member Category':r['Member Category']||'','Member Expiry':memberExpiryISO(r['Member Expiry'])
+    'Member Category':r['Member Category']||'','Member Expiry':memberExpiryISO(r['Member Expiry']),
+    'TMF Member Type':r['TMF Member Type']||'','TMF Date Joined':r['TMF Date Joined']||'',
+    'TMF Principal Contact':r['TMF Principal Contact']||''
   };
   for(var k in changes)p[k]=changes[k];
   return p;
+}
+
+/* ─── TM Forum membership suggestions — a one-time snapshot correlating the live Prospects list
+   against the 766/785-member TM Forum roster (TMF Members project, 2026-10-03), computed offline
+   since there's no live lookup sheet yet (see project notes for the Phase 2 plan: a proper
+   "TMF Directory" tab + on-demand recheck). Exact-name matches were already written directly to
+   the sheet; these are the fuzzy/brand-family matches that need a human look before they're
+   trusted — per Gareth's explicit choice to flag rather than auto-apply anything uncertain.
+   Keyed by the prospect's exact Company text at the time this was computed. ─── */
+var TMF_SUGGESTIONS={
+  'Technotree Limited':{tier:'fuzzy',note:'90% name match — likely a typo/spelling variant, not a different company.',candidates:[
+    {name:'Tecnotree',type:'Corporate Member',joined:'February 26, 2007',contact:'Biswajit Deva Sharma'}]},
+  'Orange':{tier:'brand',note:'No entity named plain "Orange" in the roster — likely the same company as your "Orange S.A." prospect row, already confirmed as a member.',candidates:[
+    {name:'Orange S.A.',type:'Corporate Member',joined:'June 13, 1989',contact:'Hubert Mariotte'}]},
+  'MTN Group':{tier:'brand',note:'TM Forum membership is per country subsidiary, not at group level — pick the one this prospect is really about, if any.',candidates:[
+    {name:'MTN Nigeria',type:'Subsidiary Member',joined:'September 7, 2023',contact:'Bukola Ajayi'},
+    {name:'MTN South Africa',type:'Corporate Member',joined:'June 20, 2022',contact:'Puru Dwarakanathan'},
+    {name:'MTN Uganda',type:'Subsidiary Member',joined:'October 27, 2025',contact:'Eric Semakula'}]},
+  'AXIAN Telecom':{tier:'brand',note:'Closest name match in the roster — confirm this is the same entity before accepting.',candidates:[
+    {name:'AXIAN TELECOM MIDDLE EAST TECHNICAL AND MANAGEMENT SERVICES LIMITED',type:'Corporate Member',joined:'September 23, 2024',contact:'Christian Bellet'}]},
+  'Maroc Telecom INWI':{tier:'brand',note:'Heads up: this prospect\'s name combines two separate, competing Moroccan operators (state-linked Maroc Telecom and rival INWI) — verify which one is actually meant before confirming.',candidates:[
+    {name:'Itissalat Al-Maghrib (IAM) – Maroc Telecom',type:'Subsidiary Member',joined:'September 18, 2026',contact:'Oussama Garaaoui'}]},
+  'Libya Telecom':{tier:'brand',note:'"Hatif" is Arabic for "telephone" — likely the same company under its Arabic trading name, not confirmed.',candidates:[
+    {name:'Hatif Libya Company',type:'Corporate Member',joined:'July 18, 2024',contact:'hassan zawia'}]},
+  'Saudi Telecom Company (STC)':{tier:'brand',note:'Primary candidate is the exact parent company; the Bahrain subsidiary is also in the roster separately.',candidates:[
+    {name:'Saudi Telecom Company',type:'Corporate Member',joined:'June 26, 2003',contact:'Hamad Almadi'},
+    {name:'STC Bahrain B.S.C.',type:'Subsidiary Member',joined:'February 5, 2025',contact:'AKRAM BAKRI'}]},
+  'Zain Group':{tier:'brand',note:'The middle candidate looks like the real parent entity; the others are specific country subsidiaries.',candidates:[
+    {name:'Zain Group - Mobile Telecommunications Company K.S.C.P',type:'Corporate Member',joined:'November 18, 2020',contact:'Maged Danial'},
+    {name:'Mobile Telecommunications Saudi Company (Zain KSA)',type:'Corporate Member',joined:'October 8, 2020',contact:'Norah Aljasser'},
+    {name:'Zain Kuwait',type:'Subsidiary Member',joined:'June 17, 2026',contact:'Omar Alsaleh'}]},
+  'Emirates Integrated Telecommunications Company (du)':{tier:'brand',note:'EITC = Emirates Integrated Telecommunications Company; "du" is its trading brand — almost certainly the same company.',candidates:[
+    {name:'EITC (DU)',type:'Corporate Member',joined:'August 14, 2006',contact:'Hadif Almuhairi'}]},
+  'Airtel Madagascar':{tier:'brand',note:'Only the parent group is in the roster — the Madagascar subsidiary isn\'t separately listed, so this would be marking the group, not this specific entity.',candidates:[
+    {name:'Bharti Airtel Ltd',type:'Corporate Member',joined:'June 23, 2008',contact:'Anant Kumar'}]},
+  'Vodacom Lesotho':{tier:'brand',note:'Only sibling/parent entities are in the roster — the Lesotho subsidiary isn\'t separately listed.',candidates:[
+    {name:'Vodacom (Pty) Ltd.',type:'Subsidiary Member',joined:'March 10, 2016',contact:'Anban Mestry'},
+    {name:'Vodacom Mozambique',type:'Subsidiary Member',joined:'November 23, 2017',contact:'Andre Tenreiro'}]},
+  'Vodafone Ethiopia':{tier:'brand',note:'8 different Vodafone entities are in the roster; none specifically for Ethiopia — shown here is the parent Group.',candidates:[
+    {name:'Vodafone Group',type:'Corporate Member',joined:'December 18, 1996',contact:'Lester Thomas'}]}
+};
+var _tmfSuggestionDismissed={};
+
+function renderTmfSuggestion(){
+  var el=document.getElementById('pmodal-tmf-suggestion');
+  if(!el||!_modalProspect)return;
+  var r=_modalProspect;
+  var sugg=TMF_SUGGESTIONS[r['Company']];
+  if(!sugg||isMemberYes(r)||_tmfSuggestionDismissed[r['row_number']]){el.innerHTML='';return;}
+  var rows=sugg.candidates.map(function(c,i){
+    return '<div class="tmf-sugg-item">'+
+      '<div><div class="tmf-sugg-name">'+esc(c.name)+'</div>'+
+      '<div class="tmf-sugg-meta">'+esc(c.type)+' · joined '+esc(c.joined)+' · '+esc(c.contact)+'</div></div>'+
+      '<div class="tmf-sugg-actions"><button class="tmf-sugg-confirm" onclick="confirmTmfMatch('+i+')">Confirm match</button></div>'+
+      '</div>';
+  }).join('');
+  el.innerHTML='<div class="tmf-sugg">'+
+    '<div class="tmf-sugg-head">⚑ Possible TM Forum member match — needs a quick check</div>'+
+    (sugg.note?'<div class="tmf-sugg-note">'+esc(sugg.note)+'</div>':'')+
+    rows+
+    '<div style="margin-top:8px"><button class="tmf-sugg-dismiss" onclick="dismissTmfSuggestion()">Not a match, dismiss</button></div>'+
+    '</div>';
+}
+
+function dismissTmfSuggestion(){
+  if(!_modalProspect)return;
+  _tmfSuggestionDismissed[_modalProspect['row_number']]=true;
+  renderTmfSuggestion();
+}
+
+async function confirmTmfMatch(idx){
+  var r=_modalProspect;
+  if(!r)return;
+  var sugg=TMF_SUGGESTIONS[r['Company']];
+  if(!sugg)return;
+  var c=sugg.candidates[idx];
+  var prevMember=r['Member'],prevType=r['TMF Member Type'],prevJoined=r['TMF Date Joined'],prevContact=r['TMF Principal Contact'];
+  r['Member']='Yes';r['TMF Member Type']=c.type;r['TMF Date Joined']=c.joined;r['TMF Principal Contact']=c.contact;
+  renderMembershipStrip();renderTmfSuggestion();renderProspects();
+  try{
+    var resp=await fetch(PROSPECT_WRITE_WH,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'update',prospect:prospectPayload(r,{'Member':'Yes','TMF Member Type':c.type,'TMF Date Joined':c.joined,'TMF Principal Contact':c.contact})})});
+    var data=await resp.json();
+    if(!data.success)throw new Error(data.error||'Save failed');
+    try{localStorage.setItem(PROSPECT_SS_KEY,JSON.stringify(allProspects))}catch(e){}
+    showPsToast('Marked as TM Forum member: '+c.name);
+  }catch(e){
+    r['Member']=prevMember;r['TMF Member Type']=prevType;r['TMF Date Joined']=prevJoined;r['TMF Principal Contact']=prevContact;
+    renderMembershipStrip();renderTmfSuggestion();renderProspects();
+    showPsToast('Save failed: '+e.message,true);
+  }
 }
 
 async function saveMembershipDetails(){
@@ -2267,6 +2373,7 @@ function copyAllEmail(){
       <div id="pmodal-meta" class="pmodal-meta"></div>
       <button class="pact-btn pact-ben" style="margin-top:12px;padding:6px 14px;font-size:9px" onclick="openProspectBenefitsFor(_modalProspect)">✦ Generate ODA Benefits Brief</button>
       <div id="pmodal-membership" class="pmodal-membership"></div>
+      <div id="pmodal-tmf-suggestion"></div>
     </div>
     <div class="pmodal-body">
       <div class="pmodal-col">
