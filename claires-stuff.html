@@ -1905,19 +1905,25 @@ function renderTmfSuggestion(){
   if(!el||!_modalProspect)return;
   var r=_modalProspect;
   var sugg=TMF_SUGGESTIONS[r['Company']];
-  if(!sugg||isMemberYes(r)||_tmfSuggestionDismissed[r['row_number']]){el.innerHTML='';return;}
+  /* Already marked Yes by hand but never linked to a specific roster entity (no TMF Date Joined
+     yet) still needs this panel — just worded as "link the record" rather than "mark as member",
+     since the Yes/No question is already answered. Only a prospect that's both Yes AND already
+     linked (or dismissed) goes quiet. */
+  var alreadyLinked=isMemberYes(r)&&!!r['TMF Date Joined'];
+  if(!sugg||alreadyLinked||_tmfSuggestionDismissed[r['row_number']]){el.innerHTML='';return;}
+  var linkOnly=isMemberYes(r);
   var rows=sugg.candidates.map(function(c,i){
     return '<div class="tmf-sugg-item">'+
       '<div><div class="tmf-sugg-name">'+esc(c.name)+'</div>'+
       '<div class="tmf-sugg-meta">'+esc(c.type)+' · joined '+esc(c.joined)+' · '+esc(c.contact)+'</div></div>'+
-      '<div class="tmf-sugg-actions"><button class="tmf-sugg-confirm" onclick="confirmTmfMatch('+i+')">Confirm match</button></div>'+
+      '<div class="tmf-sugg-actions"><button class="tmf-sugg-confirm" onclick="confirmTmfMatch('+i+')">'+(linkOnly?'Link this record':'Confirm match')+'</button></div>'+
       '</div>';
   }).join('');
   el.innerHTML='<div class="tmf-sugg">'+
-    '<div class="tmf-sugg-head">⚑ Possible TM Forum member match — needs a quick check</div>'+
+    '<div class="tmf-sugg-head">⚑ '+(linkOnly?'Already marked a member — which TM Forum record?':'Possible TM Forum member match — needs a quick check')+'</div>'+
     (sugg.note?'<div class="tmf-sugg-note">'+esc(sugg.note)+'</div>':'')+
     rows+
-    '<div style="margin-top:8px"><button class="tmf-sugg-dismiss" onclick="dismissTmfSuggestion()">Not a match, dismiss</button></div>'+
+    '<div style="margin-top:8px"><button class="tmf-sugg-dismiss" onclick="dismissTmfSuggestion()">'+(linkOnly?'Skip for now':'Not a match, dismiss')+'</button></div>'+
     '</div>';
 }
 
