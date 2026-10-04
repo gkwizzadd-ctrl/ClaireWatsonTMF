@@ -1087,15 +1087,6 @@ footer {
     <li><a href="#testimonials-home">Testimonials</a></li>
     <li><a href="#contact">Contact</a></li>
     <li class="nav-dropdown">
-      <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">🔒 Stuff ▾</a>
-      <div class="nav-dropdown-menu">
-        <div class="nav-dropdown-menu-inner">
-          <a href="claires-stuff.html">Claire's Stuff</a>
-          <a href="gregs-stuff.html">Greg's Stuff</a>
-        </div>
-      </div>
-    </li>
-    <li class="nav-dropdown">
       <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">📄 Documents ▾</a>
       <div class="nav-dropdown-menu">
         <div class="nav-dropdown-menu-inner">
@@ -1136,13 +1127,6 @@ footer {
   <a href="#about"     onclick="closeMobile()">About</a>
   <a href="#testimonials-home" onclick="closeMobile()">Testimonials</a>
   <a href="#contact"   onclick="closeMobile()">Contact</a>
-  <div class="mobile-nav-group">
-    <a href="#" class="mobile-nav-toggle" id="mobile-stuff-toggle" style="color:rgba(217,18,65,0.85)" onclick="toggleMobileStuff(event)">🔒 Stuff <span class="mobile-nav-toggle-caret">▾</span></a>
-    <div class="mobile-nav-sub" id="mobile-stuff-sub">
-      <a href="claires-stuff.html" onclick="closeMobile()">Claire's Stuff</a>
-      <a href="gregs-stuff.html" onclick="closeMobile()">Greg's Stuff</a>
-    </div>
-  </div>
   <a href="https://tmf-case-studies.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📚 Case Studies</a>
   <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🍝 ODA Case Study</a>
   <a href="https://signal-to-resolution.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📶 Signal to Resolution</a>
@@ -1169,12 +1153,11 @@ footer {
         <li><strong>Contact</strong> — a short form to get in touch directly. Submitting it can also unlock a personalised, downloadable Engagement Plan questionnaire tailored to your organisation.</li>
         <li><strong>Ask Claire's Team</strong> (chat bubble, bottom corner) — a live chat that answers ODA questions and can hand you straight to the contact form when you're ready to talk.</li>
         <li><strong>💡 Thought of the Month</strong> (bulb button) — a short video with Claire's current perspective on ODA transformation.</li>
-        <li><strong>🔒 Claire's Stuff / Greg's Stuff</strong> — private working pages for Claire and Greg's own account tracking, not part of the public pitch.</li>
         <li><strong>📊 Case Studies</strong> — real TM Forum member training journeys, starting with Tata Communications Transformation Services (TCTS), including a self-assessment you can take against your own organisation.</li>
         <li><strong>📄 Documents</strong> — the Benefits and Roadmap briefs, TM Forum's own member Case Studies, and an interactive ODA Case Study of our own: select a component from the real ODA canvas and watch it untangle a typical operator's legacy BSS/OSS stack.</li>
         <li><strong>🎮 Games &amp; Quiz</strong> — ODA Chess and the TMF AI Quiz, two lighter ways to learn ODA concepts.</li>
       </ol>
-      <p>Everything here is free to explore — the private links are just marked so it's clear which parts are internal working pages rather than the public pitch.</p>
+      <p>Everything here is free to explore.</p>
     </div>
   </div>
 </div>
@@ -1516,11 +1499,6 @@ footer {
   function closeHiw() { document.getElementById('hiw-modal').classList.remove('open'); }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHiw(); });
   function closeMobile() { mobileNav.classList.remove('open'); hbg.setAttribute('aria-expanded', false); }
-  function toggleMobileStuff(e) {
-    e.preventDefault();
-    document.getElementById('mobile-stuff-toggle').classList.toggle('open');
-    document.getElementById('mobile-stuff-sub').classList.toggle('open');
-  }
 
   /* Bulb / Thought of the Month modal */
   function openBulb() {
