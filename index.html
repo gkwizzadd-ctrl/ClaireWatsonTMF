@@ -1382,6 +1382,7 @@ footer {
       </a>
 
       <div class="svc-card svc-featured r d4">
+        <button type="button" class="svc-info-btn" aria-label="See it animated" onclick="openSvcx(4);">i</button>
         <div style="padding-top:4px">
           <div class="svc-num">05</div>
         </div>
@@ -1666,6 +1667,16 @@ footer {
       ],
       source: "Based on TM Forum's AI-native operations work — tmforum.org/ai-operations/",
     },
+    {
+      kicker: 'Service 05', headline: 'Standards Engagement & Member Value',
+      summary: "Connecting organisations directly to TM Forum's own programmes, co-creation projects and industry missions — so membership becomes action, not just a logo on a page.",
+      points: [
+        "Works directly with TM Forum members to maximise the value of their membership — direct access to the Forum's own structures, not advice from outside them.",
+        'Connects organisations to the right programmes: Catalyst proof-of-concepts, Open API co-creation, the ODA Canvas, and TM Forum’s industry missions (Composable IT & Ecosystems, Autonomous Networks, Trustworthy AI & Data).',
+        'The value compounds: a member engaged in the right Catalyst or mission gets influence over the standards it will later have to implement — not just early access to the finished result.',
+      ],
+      source: "Based on TM Forum's own membership and mission structure — tmforum.org/about/membership",
+    },
   ];
 
   function svcxSceneEtom() {
@@ -1737,7 +1748,34 @@ footer {
       '<text x="210" y="280" text-anchor="middle" class="svcx-label--dim">ODA Canvas: zero-touch, end to end</text></svg>';
   }
 
-  var SVCX_SCENES = [svcxSceneEtom, svcxSceneOda, svcxSceneOpenApi, svcxSceneAi];
+  function svcxSceneMembership() {
+    var hub = [210, 150];
+    var programmes = [
+      { x: 210, y: 46, label: 'Catalysts' },
+      { x: 338, y: 150, label: 'Open APIs' },
+      { x: 210, y: 254, label: 'ODA Canvas' },
+      { x: 82, y: 150, label: 'Industry Missions' },
+    ];
+    var spokes = programmes.map(function (p, i) {
+      return '<line x1="' + hub[0] + '" y1="' + hub[1] + '" x2="' + p.x + '" y2="' + p.y + '" class="svcx-hub-line" style="animation-delay:' + (i * 0.22) + 's"/>' +
+        '<circle cx="' + p.x + '" cy="' + p.y + '" r="11" class="svcx-node"/>' +
+        '<circle cx="' + p.x + '" cy="' + p.y + '" r="16" class="svcx-pulse" style="animation-delay:' + (i * 0.22) + 's"/>';
+    }).join('');
+    var labels = programmes.map(function (p) {
+      var dy = p.y < hub[1] ? -22 : (p.y > hub[1] ? 28 : 6);
+      var anchor = p.x < hub[0] ? 'end' : (p.x > hub[0] ? 'start' : 'middle');
+      var dx = p.x < hub[0] ? -16 : (p.x > hub[0] ? 16 : 0);
+      return '<text x="' + (p.x + dx) + '" y="' + (p.y + dy) + '" text-anchor="' + anchor + '" class="svcx-label">' + p.label + '</text>';
+    }).join('');
+    return '<svg viewBox="0 0 420 300" role="img" aria-label="A member at the centre connected to Catalysts, Open APIs, the ODA Canvas and Industry Missions">' +
+      spokes + labels +
+      '<circle cx="' + hub[0] + '" cy="' + hub[1] + '" r="16" class="svcx-node"/>' +
+      '<circle cx="' + hub[0] + '" cy="' + hub[1] + '" r="22" class="svcx-pulse"/>' +
+      '<text x="' + hub[0] + '" y="' + (hub[1] + 36) + '" text-anchor="middle" class="svcx-label--big">Member</text>' +
+      '<text x="210" y="292" text-anchor="middle" class="svcx-label--dim">Membership becomes action, not just a logo</text></svg>';
+  }
+
+  var SVCX_SCENES = [svcxSceneEtom, svcxSceneOda, svcxSceneOpenApi, svcxSceneAi, svcxSceneMembership];
   var svcxIndex = null;
 
   function svcxRender() {
