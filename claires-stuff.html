@@ -168,12 +168,31 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .status-nonmember{background:rgba(217,18,65,.1);color:rgba(239,100,130,.85);border:1px solid rgba(217,18,65,.22)}
 .mc-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
 .mc-row:first-child{border-top:none}
+.mc-row.mc-clickable{cursor:pointer;border-radius:8px;margin:0 -8px;padding:10px 8px;transition:background .15s}
+.mc-row.mc-clickable:hover{background:rgba(255,255,255,.04)}
+.mc-row.mc-clickable:first-child{margin-top:-2px}
 .mc-name{font-family:var(--serif);font-size:15px;font-weight:500;color:#fff;margin-bottom:2px}
 .mc-meta{font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,.35);letter-spacing:.02em}
 .mc-meta a{color:rgba(130,180,255,.75);text-decoration:none}
 .mc-meta a:hover{text-decoration:underline}
 .mc-empty{font-size:11.5px;color:rgba(255,255,255,.3);padding:10px 0 2px;line-height:1.6}
 .mc-count{font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,.2)}
+
+/* Member Info popup */
+.mc-popup-overlay{position:fixed;inset:0;background:rgba(5,3,20,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:950;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
+.mc-popup-overlay.open{opacity:1;pointer-events:all}
+.mc-popup-panel{position:relative;background:#0D0B4D;border:1px solid rgba(255,255,255,.11);border-radius:16px;width:100%;max-width:440px;padding:28px;transform:scale(.94) translateY(14px);transition:transform .32s cubic-bezier(.34,1.46,.64,1);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04) inset}
+.mc-popup-overlay.open .mc-popup-panel{transform:scale(1) translateY(0)}
+.mc-popup-eyebrow{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(80,200,120,.65);margin-bottom:10px}
+.mc-popup-name{font-family:var(--serif);font-size:26px;font-weight:500;color:#fff;line-height:1.15;padding-right:28px;margin-bottom:10px}
+.mc-popup-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.mc-popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:18px}
+.mcp-field-label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:3px}
+.mcp-field-val{font-size:13px;color:#fff}
+.mcp-field-val a{color:rgba(130,180,255,.85);text-decoration:none}
+.mcp-field-val a:hover{text-decoration:underline}
+.mc-popup-profile-btn{display:block;text-align:center;padding:11px;background:rgba(80,200,120,.12);border:1px solid rgba(80,200,120,.3);border-radius:8px;color:rgba(80,200,120,.95);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:background .15s}
+.mc-popup-profile-btn:hover{background:rgba(80,200,120,.22)}
 .pcard-contacts-row{display:flex}
 .contact-av{width:22px;height:22px;border-radius:50%;background:rgba(0,48,135,.6);border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;color:rgba(130,180,255,.9);margin-left:-4px}
 .contact-av:first-child{margin-left:0}
@@ -939,10 +958,11 @@ function loadMembersIndex(){
   });
   return _membersIndexPromise;
 }
+var _mcLastMatches=[];
 function runMemberCheck(query){
   var resEl=document.getElementById('membercheck-results');
   query=String(query||'').trim();
-  if(!query){resEl.innerHTML='';return}
+  if(!query){resEl.innerHTML='';_mcLastMatches=[];return}
   if(!_membersIndex){
     resEl.innerHTML='<div class="mc-empty">Loading roster…</div>';
     loadMembersIndex().then(function(){runMemberCheck(document.getElementById('membercheck-input').value)});
@@ -950,22 +970,48 @@ function runMemberCheck(query){
   }
   var q=query.toLowerCase();
   var matches=_membersIndex.filter(function(m){return m.name&&m.name.toLowerCase().indexOf(q)!==-1}).slice(0,8);
+  _mcLastMatches=matches;
   if(!matches.length){
     resEl.innerHTML='<div class="mc-row"><div><div class="mc-name">'+esc(query)+'</div>'+
       '<div class="mc-meta"><span class="status-pill status-nonmember">Not a TM Forum member</span></div></div></div>';
     return;
   }
-  resEl.innerHTML=matches.map(function(m){
+  resEl.innerHTML=matches.map(function(m,i){
     var parts=[];
     if(m.type)parts.push(esc(m.type));
     if(m.region)parts.push(esc(m.region));
     if(m.joined)parts.push('joined '+esc(m.joined));
-    return '<div class="mc-row"><div>'+
-      '<div class="mc-name">'+esc(m.name)+' <span class="status-pill status-member">Member</span></div>'+
-      '<div class="mc-meta">'+parts.join(' · ')+(m.profileUrl?' · <a href="'+esc(m.profileUrl)+'" target="_blank" rel="noopener">Profile ↗</a>':'')+'</div>'+
-      '</div></div>';
+    return '<div class="mc-row mc-clickable" onclick="openMemberPopup('+i+')">'+
+      '<div><div class="mc-name">'+esc(m.name)+' <span class="status-pill status-member">Member</span></div>'+
+      '<div class="mc-meta">'+parts.join(' · ')+'</div></div></div>';
   }).join('');
 }
+
+function openMemberPopup(i){
+  var m=_mcLastMatches[i];
+  if(!m)return;
+  document.getElementById('mcp-name').textContent=m.name;
+  document.getElementById('mcp-badges').innerHTML='<span class="status-pill status-member">Member</span>'+
+    (m.category?'<span class="status-pill status-other">'+esc(m.category)+'</span>':'');
+  var fields=[
+    ['Member Type',m.type],
+    ['Region',esc(m.region)],
+    ['Date Joined',esc(m.joined)],
+    ['Engagement Manager',esc(m.engagementManager)],
+    ['Catalyst Awards',String(m.catalystAwards||0)],
+    ['Website',m.website?('<a href="'+esc(m.website)+'" target="_blank" rel="noopener">'+esc(m.website.replace(/^https?:\/\//,''))+'</a>'):'—']
+  ];
+  document.getElementById('mcp-grid').innerHTML=fields.map(function(f){
+    return '<div><div class="mcp-field-label">'+f[0]+'</div><div class="mcp-field-val">'+(f[1]||'—')+'</div></div>';
+  }).join('');
+  var linkEl=document.getElementById('mcp-profile-link');
+  if(m.profileUrl){linkEl.href=m.profileUrl;linkEl.style.display='';}else{linkEl.style.display='none';}
+  document.getElementById('mc-popup-overlay').classList.add('open');
+}
+function closeMemberPopup(){
+  document.getElementById('mc-popup-overlay').classList.remove('open');
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMemberPopup()});
 
 /* ─── TMF CONTACTS ──────────────────────────────────────────── */
 var CONTACTS_READ_WH ='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-contacts-read';
@@ -2701,6 +2747,18 @@ function copyAllEmail(){
   </div>
 </div>
 <div id="ps-toast" class="ps-toast"></div>
+
+<!-- ── Member Info popup (Check Membership results) ──────────── -->
+<div id="mc-popup-overlay" class="mc-popup-overlay" onclick="if(event.target===this)closeMemberPopup()">
+  <div class="mc-popup-panel">
+    <button class="pmodal-close" onclick="closeMemberPopup()">✕</button>
+    <div class="mc-popup-eyebrow">TM Forum Member</div>
+    <div class="mc-popup-name" id="mcp-name"></div>
+    <div class="mc-popup-badges" id="mcp-badges"></div>
+    <div class="mc-popup-grid" id="mcp-grid"></div>
+    <a id="mcp-profile-link" href="#" target="_blank" rel="noopener" class="mc-popup-profile-btn">View full profile on tmforum.org ↗</a>
+  </div>
+</div>
 
 <!-- ── TMF Contacts modal ─────────────────────────────────── -->
 <div id="tmfc-modal" class="tmfc-modal" onclick="if(event.target===this)closeTmfEdit()">
