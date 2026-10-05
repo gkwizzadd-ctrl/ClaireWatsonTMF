@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal Users — Claire's Stuff</title>
+<title>Portal Users — Admin</title>
 <link rel="icon" type="image/png" href="images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -28,6 +28,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .page-h{font-family:var(--serif);font-size:30px;font-weight:500;color:#fff;margin-bottom:6px}
 .page-sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:32px}
 
+/* Admin login gate */
+.login-wrap{max-width:360px;margin:60px auto 0}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
+.login-field input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border-hi);border-radius:7px;padding:10px 12px;font-family:var(--sans);font-size:13.5px;color:#fff;outline:none;transition:border-color .15s}
+.login-field input:focus{border-color:var(--crimson)}
+.login-error{font-size:12px;color:#ff8aa3;min-height:16px;margin-bottom:10px}
+.login-submit{width:100%;padding:11px;border:none;border-radius:7px;background:var(--crimson);color:#fff;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.login-submit:hover{background:#b80f35}
+.login-submit:disabled{opacity:.5;cursor:default}
+
 .ucard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px}
 .ucard-av{width:40px;height:40px;border-radius:50%;background:rgba(217,18,65,.15);border:1px solid rgba(217,18,65,.3);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;font-weight:600;color:var(--crimson);flex-shrink:0}
 .ucard-main{flex:1;min-width:0}
@@ -38,6 +50,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .ucard-meta{text-align:right;flex-shrink:0}
 .ucard-company{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:rgba(217,18,65,.75);margin-bottom:4px}
 .ucard-dates{font-size:10.5px;color:rgba(255,255,255,.3);font-family:var(--mono)}
+.ucard-admin-badge{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(245,158,11,.35);border-radius:10px;padding:2px 7px;margin-left:8px;vertical-align:middle}
 
 .ucard-actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
 .ucard-edit-btn{flex-shrink:0;background:none;border:1px solid var(--border-hi);border-radius:7px;padding:7px 12px;font-family:var(--sans);font-size:11px;color:rgba(255,255,255,.6);cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap}
@@ -51,7 +64,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .uedit-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px}
 .uedit-field input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border-hi);border-radius:6px;padding:8px 10px;font-family:var(--sans);font-size:12.5px;color:#fff;outline:none;transition:border-color .15s}
 .uedit-field input:focus{border-color:var(--crimson)}
-.uedit-hint{font-size:10.5px;color:rgba(255,255,255,.3);margin-top:-6px;margin-bottom:12px}
 .uedit-error{font-size:11.5px;color:#ff8aa3;min-height:14px;margin-bottom:8px}
 .uedit-actions{display:flex;gap:10px}
 .uedit-btn{border:none;border-radius:7px;padding:9px 16px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,opacity .15s}
@@ -74,21 +86,41 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 <body>
 
 <div class="wrap">
-  <a href="claires-stuff.html" class="back-link">← Back to Claire's Stuff</a>
-  <div class="page-eyebrow">TM Forum Member Portal</div>
-  <div class="page-h">Registered Users</div>
-  <div class="page-sub">Everyone who has registered on clairewatson.vercel.app. Deactivate an account to block their access, reset a password, or edit their name/company/email.</div>
-  <div id="count-chip" class="count-chip" style="display:none"></div>
-  <div id="list"></div>
+  <a href="index.html" class="back-link">← Back to site</a>
+
+  <div id="login-screen" class="login-wrap" style="display:none">
+    <div class="page-eyebrow" style="text-align:center">TM Forum Member Portal</div>
+    <div class="page-h" style="text-align:center;margin-bottom:24px">Admin Login</div>
+    <div class="login-card">
+      <form onsubmit="return submitAdminLogin(event)">
+        <div class="login-field">
+          <label>Email</label>
+          <input type="email" id="admin-login-email" required placeholder="you@tmforum.org">
+        </div>
+        <div class="login-field">
+          <label>Password</label>
+          <input type="password" id="admin-login-password" required>
+        </div>
+        <div class="login-error" id="admin-login-error"></div>
+        <button type="submit" class="login-submit" id="admin-login-submit">Log In</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="admin-content" style="display:none">
+    <div class="page-eyebrow">TM Forum Member Portal</div>
+    <div class="page-h">Registered Users</div>
+    <div class="page-sub">Everyone who has registered on clairewatson.vercel.app. Deactivate an account to block their access, reset a password, or edit their name/company/email.</div>
+    <div id="count-chip" class="count-chip" style="display:none"></div>
+    <div id="list"></div>
+  </div>
 </div>
 
 <script>
-if (localStorage.getItem('cwclaires-auth') !== '1') {
-  window.location.replace('claires-stuff.html');
-}
-
 var USERS_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-portal-auth';
 var currentUsers = [];
+var callerEmail = null;
+var callerPasswordHash = null;
 
 function esc(s) {
   var d = document.createElement('div');
@@ -110,6 +142,61 @@ async function adminSha256(msg) {
   return Array.from(new Uint8Array(hash)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
 }
 
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('admin-content').style.display = 'none';
+}
+function showAdminContent() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'block';
+  loadUsers();
+}
+
+function submitAdminLogin(evt) {
+  evt.preventDefault();
+  var email = document.getElementById('admin-login-email').value.trim();
+  var password = document.getElementById('admin-login-password').value;
+  var errEl = document.getElementById('admin-login-error');
+  var btn = document.getElementById('admin-login-submit');
+  errEl.textContent = '';
+  btn.disabled = true;
+  adminSha256(password).then(function (hash) {
+    return fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'admin-login', email: email, passwordHash: hash }) })
+      .then(function (r) { return r.json(); }).then(function (d) {
+        btn.disabled = false;
+        if (!d.success) {
+          errEl.textContent = 'Incorrect email/password, or this account is not an admin.';
+          return;
+        }
+        callerEmail = email;
+        callerPasswordHash = hash;
+        sessionStorage.setItem('cwadmin-session', JSON.stringify({ email: email, passwordHash: hash }));
+        showAdminContent();
+      });
+  }).catch(function () {
+    btn.disabled = false;
+    errEl.textContent = 'Could not reach the server — please try again.';
+  });
+  return false;
+}
+
+function checkExistingSession() {
+  var raw = sessionStorage.getItem('cwadmin-session');
+  if (!raw) { showLoginScreen(); return; }
+  var session;
+  try { session = JSON.parse(raw); } catch (e) { showLoginScreen(); return; }
+  if (!session || !session.email || !session.passwordHash) { showLoginScreen(); return; }
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'admin-login', email: session.email, passwordHash: session.passwordHash }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.success) { sessionStorage.removeItem('cwadmin-session'); showLoginScreen(); return; }
+      callerEmail = session.email;
+      callerPasswordHash = session.passwordHash;
+      showAdminContent();
+    })
+    .catch(function () { showLoginScreen(); });
+}
+
 var listEl = document.getElementById('list');
 var chipEl = document.getElementById('count-chip');
 
@@ -126,7 +213,7 @@ function renderUsers() {
     return '<div class="ucard">' +
         '<div class="ucard-av">' + esc(initials(u.firstName, u.lastName)) + '</div>' +
         '<div class="ucard-main">' +
-          '<div class="ucard-name">' + esc(u.firstName) + ' ' + esc(u.lastName) + '</div>' +
+          '<div class="ucard-name">' + esc(u.firstName) + ' ' + esc(u.lastName) + (u.isAdmin ? '<span class="ucard-admin-badge">Admin</span>' : '') + '</div>' +
           '<div class="ucard-email"><a href="mailto:' + esc(u.email) + '">' + esc(u.email) + '</a></div>' +
         '</div>' +
         '<div class="ucard-meta">' +
@@ -159,7 +246,7 @@ function renderUsers() {
 
 function toggleActive(i) {
   var u = currentUsers[i];
-  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', originalEmail: u.email, active: !(u.active !== false) }) })
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', callerEmail: callerEmail, callerPasswordHash: callerPasswordHash, originalEmail: u.email, active: !(u.active !== false) }) })
     .then(function (r) { return r.json(); })
     .then(function (d) { if (!d.success) alert(d.error || 'Could not update account'); loadUsers(); })
     .catch(function () { alert('Could not reach the server.'); });
@@ -170,7 +257,7 @@ function resetPassword(i) {
   var pw = prompt('Set a new password for ' + u.firstName + ' ' + u.lastName + ' (' + u.email + '):');
   if (!pw) return;
   adminSha256(pw).then(function (hash) {
-    return fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', originalEmail: u.email, newPasswordHash: hash }) });
+    return fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', callerEmail: callerEmail, callerPasswordHash: callerPasswordHash, originalEmail: u.email, newPasswordHash: hash }) });
   }).then(function (r) { return r.json(); })
     .then(function (d) { alert(d.success ? 'Password updated.' : (d.error || 'Could not update password')); })
     .catch(function () { alert('Could not reach the server.'); });
@@ -195,7 +282,7 @@ function submitUpdate(i) {
     return;
   }
   btn.disabled = true;
-  var payload = { action: 'update-user', originalEmail: u.email, firstName: firstName, lastName: lastName, email: email, company: company };
+  var payload = { action: 'update-user', callerEmail: callerEmail, callerPasswordHash: callerPasswordHash, originalEmail: u.email, firstName: firstName, lastName: lastName, email: email, company: company };
   fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     .then(function (r) { return r.json(); }).then(function (d) {
       btn.disabled = false;
@@ -212,12 +299,17 @@ function submitUpdate(i) {
 
 function loadUsers() {
   listEl.innerHTML = '<div class="state-msg">Loading…</div>';
-  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list-users' }) })
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list-users', callerEmail: callerEmail, callerPasswordHash: callerPasswordHash }) })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      currentUsers = (d.success && d.users) ? d.users.slice().sort(function (a, b) {
+      if (!d.success) {
+        sessionStorage.removeItem('cwadmin-session');
+        showLoginScreen();
+        return;
+      }
+      currentUsers = d.users.slice().sort(function (a, b) {
         return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-      }) : [];
+      });
       renderUsers();
     })
     .catch(function () {
@@ -225,7 +317,7 @@ function loadUsers() {
     });
 }
 
-loadUsers();
+checkExistingSession();
 </script>
 
 </body>

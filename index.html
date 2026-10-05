@@ -1192,6 +1192,7 @@ footer {
     </li>
     <li><button type="button" class="nav-hiw-btn" onclick="openHiw()" data-i18n="nav.hiw">❓ How It Works</button></li>
     <li><button type="button" class="nav-hiw-btn" id="nav-login-btn" onclick="openAuth()" data-i18n="nav.login">🔑 Member Login</button></li>
+    <li><button type="button" class="nav-hiw-btn" id="nav-admin-btn" onclick="openAdminPage()" data-i18n="nav.admin" style="display:none">⚙️ Admin</button></li>
     <li class="nav-dropdown">
       <a href="#" class="nav-private nav-dropdown-trigger lang-trigger" id="lang-trigger" onclick="return false;">🌐 EN ▾</a>
       <div class="nav-dropdown-menu">
@@ -1229,6 +1230,7 @@ footer {
   <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.games.aiQuiz">🎓 TMF AI Quiz</a>
   <a href="#" onclick="closeMobile(); openHiw(); return false;" data-i18n="nav.hiw">❓ How It Works</a>
   <a href="#" onclick="closeMobile(); openAuth(); return false;" data-i18n="nav.login">🔑 Member Login</a>
+  <a href="#" id="mobile-admin-btn" onclick="closeMobile(); openAdminPage(); return false;" data-i18n="nav.admin" style="display:none">⚙️ Admin</a>
   <a href="#" onclick="setLang('en'); closeMobile(); return false;">EN — English</a>
   <a href="#" onclick="setLang('fr'); closeMobile(); return false;">FR — Français</a>
 </div>
@@ -1707,6 +1709,7 @@ footer {
       'nav.games.aiQuiz': '🎓 TMF AI Quiz',
       'nav.hiw': '❓ How It Works',
       'nav.login': '🔑 Member Login',
+      'nav.admin': '⚙️ Admin',
       'auth.eyebrow': 'TM Forum Member Portal',
       'auth.title': 'Welcome',
       'auth.tabLogin': 'Log In',
@@ -1834,6 +1837,7 @@ footer {
       'nav.games.aiQuiz': '🎓 Quiz IA TMF',
       'nav.hiw': '❓ Comment ça marche',
       'nav.login': '🔑 Espace Membre',
+      'nav.admin': '⚙️ Admin',
       'auth.eyebrow': 'Portail Membre TM Forum',
       'auth.title': 'Bienvenue',
       'auth.tabLogin': 'Connexion',
@@ -2015,10 +2019,24 @@ footer {
       loginBtn.textContent = '👤 ' + companyName;
       loginBtn.onclick = function () { document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' }); };
     }
+    updateAdminButton(!!user.isAdmin);
+  }
+
+  function updateAdminButton(isAdmin) {
+    var desktopBtn = document.getElementById('nav-admin-btn');
+    var mobileBtn = document.getElementById('mobile-admin-btn');
+    if (desktopBtn) desktopBtn.style.display = isAdmin ? '' : 'none';
+    if (mobileBtn) mobileBtn.style.display = isAdmin ? '' : 'none';
+  }
+
+  function openAdminPage() {
+    window.open('portal-users.html', '_blank');
   }
 
   function logoutMember() {
     localStorage.removeItem(PORTAL_USER_KEY);
+    sessionStorage.removeItem('cwadmin-session');
+    updateAdminButton(false);
     document.getElementById('hero-member-badge').classList.remove('visible');
     var loginBtn = document.getElementById('nav-login-btn');
     if (loginBtn) {
@@ -2048,7 +2066,9 @@ footer {
     var btn = document.getElementById('login-submit');
     errEl.textContent = '';
     btn.disabled = true;
+    var clientHash;
     portalSha256(password).then(function (hash) {
+      clientHash = hash;
       return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'login', email: email, passwordHash: hash }) });
     }).then(function (r) { return r.json(); }).then(function (d) {
       btn.disabled = false;
@@ -2057,6 +2077,9 @@ footer {
         return;
       }
       localStorage.setItem(PORTAL_USER_KEY, JSON.stringify(d));
+      if (d.user && d.user.isAdmin) {
+        sessionStorage.setItem('cwadmin-session', JSON.stringify({ email: d.user.email, passwordHash: clientHash }));
+      }
       renderWelcome(d, currentLang());
       closeAuth();
       document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' });
