@@ -1275,6 +1275,245 @@
       }
     },
     {
+      "id": "poa-072",
+      "name": "IF — Delete User?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -620
+      ],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ ($json.body ?? $json).action }}",
+              "operation": "equal",
+              "value2": "delete-user"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "poa-073",
+      "name": "Read Portal Users (Delete)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1180,
+        -620
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Portal Users",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "poa-074",
+      "name": "Build Delete",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        -620
+      ],
+      "parameters": {
+        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nfunction verifyCaller(rows, callerEmail, callerPasswordHash) {\n  var email = String(callerEmail || '').trim().toLowerCase();\n  if (!email || !callerPasswordHash) return null;\n  var row = rows.find(function (r) { return String(r.Email || '').trim().toLowerCase() === email; });\n  if (!row) return null;\n  var stored = String(row['Password Hash'] || '');\n  var sep = stored.indexOf(':');\n  if (sep < 0) return null;\n  var salt = stored.slice(0, sep), expectedHash = stored.slice(sep + 1);\n  var actualHash = sha256Hex(salt + callerPasswordHash);\n  if (actualHash !== expectedHash) return null;\n  if (String(row.IsAdmin || '').toLowerCase() !== 'true') return null;\n  return row;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst rows = $input.all().map(i => i.json);\n\nconst caller = verifyCaller(rows, body.callerEmail, body.callerPasswordHash);\nif (!caller) {\n  return [{ json: { blocked: true, reason: 'not_authorized' } }];\n}\n\nconst targetEmail = String(body.originalEmail || body.email || '').trim().toLowerCase();\nif (targetEmail === String(caller.Email || '').trim().toLowerCase()) {\n  return [{ json: { blocked: true, reason: 'cannot_delete_self' } }];\n}\n\nconst row = rows.find(r => String(r.Email || '').trim().toLowerCase() === targetEmail);\nif (!row) {\n  return [{ json: { blocked: true, reason: 'not_found' } }];\n}\n\nreturn [{ json: { blocked: false, targetEmail } }];"
+      }
+    },
+    {
+      "id": "poa-075",
+      "name": "IF — Delete Blocked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -620
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.blocked }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "poa-076",
+      "name": "Respond — Delete Blocked",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        -700
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.reason }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "poa-079",
+      "name": "Remove Portal Users Sheet (Delete)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1900,
+        -620
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "remove",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Portal Users",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "poa-080",
+      "name": "Recreate Portal Users Sheet (Delete)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2140,
+        -620
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "title": "Portal Users"
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "poa-081",
+      "name": "Build Remaining Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2380,
+        -620
+      ],
+      "parameters": {
+        "jsCode": "const targetEmail = $('Build Delete').first().json.targetEmail;\nconst rows = $('Read Portal Users (Delete)').all().map(i => i.json);\nconst remaining = rows.filter(r => r.Email && String(r.Email).trim().toLowerCase() !== targetEmail);\nreturn remaining.map(r => ({ json: {\n  Email: r.Email,\n  'Password Hash': r['Password Hash'],\n  Company: r.Company,\n  'Company Slug': r['Company Slug'],\n  'Language Preference': r['Language Preference'],\n  'First Name': r['First Name'],\n  'Last Name': r['Last Name'],\n  Active: r.Active,\n  IsAdmin: r.IsAdmin,\n  'Created At': r['Created At'],\n  'Last Login': r['Last Login']\n} }));"
+      }
+    },
+    {
+      "id": "poa-082",
+      "name": "Re-Append Remaining Users",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2620,
+        -620
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Portal Users",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "poa-078",
+      "name": "Respond — Delete Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        -620
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "id": "poa-011",
       "name": "IF — Register?",
       "type": "n8n-nodes-base.if",
@@ -2181,7 +2420,7 @@
         ],
         [
           {
-            "node": "IF — Register?",
+            "node": "IF — Delete User?",
             "type": "main",
             "index": 0
           }
@@ -2233,6 +2472,108 @@
         [
           {
             "node": "Respond — Set Admin Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Delete User?": {
+      "main": [
+        [
+          {
+            "node": "Read Portal Users (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF — Register?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Portal Users (Delete)": {
+      "main": [
+        [
+          {
+            "node": "Build Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Delete": {
+      "main": [
+        [
+          {
+            "node": "IF — Delete Blocked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Delete Blocked?": {
+      "main": [
+        [
+          {
+            "node": "Respond — Delete Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove Portal Users Sheet (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Portal Users Sheet (Delete)": {
+      "main": [
+        [
+          {
+            "node": "Recreate Portal Users Sheet (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recreate Portal Users Sheet (Delete)": {
+      "main": [
+        [
+          {
+            "node": "Build Remaining Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Remaining Rows": {
+      "main": [
+        [
+          {
+            "node": "Re-Append Remaining Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Re-Append Remaining Users": {
+      "main": [
+        [
+          {
+            "node": "Respond — Delete Success",
             "type": "main",
             "index": 0
           }

@@ -57,6 +57,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .ucard-edit-btn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
 .ucard-active-btn.is-active{color:var(--green);border-color:rgba(80,200,120,.35)}
 .ucard-active-btn.is-inactive{color:rgba(255,255,255,.3)}
+.ucard-delete-btn{color:#ff8aa3;border-color:rgba(255,138,163,.3)}
+.ucard-delete-btn:hover{color:#fff;border-color:#ff8aa3;background:rgba(255,138,163,.12)}
 
 .uedit{background:rgba(217,18,65,.04);border:1px solid rgba(217,18,65,.2);border-radius:10px;padding:16px 18px;margin:-4px 0 10px;display:none}
 .uedit.open{display:block}
@@ -108,8 +110,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
   </div>
 
   <div id="admin-content" style="display:none">
-    <div class="page-eyebrow">TM Forum Member Portal</div>
-    <div class="page-h">Registered Users</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+      <div>
+        <div class="page-eyebrow">TM Forum Member Portal</div>
+        <div class="page-h">Registered Users</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div id="logged-in-as" style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35);margin-bottom:8px"></div>
+        <button type="button" class="ucard-edit-btn" onclick="adminLogout()">Log out</button>
+      </div>
+    </div>
     <div class="page-sub">Everyone who has registered on clairewatson.vercel.app. Deactivate an account to block their access, reset a password, or edit their name/company/email.</div>
     <div id="count-chip" class="count-chip" style="display:none"></div>
     <div id="list"></div>
@@ -149,7 +159,16 @@ function showLoginScreen() {
 function showAdminContent() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('admin-content').style.display = 'block';
+  document.getElementById('logged-in-as').textContent = 'Logged in as ' + callerEmail;
   loadUsers();
+}
+function adminLogout() {
+  sessionStorage.removeItem('cwadmin-session');
+  callerEmail = null;
+  callerPasswordHash = null;
+  document.getElementById('admin-login-email').value = '';
+  document.getElementById('admin-login-password').value = '';
+  showLoginScreen();
 }
 
 function submitAdminLogin(evt) {
@@ -224,6 +243,7 @@ function renderUsers() {
           '<button type="button" class="ucard-edit-btn ucard-active-btn ' + (active ? 'is-active' : 'is-inactive') + '" onclick="toggleActive(' + i + ')">' + (active ? '🟢 Active' : '⚪ Deactivated') + '</button>' +
           '<button type="button" class="ucard-edit-btn" onclick="resetPassword(' + i + ')">🔑 Reset password</button>' +
           '<button type="button" class="ucard-edit-btn" onclick="toggleEdit(' + i + ')">Edit</button>' +
+          (u.email === callerEmail ? '' : '<button type="button" class="ucard-edit-btn ucard-delete-btn" onclick="deleteUser(' + i + ')">🗑 Delete</button>') +
         '</div>' +
       '</div>' +
       '<div class="uedit" id="uedit-' + i + '">' +
@@ -260,6 +280,18 @@ function resetPassword(i) {
     return fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', callerEmail: callerEmail, callerPasswordHash: callerPasswordHash, originalEmail: u.email, newPasswordHash: hash }) });
   }).then(function (r) { return r.json(); })
     .then(function (d) { alert(d.success ? 'Password updated.' : (d.error || 'Could not update password')); })
+    .catch(function () { alert('Could not reach the server.'); });
+}
+
+function deleteUser(i) {
+  var u = currentUsers[i];
+  if (!confirm('Permanently delete ' + u.firstName + ' ' + u.lastName + ' (' + u.email + ')? This cannot be undone.')) return;
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete-user', callerEmail: callerEmail, callerPasswordHash: callerPasswordHash, originalEmail: u.email }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.success) { alert(d.error === 'cannot_delete_self' ? 'You cannot delete your own account.' : (d.error || 'Could not delete user')); return; }
+      loadUsers();
+    })
     .catch(function () { alert('Could not reach the server.'); });
 }
 
