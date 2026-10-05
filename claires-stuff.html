@@ -181,11 +181,26 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* Member Info popup */
 .mc-popup-overlay{position:fixed;inset:0;background:rgba(5,3,20,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:950;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .22s}
 .mc-popup-overlay.open{opacity:1;pointer-events:all}
-.mc-popup-panel{position:relative;background:#0D0B4D;border:1px solid rgba(255,255,255,.11);border-radius:16px;width:100%;max-width:440px;padding:28px;transform:scale(.94) translateY(14px);transition:transform .32s cubic-bezier(.34,1.46,.64,1);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04) inset}
+.mc-popup-panel{position:relative;background:#0D0B4D;border:1px solid rgba(255,255,255,.11);border-radius:16px;width:100%;max-width:460px;max-height:88vh;overflow-y:auto;padding:28px;transform:scale(.94) translateY(14px);transition:transform .32s cubic-bezier(.34,1.46,.64,1);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04) inset}
 .mc-popup-overlay.open .mc-popup-panel{transform:scale(1) translateY(0)}
-.mc-popup-eyebrow{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(80,200,120,.65);margin-bottom:10px}
-.mc-popup-name{font-family:var(--serif);font-size:26px;font-weight:500;color:#fff;line-height:1.15;padding-right:28px;margin-bottom:10px}
-.mc-popup-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.mcp-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+.mcp-logo-wrap{width:56px;height:56px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.35);opacity:0;transform:scale(.7)}
+.mcp-logo-wrap.mcp-animate{animation:mcpPop .4s cubic-bezier(.34,1.46,.64,1) .08s forwards}
+@keyframes mcpPop{to{opacity:1;transform:scale(1)}}
+.mcp-logo{width:100%;height:100%;object-fit:contain;padding:7px}
+.mcp-logo-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;font-weight:600;color:var(--navy);background:linear-gradient(135deg,#fff,#dcdcf2)}
+.mcp-header-text{flex:1;min-width:0;padding-top:1px}
+.mc-popup-eyebrow{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(80,200,120,.65);margin-bottom:8px}
+.mc-popup-name{font-family:var(--serif);font-size:23px;font-weight:500;color:#fff;line-height:1.15;padding-right:28px;margin-bottom:8px}
+.mc-popup-badges{display:flex;gap:6px;flex-wrap:wrap}
+.mcp-engagement{display:flex;align-items:center;gap:14px;padding:14px;background:rgba(80,200,120,.05);border:1px solid rgba(80,200,120,.18);border-radius:10px;margin-bottom:16px}
+.mcp-ring-wrap{position:relative;width:64px;height:64px;flex-shrink:0}
+.mcp-ring{width:64px;height:64px;transform:rotate(-90deg)}
+.mcp-ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:6}
+.mcp-ring-fg{fill:none;stroke:#50C878;stroke-width:6;stroke-linecap:round;stroke-dasharray:188.5;stroke-dashoffset:188.5}
+.mcp-ring-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:600;color:#fff}
+.mcp-engagement-title{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(80,200,120,.85);margin-bottom:4px}
+.mcp-engagement-sub{font-size:10.5px;color:rgba(255,255,255,.4);line-height:1.5}
 .mc-popup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:18px}
 .mcp-field-label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:3px}
 .mcp-field-val{font-size:13px;color:#fff}
@@ -987,25 +1002,87 @@ function runMemberCheck(query){
   }).join('');
 }
 
+function mcLogoDomain(website){
+  if(!website)return '';
+  try{
+    var u=new URL(/^https?:\/\//.test(website)?website:'https://'+website);
+    return u.hostname.replace(/^www\./,'');
+  }catch(e){return ''}
+}
+function mcEngagementScore(m){
+  var pts=Math.min(m.catalystAwards||0,10)*4
+    +Math.min(m.staffCertified||0,50)*0.6
+    +Math.min(m.manifestosSigned||0,5)*4
+    +Math.min(m.individualAwards||0,5)*2;
+  return Math.max(0,Math.min(100,Math.round(pts)));
+}
 function openMemberPopup(i){
   var m=_mcLastMatches[i];
   if(!m)return;
+
+  // Logo — reset to a fresh state each time so the pop-in animation replays per member
+  var logoEl=document.getElementById('mcp-logo');
+  var fallbackEl=document.getElementById('mcp-logo-fallback');
+  var wrapEl=document.getElementById('mcp-logo-wrap');
+  var domain=mcLogoDomain(m.website);
+  fallbackEl.style.display='none';
+  fallbackEl.textContent=(m.name||'?').trim().charAt(0).toUpperCase();
+  if(domain){
+    logoEl.style.display='';
+    logoEl.src='https://logo.clearbit.com/'+domain+'?size=128';
+  }else{
+    logoEl.style.display='none';
+    fallbackEl.style.display='flex';
+  }
+  wrapEl.classList.remove('mcp-animate');
+  void wrapEl.offsetWidth; // force reflow so the entrance animation replays for each member
+  wrapEl.classList.add('mcp-animate');
+
   document.getElementById('mcp-name').textContent=m.name;
   document.getElementById('mcp-badges').innerHTML='<span class="status-pill status-member">Member</span>'+
     (m.category?'<span class="status-pill status-other">'+esc(m.category)+'</span>':'');
+
   var fields=[
-    ['Member Type',m.type],
+    ['Member Type',esc(m.type)],
     ['Region',esc(m.region)],
     ['Date Joined',esc(m.joined)],
-    ['Engagement Manager',esc(m.engagementManager)],
+    ['Principal Contact',esc(m.principalContact)],
+    ['Engagement Manager',m.engagementManagerEmail?('<a href="mailto:'+esc(m.engagementManagerEmail)+'">'+esc(m.engagementManager)+'</a>'):esc(m.engagementManager)],
+    ['Website',m.website?('<a href="'+esc(m.website)+'" target="_blank" rel="noopener">'+esc(m.website.replace(/^https?:\/\//,'').replace(/\/$/,''))+'</a>'):'—'],
     ['Catalyst Awards',String(m.catalystAwards||0)],
-    ['Website',m.website?('<a href="'+esc(m.website)+'" target="_blank" rel="noopener">'+esc(m.website.replace(/^https?:\/\//,''))+'</a>'):'—']
+    ['Individual Awards',String(m.individualAwards||0)],
+    ['Staff Certified',String(m.staffCertified||0)],
+    ['Manifestos Signed',String(m.manifestosSigned||0)]
   ];
   document.getElementById('mcp-grid').innerHTML=fields.map(function(f){
     return '<div><div class="mcp-field-label">'+f[0]+'</div><div class="mcp-field-val">'+(f[1]||'—')+'</div></div>';
   }).join('');
+
   var linkEl=document.getElementById('mcp-profile-link');
   if(m.profileUrl){linkEl.href=m.profileUrl;linkEl.style.display='';}else{linkEl.style.display='none';}
+
+  // Engagement ring — reset instantly to 0%, then animate to the real score
+  var score=mcEngagementScore(m);
+  var ring=document.getElementById('mcp-ring-fg');
+  var circumference=2*Math.PI*30;
+  ring.style.transition='none';
+  ring.style.strokeDashoffset=circumference;
+  void ring.offsetWidth;
+  ring.style.transition='stroke-dashoffset 1s cubic-bezier(.22,.9,.34,1)';
+  var pctEl=document.getElementById('mcp-ring-pct');
+  pctEl.textContent='0%';
+  requestAnimationFrame(function(){
+    ring.style.strokeDashoffset=String(circumference*(1-score/100));
+    var start=null;
+    function tick(ts){
+      if(!start)start=ts;
+      var p=Math.min(1,(ts-start)/1000);
+      pctEl.textContent=Math.round(p*score)+'%';
+      if(p<1)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+
   document.getElementById('mc-popup-overlay').classList.add('open');
 }
 function closeMemberPopup(){
@@ -2752,9 +2829,30 @@ function copyAllEmail(){
 <div id="mc-popup-overlay" class="mc-popup-overlay" onclick="if(event.target===this)closeMemberPopup()">
   <div class="mc-popup-panel">
     <button class="pmodal-close" onclick="closeMemberPopup()">✕</button>
-    <div class="mc-popup-eyebrow">TM Forum Member</div>
-    <div class="mc-popup-name" id="mcp-name"></div>
-    <div class="mc-popup-badges" id="mcp-badges"></div>
+    <div class="mcp-header">
+      <div class="mcp-logo-wrap" id="mcp-logo-wrap">
+        <img id="mcp-logo" class="mcp-logo" alt="" onerror="this.style.display='none';document.getElementById('mcp-logo-fallback').style.display='flex'">
+        <div id="mcp-logo-fallback" class="mcp-logo-fallback"></div>
+      </div>
+      <div class="mcp-header-text">
+        <div class="mc-popup-eyebrow">TM Forum Member</div>
+        <div class="mc-popup-name" id="mcp-name"></div>
+        <div class="mc-popup-badges" id="mcp-badges"></div>
+      </div>
+    </div>
+    <div class="mcp-engagement">
+      <div class="mcp-ring-wrap">
+        <svg class="mcp-ring" viewBox="0 0 72 72">
+          <circle class="mcp-ring-bg" cx="36" cy="36" r="30"></circle>
+          <circle class="mcp-ring-fg" id="mcp-ring-fg" cx="36" cy="36" r="30"></circle>
+        </svg>
+        <div class="mcp-ring-label" id="mcp-ring-pct">0%</div>
+      </div>
+      <div class="mcp-engagement-text">
+        <div class="mcp-engagement-title">Engagement Signal</div>
+        <div class="mcp-engagement-sub">Derived from Catalyst wins, certified staff &amp; manifestos signed — not an official TM Forum score.</div>
+      </div>
+    </div>
     <div class="mc-popup-grid" id="mcp-grid"></div>
     <a id="mcp-profile-link" href="#" target="_blank" rel="noopener" class="mc-popup-profile-btn">View full profile on tmforum.org ↗</a>
   </div>
