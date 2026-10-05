@@ -165,6 +165,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .status-contacted{background:rgba(139,92,246,.1);color:rgba(167,139,250,.8);border:1px solid rgba(139,92,246,.2)}
 .status-member{background:rgba(80,200,120,.12);color:rgba(80,200,120,.95);border:1px solid rgba(80,200,120,.28)}
 .status-other{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
+.status-nonmember{background:rgba(217,18,65,.1);color:rgba(239,100,130,.85);border:1px solid rgba(217,18,65,.22)}
+.mc-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
+.mc-row:first-child{border-top:none}
+.mc-name{font-family:var(--serif);font-size:15px;font-weight:500;color:#fff;margin-bottom:2px}
+.mc-meta{font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,.35);letter-spacing:.02em}
+.mc-meta a{color:rgba(130,180,255,.75);text-decoration:none}
+.mc-meta a:hover{text-decoration:underline}
+.mc-empty{font-size:11.5px;color:rgba(255,255,255,.3);padding:10px 0 2px;line-height:1.6}
+.mc-count{font-family:var(--mono);font-size:8.5px;color:rgba(255,255,255,.2)}
 .pcard-contacts-row{display:flex}
 .contact-av{width:22px;height:22px;border-radius:50%;background:rgba(0,48,135,.6);border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;color:rgba(130,180,255,.9);margin-left:-4px}
 .contact-av:first-child{margin-left:0}
@@ -708,6 +717,20 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="res-error" id="prospect-error"></div>
         </div>
 
+        <!-- Membership Check (authoritative 785-member TM Forum roster, scraped locally) -->
+        <div class="scard" id="membercheck-card">
+          <div class="scard-eyebrow">
+            <span>TM Forum Roster</span>
+            <span class="mc-count" id="membercheck-count"></span>
+          </div>
+          <div class="research-heading" style="margin-bottom:4px">Check Membership</div>
+          <div class="research-sub">Search all current TM Forum members by company name — the full roster, not just this pipeline's hand-picked suggestions.</div>
+          <div class="research-input-row">
+            <input id="membercheck-input" class="research-input" type="text" placeholder="e.g. Orange, Vodafone, Huawei…" oninput="runMemberCheck(this.value)" autocomplete="off">
+          </div>
+          <div id="membercheck-results"></div>
+        </div>
+
         <!-- Member Intelligence -->
         <a href="member-dashboard.html" target="_blank" rel="noopener" class="member-card">
           <div class="member-card-eyebrow">
@@ -884,6 +907,7 @@ function initDashboard(){
   loadProspects();
   initTmfContacts();
   loadProspectPersonas();
+  loadMembersIndex();
   /* Global Radar (radar.html) hands an operator over as ?research=<name>: fill the box and run the research. */
   try{
     var rq=new URLSearchParams(window.location.search).get('research');
@@ -893,6 +917,54 @@ function initDashboard(){
       if(rin){rin.value=rq;rin.scrollIntoView({behavior:'smooth',block:'center'});runProspectResearch()}
     }
   }catch(e){}
+}
+
+/* ─── MEMBERSHIP CHECK ──────────────────────────────────────────
+   Authoritative local snapshot of all current TM Forum members (scraped
+   from tmforum.org's own member directory, data/tmf-members-index.json),
+   not the small hand-curated TMF_SUGGESTIONS list used in the prospect
+   editor below. Loaded once and searched client-side. ── */
+var _membersIndex=null;
+var _membersIndexPromise=null;
+function loadMembersIndex(){
+  if(_membersIndexPromise)return _membersIndexPromise;
+  _membersIndexPromise=fetch('data/tmf-members-index.json').then(function(r){return r.json()}).then(function(list){
+    _membersIndex=list;
+    var cEl=document.getElementById('membercheck-count');
+    if(cEl)cEl.textContent=list.length+' members';
+    return list;
+  }).catch(function(){
+    var cEl=document.getElementById('membercheck-count');
+    if(cEl)cEl.textContent='load failed';
+  });
+  return _membersIndexPromise;
+}
+function runMemberCheck(query){
+  var resEl=document.getElementById('membercheck-results');
+  query=String(query||'').trim();
+  if(!query){resEl.innerHTML='';return}
+  if(!_membersIndex){
+    resEl.innerHTML='<div class="mc-empty">Loading roster…</div>';
+    loadMembersIndex().then(function(){runMemberCheck(document.getElementById('membercheck-input').value)});
+    return;
+  }
+  var q=query.toLowerCase();
+  var matches=_membersIndex.filter(function(m){return m.name&&m.name.toLowerCase().indexOf(q)!==-1}).slice(0,8);
+  if(!matches.length){
+    resEl.innerHTML='<div class="mc-row"><div><div class="mc-name">'+esc(query)+'</div>'+
+      '<div class="mc-meta"><span class="status-pill status-nonmember">Not a TM Forum member</span></div></div></div>';
+    return;
+  }
+  resEl.innerHTML=matches.map(function(m){
+    var parts=[];
+    if(m.type)parts.push(esc(m.type));
+    if(m.region)parts.push(esc(m.region));
+    if(m.joined)parts.push('joined '+esc(m.joined));
+    return '<div class="mc-row"><div>'+
+      '<div class="mc-name">'+esc(m.name)+' <span class="status-pill status-member">Member</span></div>'+
+      '<div class="mc-meta">'+parts.join(' · ')+(m.profileUrl?' · <a href="'+esc(m.profileUrl)+'" target="_blank" rel="noopener">Profile ↗</a>':'')+'</div>'+
+      '</div></div>';
+  }).join('');
 }
 
 /* ─── TMF CONTACTS ──────────────────────────────────────────── */
