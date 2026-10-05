@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Users — Claire's Stuff</title>
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0A091E; --navy:#0D0B4D; --crimson:#D91241; --green:#50C878; --amber:#F59E0B;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --border:rgba(255,255,255,.07); --border-hi:rgba(255,255,255,.13);
+  --surface:rgba(255,255,255,.04); --surface-hi:rgba(255,255,255,.07);
+}
+body{background:var(--ink);color:#fff;font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
+
+.wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:40px 24px 80px}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);text-decoration:none;margin-bottom:28px;transition:color .2s}
+.back-link:hover{color:#fff}
+.page-eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(217,18,65,.7);margin-bottom:8px}
+.page-h{font-family:var(--serif);font-size:30px;font-weight:500;color:#fff;margin-bottom:6px}
+.page-sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:32px}
+
+.ucard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.ucard-av{width:40px;height:40px;border-radius:50%;background:rgba(217,18,65,.15);border:1px solid rgba(217,18,65,.3);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;font-weight:600;color:var(--crimson);flex-shrink:0}
+.ucard-main{flex:1;min-width:0}
+.ucard-name{font-family:var(--serif);font-size:16px;font-weight:600;color:#fff;margin-bottom:2px}
+.ucard-email{font-size:12px;color:rgba(255,255,255,.45)}
+.ucard-email a{color:inherit;text-decoration:none}
+.ucard-email a:hover{color:#fff}
+.ucard-meta{text-align:right;flex-shrink:0}
+.ucard-company{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:rgba(217,18,65,.75);margin-bottom:4px}
+.ucard-dates{font-size:10.5px;color:rgba(255,255,255,.3);font-family:var(--mono)}
+
+.state-msg{padding:40px 0;text-align:center;color:rgba(255,255,255,.35);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+.count-chip{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:rgba(255,255,255,.4);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px;margin-bottom:24px}
+
+@media (max-width:560px){
+  .ucard{flex-wrap:wrap}
+  .ucard-meta{text-align:left;width:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a href="claires-stuff.html" class="back-link">← Back to Claire's Stuff</a>
+  <div class="page-eyebrow">TM Forum Member Portal</div>
+  <div class="page-h">Registered Users</div>
+  <div class="page-sub">Everyone who has registered on clairewatson.vercel.app, read-only.</div>
+  <div id="count-chip" class="count-chip" style="display:none"></div>
+  <div id="list"></div>
+</div>
+
+<script>
+if (localStorage.getItem('cwclaires-auth') !== '1') {
+  window.location.replace('claires-stuff.html');
+}
+
+var USERS_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-portal-auth';
+
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+function initials(first, last) {
+  return ((first || '').charAt(0) + (last || '').charAt(0)).toUpperCase() || '?';
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+var listEl = document.getElementById('list');
+var chipEl = document.getElementById('count-chip');
+listEl.innerHTML = '<div class="state-msg">Loading…</div>';
+
+fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list-users' }) })
+  .then(function (r) { return r.json(); })
+  .then(function (d) {
+    if (!d.success || !d.users || !d.users.length) {
+      listEl.innerHTML = '<div class="state-msg">No registered users yet.</div>';
+      return;
+    }
+    var users = d.users.slice().sort(function (a, b) {
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+    chipEl.style.display = 'inline-block';
+    chipEl.textContent = users.length + (users.length === 1 ? ' user' : ' users');
+    listEl.innerHTML = users.map(function (u) {
+      return '<div class="ucard">' +
+        '<div class="ucard-av">' + esc(initials(u.firstName, u.lastName)) + '</div>' +
+        '<div class="ucard-main">' +
+          '<div class="ucard-name">' + esc(u.firstName) + ' ' + esc(u.lastName) + '</div>' +
+          '<div class="ucard-email"><a href="mailto:' + esc(u.email) + '">' + esc(u.email) + '</a></div>' +
+        '</div>' +
+        '<div class="ucard-meta">' +
+          '<div class="ucard-company">' + esc(u.company || '—') + '</div>' +
+          '<div class="ucard-dates">Joined ' + esc(fmtDate(u.createdAt)) + ' · Last in ' + esc(fmtDate(u.lastLogin)) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  })
+  .catch(function () {
+    listEl.innerHTML = '<div class="state-msg">Couldn’t load the user list — check the connection and try again.</div>';
+  });
+</script>
+
+</body>
+</html>

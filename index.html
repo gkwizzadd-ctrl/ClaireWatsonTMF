@@ -221,25 +221,27 @@ body::before {
 
 /* Hero member badge — logo/flag/company/greeting shown in the Hero once a member is logged in */
 .hero-member-badge {
-  display: none; align-items: center; gap: 12px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(217,18,65,0.25); border-radius: 12px;
-  padding: 9px 14px; margin-bottom: 18px; width: fit-content; max-width: 100%;
+  display: none; align-items: center; gap: 16px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(217,18,65,0.25); border-radius: 14px;
+  padding: 14px 20px; margin-bottom: 20px; width: fit-content; max-width: 100%;
 }
 .hero-member-badge.visible { display: flex; }
-.hmb-logo { width: 34px; height: 34px; border-radius: 8px; object-fit: contain; background: #fff; padding: 3px; flex-shrink: 0; }
-.hmb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.hmb-company-row { font-family: var(--serif); font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hmb-flag { margin-right: 5px; }
-.hmb-greeting { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+.hmb-logo { width: 60px; height: 60px; border-radius: 10px; object-fit: contain; background: #fff; padding: 5px; flex-shrink: 0; }
+.hmb-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.hmb-company-row { font-family: var(--serif); font-size: 21px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hmb-flag { margin-right: 8px; font-size: 30px; line-height: 1; vertical-align: middle; }
+.hmb-greeting { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
 .hmb-logout {
-  margin-left: 4px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
-  padding: 5px 12px; font-family: var(--sans); font-size: 10.5px; color: rgba(255,255,255,0.6); cursor: pointer;
+  margin-left: 6px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
+  padding: 6px 14px; font-family: var(--sans); font-size: 11px; color: rgba(255,255,255,0.6); cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
 .hmb-logout:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 @media (max-width: 640px) {
-  .hero-member-badge { max-width: calc(100% - 4px); }
-  .hmb-company-row { white-space: normal; }
+  .hero-member-badge { max-width: calc(100% - 4px); padding: 12px 16px; gap: 12px; }
+  .hmb-logo { width: 48px; height: 48px; }
+  .hmb-company-row { white-space: normal; font-size: 18px; }
+  .hmb-flag { font-size: 24px; }
 }
 
 .nav-brand {
@@ -1160,104 +1162,6 @@ footer {
 </head>
 <body>
 
-<!-- ── Password Gate ─────────────────────────────────────── -->
-<div id="pw-gate" style="
-  position:fixed;inset:0;z-index:99999;
-  background:#0D0B4D;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'DM Sans',system-ui,sans-serif;
-">
-  <!-- Grain overlay matching site -->
-  <div style="position:absolute;inset:0;opacity:.03;pointer-events:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.75%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22300%22 height=%22300%22 filter=%22url(%23n)%22/%3E%3C/svg%3E');"></div>
-  <!-- Atmosphere gradient matching hero -->
-  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 80% 20%,rgba(217,18,65,.1) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 10% 80%,rgba(46,12,75,.5) 0%,transparent 60%);"></div>
-
-  <div style="position:relative;text-align:center;max-width:400px;width:100%;padding:0 24px;">
-
-    <!-- Brand -->
-    <div style="margin-bottom:36px;">
-      <div style="width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,#D91241,#2E0C4B);margin:0 auto 14px;"></div>
-      <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:500;color:#fff;letter-spacing:.01em;">Claire Watson</div>
-      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:5px;">TM Forum · ODA Specialist</div>
-    </div>
-
-    <!-- Card -->
-    <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:32px 28px;">
-      <div style="font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:22px;">Protected Access</div>
-      <input id="pw-input" type="password" placeholder="Enter access password" autocomplete="current-password" style="
-        width:100%;padding:12px 16px;
-        background:rgba(255,255,255,.07);
-        border:1.5px solid rgba(255,255,255,.12);border-radius:8px;
-        color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;
-        outline:none;box-sizing:border-box;margin-bottom:10px;
-        transition:border-color .2s;
-      "/>
-      <div id="pw-error" style="display:none;color:#ef4444;font-size:12.5px;margin-bottom:10px;text-align:left;font-family:'DM Mono',monospace;letter-spacing:.02em;">Incorrect password — please try again.</div>
-      <button id="pw-submit" style="
-        width:100%;padding:13px;
-        background:#D91241;border:none;border-radius:8px;
-        color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
-        cursor:pointer;transition:background .2s,transform .1s;letter-spacing:.01em;
-      " onmouseover="this.style.background='#b80f35'" onmouseout="this.style.background='#D91241'">Access Site</button>
-    </div>
-
-  </div>
-</div>
-<script>
-(function () {
-  var gate  = document.getElementById('pw-gate');
-  var input = document.getElementById('pw-input');
-  var btn   = document.getElementById('pw-submit');
-  var err   = document.getElementById('pw-error');
-  var PW_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/site-pw-check';
-
-  // Already authenticated this session
-  if (sessionStorage.getItem('cwsite-auth') === '1') { gate.remove(); return; }
-
-  async function sha256(msg) {
-    var buf  = new TextEncoder().encode(msg);
-    var hash = await crypto.subtle.digest('SHA-256', buf);
-    return Array.from(new Uint8Array(hash)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-  }
-
-  async function attempt() {
-    var pw = input.value;
-    if (!pw) { input.focus(); return; }
-    btn.textContent = 'Checking…';
-    btn.disabled = true;
-    err.style.display = 'none';
-    input.style.borderColor = 'rgba(255,255,255,.12)';
-    try {
-      var hash = await sha256(pw);
-      var r = await fetch(PW_WH, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({hash:hash}) });
-      var d = await r.json();
-      if (d.valid) {
-        sessionStorage.setItem('cwsite-auth', '1');
-        gate.style.transition = 'opacity .5s ease';
-        gate.style.opacity = '0';
-        setTimeout(function(){ gate.remove(); }, 500);
-      } else {
-        input.style.borderColor = '#ef4444';
-        err.style.display = 'block';
-        input.value = '';
-        input.focus();
-        btn.textContent = 'Access Site';
-        btn.disabled = false;
-      }
-    } catch(e) {
-      err.textContent = 'Connection error — please try again.';
-      err.style.display = 'block';
-      btn.textContent = 'Access Site';
-      btn.disabled = false;
-    }
-  }
-
-  btn.addEventListener('click', attempt);
-  input.addEventListener('keydown', function(e){ if (e.key === 'Enter') attempt(); });
-  input.focus();
-})();
-</script>
-
 <!-- Nav -->
 <nav id="nav">
   <ul class="nav-links">
@@ -1400,13 +1304,10 @@ footer {
         </div>
         <div class="auth-field">
           <label data-i18n="auth.companyLabel">Company</label>
-          <select id="register-company" required>
-            <option value="" data-i18n="auth.companyLoading">Loading…</option>
-          </select>
+          <input type="text" id="register-company" required data-i18n-placeholder="auth.companyPlaceholder" placeholder="Your company name">
         </div>
         <div class="auth-error" id="register-error"></div>
         <button type="submit" class="auth-submit" id="register-submit" data-i18n="auth.registerSubmit">Create Account</button>
-        <div class="auth-switch" data-i18n="auth.companyMissing">Don't see your company? Ask Claire to add it.</div>
       </form>
       <a href="#" class="auth-skip" onclick="closeAuth(); return false;" data-i18n="auth.continueWithoutLogin">Continue browsing without logging in</a>
     </div>
@@ -1821,7 +1722,7 @@ footer {
       'auth.companyLabel': 'Company',
       'auth.companyLoading': 'Loading…',
       'auth.registerSubmit': 'Create Account',
-      'auth.companyMissing': "Don't see your company? Ask Claire to add it.",
+      'auth.companyPlaceholder': 'Your company name',
       'auth.errorEmailTaken': 'That email is already registered — try logging in instead.',
       'auth.errorInvalid': 'Incorrect email or password.',
       'auth.errorGeneric': 'Something went wrong — please try again.',
@@ -1846,6 +1747,7 @@ footer {
       'hero.portraitExit': '✕ Exit',
       'hero.bulbLabel': "Claire's Thought<br>of the Month",
       'hero.memberGreeting': 'Welcome, {name}',
+      'hero.subGeneric': 'Welcome to the TM Forum Member Portal, {company}. Claire looks forward to connecting with you on your ODA journey.',
       'hiw.eyebrow': 'How It Works',
       'hiw.title': 'Everything on this site, at a glance',
       'hiw.intro': "This site is how Claire helps telecom and satellite operators navigate TM Forum's Open Digital Architecture (ODA) — here's what each part does.",
@@ -1946,7 +1848,7 @@ footer {
       'auth.companyLabel': 'Entreprise',
       'auth.companyLoading': 'Chargement…',
       'auth.registerSubmit': 'Créer un compte',
-      'auth.companyMissing': "Votre entreprise n'apparaît pas ? Demandez à Claire de l'ajouter.",
+      'auth.companyPlaceholder': 'Nom de votre entreprise',
       'auth.errorEmailTaken': 'Cet e-mail est déjà enregistré — essayez de vous connecter.',
       'auth.errorInvalid': 'E-mail ou mot de passe incorrect.',
       'auth.errorGeneric': "Une erreur s'est produite — veuillez réessayer.",
@@ -1971,6 +1873,7 @@ footer {
       'hero.portraitExit': '✕ Fermer',
       'hero.bulbLabel': "La pensée du mois<br>de Claire",
       'hero.memberGreeting': 'Bienvenue, {name}',
+      'hero.subGeneric': "Bienvenue sur le Portail Membre du TM Forum, {company}. Claire se réjouit d'échanger avec vous sur votre parcours ODA.",
       'hiw.eyebrow': 'Comment ça marche',
       'hiw.title': "Tout ce que propose ce site, en un coup d'œil",
       'hiw.intro': "Ce site est la façon dont Claire aide les opérateurs télécoms et satellites à naviguer dans l'Architecture Numérique Ouverte (ODA) du TM Forum — voici ce que fait chaque partie.",
@@ -2083,17 +1986,30 @@ footer {
   function renderWelcome(data, lang) {
     var org = data.org;
     var user = data.user || {};
-    if (!org) return;
-    document.getElementById('hero-sub').textContent = (lang === 'fr') ? (org.welcomeFr || org.welcomeEn || '') : (org.welcomeEn || '');
-    document.getElementById('hmb-logo').src = org.logoUrl || '';
-    document.getElementById('hmb-logo').alt = org.company || '';
-    document.getElementById('hmb-flag').textContent = flagEmoji(org.countryCode);
-    document.getElementById('hmb-company').textContent = org.company || '';
+    var companyName = (org && org.company) || user.company || '';
+    var logoEl = document.getElementById('hmb-logo');
+    var flagEl = document.getElementById('hmb-flag');
+
+    if (org) {
+      document.getElementById('hero-sub').textContent = (lang === 'fr') ? (org.welcomeFr || org.welcomeEn || '') : (org.welcomeEn || '');
+      logoEl.src = org.logoUrl || '';
+      logoEl.alt = org.company || '';
+      logoEl.style.display = org.logoUrl ? '' : 'none';
+      flagEl.textContent = flagEmoji(org.countryCode);
+      flagEl.style.display = org.countryCode ? '' : 'none';
+    } else {
+      document.getElementById('hero-sub').textContent = (I18N[lang]['hero.subGeneric'] || '').replace('{company}', companyName);
+      logoEl.src = '';
+      logoEl.style.display = 'none';
+      flagEl.textContent = '';
+      flagEl.style.display = 'none';
+    }
+    document.getElementById('hmb-company').textContent = companyName;
     document.getElementById('hmb-greeting').textContent = (I18N[lang]['hero.memberGreeting'] || '').replace('{name}', user.firstName || '');
     document.getElementById('hero-member-badge').classList.add('visible');
     var loginBtn = document.getElementById('nav-login-btn');
     if (loginBtn) {
-      loginBtn.textContent = '👤 ' + org.company;
+      loginBtn.textContent = '👤 ' + companyName;
       loginBtn.onclick = function () { document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' }); };
     }
   }
@@ -2110,7 +2026,6 @@ footer {
 
   function openAuth() {
     document.getElementById('auth-modal').classList.add('open');
-    loadCompanyOptions();
   }
   function closeAuth() { document.getElementById('auth-modal').classList.remove('open'); }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAuth(); });
@@ -2120,25 +2035,6 @@ footer {
     document.getElementById('auth-tab-register').classList.toggle('active', which === 'register');
     document.getElementById('auth-form-login').classList.toggle('active', which === 'login');
     document.getElementById('auth-form-register').classList.toggle('active', which === 'register');
-  }
-
-  var companiesLoaded = false;
-  function loadCompanyOptions() {
-    if (companiesLoaded) return;
-    fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'orgs' }) })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var select = document.getElementById('register-company');
-        if (!d.success || !d.orgs || !d.orgs.length) {
-          select.innerHTML = '<option value="">—</option>';
-          return;
-        }
-        companiesLoaded = true;
-        select.innerHTML = d.orgs.map(function (o) {
-          return '<option value="' + o.slug + '">' + o.company + ' (' + o.country + ')</option>';
-        }).join('');
-      })
-      .catch(function () {});
   }
 
   function submitLogin(evt) {
@@ -2174,14 +2070,14 @@ footer {
     var lastName = document.getElementById('register-lastname').value.trim();
     var email = document.getElementById('register-email').value.trim();
     var password = document.getElementById('register-password').value;
-    var companySlug = document.getElementById('register-company').value;
+    var company = document.getElementById('register-company').value.trim();
     var errEl = document.getElementById('register-error');
     var btn = document.getElementById('register-submit');
     errEl.textContent = '';
-    if (!firstName || !lastName || !companySlug) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
+    if (!firstName || !lastName || !company) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
     btn.disabled = true;
     portalSha256(password).then(function (hash) {
-      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, companySlug: companySlug, lang: currentLang(), firstName: firstName, lastName: lastName }) });
+      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, company: company, lang: currentLang(), firstName: firstName, lastName: lastName }) });
     }).then(function (r) { return r.json(); }).then(function (d) {
       btn.disabled = false;
       if (!d.success) {
