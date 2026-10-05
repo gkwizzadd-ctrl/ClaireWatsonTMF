@@ -153,6 +153,89 @@ body::before {
 .hiw-body li { margin-bottom: 12px; }
 .hiw-body li strong { color: var(--ink); }
 
+/* Auth modal (Member Login / Register) — clones the #hiw-modal shell, dark panel variant */
+#auth-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(13,11,77,0.6); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; pointer-events: none; transition: opacity 0.22s;
+}
+#auth-modal.open { opacity: 1; pointer-events: all; }
+.auth-panel {
+  background: #14113a; border: 1px solid rgba(217,18,65,0.22); border-radius: 18px;
+  width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto;
+  transform: scale(0.96) translateY(12px); transition: transform 0.28s cubic-bezier(.34,1.46,.64,1);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+}
+#auth-modal.open .auth-panel { transform: scale(1) translateY(0); }
+.auth-head { padding: 28px 28px 0; position: relative; }
+.auth-close {
+  position: absolute; top: 18px; right: 18px; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+  font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+.auth-close:hover { background: var(--crimson); color: #fff; }
+.auth-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--crimson); margin-bottom: 8px; }
+.auth-title { font-family: var(--serif); font-size: 23px; font-weight: 600; color: #fff; line-height: 1.28; padding-right: 34px; margin-bottom: 20px; }
+.auth-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 4px; margin-bottom: 22px; }
+.auth-tab {
+  flex: 1; text-align: center; padding: 9px 0; border-radius: 7px; border: none; background: none; cursor: pointer;
+  font-family: var(--sans); font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.55); transition: background 0.18s, color 0.18s;
+}
+.auth-tab.active { background: var(--crimson); color: #fff; }
+.auth-tab:focus-visible, .auth-close:focus-visible, .auth-submit:focus-visible, .welcome-logout:focus-visible, .lang-trigger:focus-visible, #nav-login-btn:focus-visible {
+  outline: 2px solid var(--crimson); outline-offset: 2px;
+}
+.auth-body { padding: 0 28px 28px; }
+.auth-form { display: none; flex-direction: column; gap: 14px; }
+.auth-form.active { display: flex; }
+.auth-field label {
+  display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5); margin-bottom: 6px;
+}
+.auth-field input, .auth-field select {
+  width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: 9px;
+  padding: 11px 13px; font-family: var(--sans); font-size: 13.5px; color: #fff; transition: border-color 0.15s;
+}
+.auth-field input:focus, .auth-field select:focus { outline: none; border-color: var(--crimson); }
+.auth-field select option { background: #14113a; color: #fff; }
+.auth-submit {
+  margin-top: 4px; padding: 12px; border: none; border-radius: 9px; background: var(--crimson); color: #fff;
+  font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: 0.03em; cursor: pointer;
+  transition: background 0.18s, transform 0.12s;
+}
+.auth-submit:hover { background: var(--crim-mid); }
+.auth-submit:active { transform: scale(0.98); }
+.auth-submit:disabled { opacity: 0.5; cursor: default; }
+.auth-error { font-size: 12px; color: #ff8aa3; min-height: 16px; }
+.auth-switch { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; margin-top: 2px; }
+
+/* Welcome panel — dark banner shown inline between hero and Expertise after login/register */
+#member-welcome { display: none; background: var(--ink); padding: 30px 0; }
+#member-welcome.visible { display: block; }
+.welcome-card {
+  max-width: 820px; margin: 0 auto; padding: 0 32px;
+  display: flex; align-items: center; gap: 22px;
+}
+.welcome-logo { width: 60px; height: 60px; border-radius: 12px; object-fit: contain; background: #fff; padding: 6px; flex-shrink: 0; }
+.welcome-text-wrap { flex: 1; }
+.welcome-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--crimson); margin-bottom: 4px; }
+.welcome-company { font-family: var(--serif); font-size: 19px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+.welcome-country { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+.welcome-paragraph { font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.78); }
+.welcome-logout {
+  flex-shrink: 0; align-self: flex-start; background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
+  padding: 6px 14px; font-family: var(--sans); font-size: 11px; color: rgba(255,255,255,0.6); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.welcome-logout:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+@media (max-width: 640px) {
+  .welcome-card { flex-direction: column; text-align: center; padding: 0 24px; }
+  .welcome-logout { align-self: center; }
+}
+
 .nav-brand {
   display: flex; align-items: center; gap: 10px;
   color: #fff; text-decoration: none;
@@ -1198,6 +1281,16 @@ footer {
       </div>
     </li>
     <li><button type="button" class="nav-hiw-btn" onclick="openHiw()">❓ How It Works</button></li>
+    <li><button type="button" class="nav-hiw-btn" id="nav-login-btn" onclick="openAuth()" data-i18n="nav.login">🔑 Member Login</button></li>
+    <li class="nav-dropdown">
+      <a href="#" class="nav-private nav-dropdown-trigger lang-trigger" id="lang-trigger" onclick="return false;">🌐 EN ▾</a>
+      <div class="nav-dropdown-menu">
+        <div class="nav-dropdown-menu-inner">
+          <a href="#" onclick="setLang('en'); return false;">English</a>
+          <a href="#" onclick="setLang('fr'); return false;">Français</a>
+        </div>
+      </div>
+    </li>
   </ul>
   <a href="#hero" class="nav-brand">
     <div class="nav-dot"></div>
@@ -1225,6 +1318,9 @@ footer {
   <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">♟ ODA Chess</a>
   <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🎓 TMF AI Quiz</a>
   <a href="#" onclick="closeMobile(); openHiw(); return false;">❓ How It Works</a>
+  <a href="#" onclick="closeMobile(); openAuth(); return false;" data-i18n="nav.login">🔑 Member Login</a>
+  <a href="#" onclick="setLang('en'); closeMobile(); return false;">EN — English</a>
+  <a href="#" onclick="setLang('fr'); closeMobile(); return false;">FR — Français</a>
 </div>
 
 <!-- How It Works modal -->
@@ -1248,6 +1344,54 @@ footer {
         <li><strong>🎮 Games &amp; Quiz</strong> — ODA Chess and the TMF AI Quiz, two lighter ways to learn ODA concepts.</li>
       </ol>
       <p>Everything here is free to explore.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Member Login / Register modal -->
+<div id="auth-modal" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-panel">
+    <div class="auth-head">
+      <button type="button" class="auth-close" onclick="closeAuth()" aria-label="Close">×</button>
+      <div class="auth-eyebrow" data-i18n="auth.eyebrow">TM Forum Member Portal</div>
+      <div class="auth-title" data-i18n="auth.title">Welcome</div>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')" data-i18n="auth.tabLogin">Log In</button>
+        <button type="button" class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')" data-i18n="auth.tabRegister">Register</button>
+      </div>
+    </div>
+    <div class="auth-body">
+      <form class="auth-form active" id="auth-form-login" onsubmit="return submitLogin(event)">
+        <div class="auth-field">
+          <label data-i18n="auth.emailLabel">Email</label>
+          <input type="email" id="login-email" required data-i18n-placeholder="auth.emailPlaceholder" placeholder="you@company.com">
+        </div>
+        <div class="auth-field">
+          <label data-i18n="auth.passwordLabel">Password</label>
+          <input type="password" id="login-password" required>
+        </div>
+        <div class="auth-error" id="login-error"></div>
+        <button type="submit" class="auth-submit" id="login-submit" data-i18n="auth.loginSubmit">Log In</button>
+      </form>
+      <form class="auth-form" id="auth-form-register" onsubmit="return submitRegister(event)">
+        <div class="auth-field">
+          <label data-i18n="auth.emailLabel">Email</label>
+          <input type="email" id="register-email" required data-i18n-placeholder="auth.emailPlaceholder" placeholder="you@company.com">
+        </div>
+        <div class="auth-field">
+          <label data-i18n="auth.passwordLabel">Password</label>
+          <input type="password" id="register-password" required minlength="6">
+        </div>
+        <div class="auth-field">
+          <label data-i18n="auth.companyLabel">Company</label>
+          <select id="register-company" required>
+            <option value="" data-i18n="auth.companyLoading">Loading…</option>
+          </select>
+        </div>
+        <div class="auth-error" id="register-error"></div>
+        <button type="submit" class="auth-submit" id="register-submit" data-i18n="auth.registerSubmit">Create Account</button>
+        <div class="auth-switch" data-i18n="auth.companyMissing">Don't see your company? Ask Claire to add it.</div>
+      </form>
     </div>
   </div>
 </div>
@@ -1343,6 +1487,20 @@ footer {
       <div class="cred-divider"></div>
       <span class="cred-item">AI-Native Operations</span>
     </div>
+  </div>
+</section>
+
+<!-- Member welcome banner — shown after a successful login/register -->
+<section id="member-welcome">
+  <div class="welcome-card">
+    <img class="welcome-logo" id="welcome-logo" src="" alt="">
+    <div class="welcome-text-wrap">
+      <div class="welcome-eyebrow" data-i18n="welcome.eyebrow">Welcome back</div>
+      <div class="welcome-company" id="welcome-company"></div>
+      <div class="welcome-country" id="welcome-country"></div>
+      <p class="welcome-paragraph" id="welcome-paragraph"></p>
+    </div>
+    <button type="button" class="welcome-logout" onclick="logoutMember()" data-i18n="welcome.logout">Log out</button>
   </div>
 </section>
 
@@ -1608,6 +1766,207 @@ footer {
   function closeHiw() { document.getElementById('hiw-modal').classList.remove('open'); }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHiw(); });
   function closeMobile() { mobileNav.classList.remove('open'); hbg.setAttribute('aria-expanded', false); }
+
+  /* ---- Member Login / Register / Welcome (bilingual EN/FR) ---- */
+  var AUTH_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-portal-auth';
+  var PORTAL_USER_KEY = 'cwportal-user';
+  var PORTAL_LANG_KEY = 'cwportal-lang';
+
+  async function portalSha256(msg) {
+    var buf  = new TextEncoder().encode(msg);
+    var hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  var I18N = {
+    en: {
+      'nav.login': '🔑 Member Login',
+      'auth.eyebrow': 'TM Forum Member Portal',
+      'auth.title': 'Welcome',
+      'auth.tabLogin': 'Log In',
+      'auth.tabRegister': 'Register',
+      'auth.emailLabel': 'Email',
+      'auth.emailPlaceholder': 'you@company.com',
+      'auth.passwordLabel': 'Password',
+      'auth.loginSubmit': 'Log In',
+      'auth.companyLabel': 'Company',
+      'auth.companyLoading': 'Loading…',
+      'auth.registerSubmit': 'Create Account',
+      'auth.companyMissing': "Don't see your company? Ask Claire to add it.",
+      'auth.errorEmailTaken': 'That email is already registered — try logging in instead.',
+      'auth.errorInvalid': 'Incorrect email or password.',
+      'auth.errorGeneric': 'Something went wrong — please try again.',
+      'welcome.eyebrow': 'Welcome back',
+      'welcome.logout': 'Log out'
+    },
+    fr: {
+      'nav.login': '🔑 Espace Membre',
+      'auth.eyebrow': 'Portail Membre TM Forum',
+      'auth.title': 'Bienvenue',
+      'auth.tabLogin': 'Connexion',
+      'auth.tabRegister': 'Inscription',
+      'auth.emailLabel': 'E-mail',
+      'auth.emailPlaceholder': 'vous@entreprise.com',
+      'auth.passwordLabel': 'Mot de passe',
+      'auth.loginSubmit': 'Se connecter',
+      'auth.companyLabel': 'Entreprise',
+      'auth.companyLoading': 'Chargement…',
+      'auth.registerSubmit': 'Créer un compte',
+      'auth.companyMissing': "Votre entreprise n'apparaît pas ? Demandez à Claire de l'ajouter.",
+      'auth.errorEmailTaken': 'Cet e-mail est déjà enregistré — essayez de vous connecter.',
+      'auth.errorInvalid': 'E-mail ou mot de passe incorrect.',
+      'auth.errorGeneric': "Une erreur s'est produite — veuillez réessayer.",
+      'welcome.eyebrow': 'Bon retour',
+      'welcome.logout': 'Se déconnecter'
+    }
+  };
+
+  function currentLang() { return (localStorage.getItem(PORTAL_LANG_KEY) === 'fr') ? 'fr' : 'en'; }
+
+  function setLang(lang) {
+    lang = (lang === 'fr') ? 'fr' : 'en';
+    localStorage.setItem(PORTAL_LANG_KEY, lang);
+    var dict = I18N[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var val = dict[el.getAttribute('data-i18n')];
+      if (val != null) el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      var val = dict[el.getAttribute('data-i18n-placeholder')];
+      if (val != null) el.placeholder = val;
+    });
+    var trigger = document.getElementById('lang-trigger');
+    if (trigger) trigger.textContent = (lang === 'fr') ? '🌐 FR ▾' : '🌐 EN ▾';
+
+    var saved = getStoredUser();
+    if (saved && saved.org) renderWelcome(saved, lang);
+  }
+
+  function getStoredUser() {
+    try { return JSON.parse(localStorage.getItem(PORTAL_USER_KEY) || 'null'); }
+    catch (e) { return null; }
+  }
+
+  function renderWelcome(data, lang) {
+    var org = data.org;
+    if (!org) return;
+    document.getElementById('welcome-logo').src = org.logoUrl || '';
+    document.getElementById('welcome-logo').alt = org.company || '';
+    document.getElementById('welcome-company').textContent = org.company || '';
+    document.getElementById('welcome-country').textContent = org.country || '';
+    document.getElementById('welcome-paragraph').textContent = (lang === 'fr') ? (org.welcomeFr || org.welcomeEn || '') : (org.welcomeEn || '');
+    document.getElementById('member-welcome').classList.add('visible');
+    var loginBtn = document.getElementById('nav-login-btn');
+    if (loginBtn) {
+      loginBtn.textContent = '👤 ' + org.company;
+      loginBtn.onclick = function () { document.getElementById('member-welcome').scrollIntoView({ behavior: 'smooth' }); };
+    }
+  }
+
+  function logoutMember() {
+    localStorage.removeItem(PORTAL_USER_KEY);
+    document.getElementById('member-welcome').classList.remove('visible');
+    var loginBtn = document.getElementById('nav-login-btn');
+    if (loginBtn) {
+      loginBtn.onclick = openAuth;
+      loginBtn.textContent = I18N[currentLang()]['nav.login'];
+    }
+  }
+
+  function openAuth() {
+    document.getElementById('auth-modal').classList.add('open');
+    loadCompanyOptions();
+  }
+  function closeAuth() { document.getElementById('auth-modal').classList.remove('open'); }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAuth(); });
+
+  function switchAuthTab(which) {
+    document.getElementById('auth-tab-login').classList.toggle('active', which === 'login');
+    document.getElementById('auth-tab-register').classList.toggle('active', which === 'register');
+    document.getElementById('auth-form-login').classList.toggle('active', which === 'login');
+    document.getElementById('auth-form-register').classList.toggle('active', which === 'register');
+  }
+
+  var companiesLoaded = false;
+  function loadCompanyOptions() {
+    if (companiesLoaded) return;
+    fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'orgs' }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var select = document.getElementById('register-company');
+        if (!d.success || !d.orgs || !d.orgs.length) {
+          select.innerHTML = '<option value="">—</option>';
+          return;
+        }
+        companiesLoaded = true;
+        select.innerHTML = d.orgs.map(function (o) {
+          return '<option value="' + o.slug + '">' + o.company + ' (' + o.country + ')</option>';
+        }).join('');
+      })
+      .catch(function () {});
+  }
+
+  function submitLogin(evt) {
+    evt.preventDefault();
+    var email = document.getElementById('login-email').value.trim();
+    var password = document.getElementById('login-password').value;
+    var errEl = document.getElementById('login-error');
+    var btn = document.getElementById('login-submit');
+    errEl.textContent = '';
+    btn.disabled = true;
+    portalSha256(password).then(function (hash) {
+      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'login', email: email, passwordHash: hash }) });
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      btn.disabled = false;
+      if (!d.success) {
+        errEl.textContent = I18N[currentLang()]['auth.errorInvalid'];
+        return;
+      }
+      localStorage.setItem(PORTAL_USER_KEY, JSON.stringify(d));
+      renderWelcome(d, currentLang());
+      closeAuth();
+      document.getElementById('member-welcome').scrollIntoView({ behavior: 'smooth' });
+    }).catch(function () {
+      btn.disabled = false;
+      errEl.textContent = I18N[currentLang()]['auth.errorGeneric'];
+    });
+    return false;
+  }
+
+  function submitRegister(evt) {
+    evt.preventDefault();
+    var email = document.getElementById('register-email').value.trim();
+    var password = document.getElementById('register-password').value;
+    var companySlug = document.getElementById('register-company').value;
+    var errEl = document.getElementById('register-error');
+    var btn = document.getElementById('register-submit');
+    errEl.textContent = '';
+    if (!companySlug) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
+    btn.disabled = true;
+    portalSha256(password).then(function (hash) {
+      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, companySlug: companySlug, lang: currentLang() }) });
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      btn.disabled = false;
+      if (!d.success) {
+        errEl.textContent = (d.error === 'email_taken') ? I18N[currentLang()]['auth.errorEmailTaken'] : I18N[currentLang()]['auth.errorGeneric'];
+        return;
+      }
+      localStorage.setItem(PORTAL_USER_KEY, JSON.stringify(d));
+      renderWelcome(d, currentLang());
+      closeAuth();
+      document.getElementById('member-welcome').scrollIntoView({ behavior: 'smooth' });
+    }).catch(function () {
+      btn.disabled = false;
+      errEl.textContent = I18N[currentLang()]['auth.errorGeneric'];
+    });
+    return false;
+  }
+
+  setLang(currentLang());
+  (function () {
+    var saved = getStoredUser();
+    if (saved && saved.org) renderWelcome(saved, currentLang());
+  })();
 
   /* Bulb / Thought of the Month modal */
   function openBulb() {
