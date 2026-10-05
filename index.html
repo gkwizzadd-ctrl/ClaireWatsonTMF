@@ -229,7 +229,7 @@ body::before {
 .hmb-logo { width: 60px; height: 60px; border-radius: 10px; object-fit: contain; background: #fff; padding: 5px; flex-shrink: 0; }
 .hmb-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .hmb-company-row { font-family: var(--serif); font-size: 21px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hmb-flag { margin-right: 8px; font-size: 30px; line-height: 1; vertical-align: middle; }
+.hmb-flag { margin-right: 10px; width: 38px; height: auto; border-radius: 3px; box-shadow: 0 1px 5px rgba(0,0,0,0.35); vertical-align: middle; flex-shrink: 0; }
 .hmb-greeting { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
 .hmb-logout {
   margin-left: 6px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
@@ -241,7 +241,7 @@ body::before {
   .hero-member-badge { max-width: calc(100% - 4px); padding: 12px 16px; gap: 12px; }
   .hmb-logo { width: 48px; height: 48px; }
   .hmb-company-row { white-space: normal; font-size: 18px; }
-  .hmb-flag { font-size: 24px; }
+  .hmb-flag { width: 30px; }
 }
 
 .nav-brand {
@@ -1321,7 +1321,7 @@ footer {
       <div class="hero-member-badge" id="hero-member-badge">
         <img class="hmb-logo" id="hmb-logo" src="" alt="">
         <div class="hmb-text">
-          <div class="hmb-company-row"><span class="hmb-flag" id="hmb-flag"></span><span id="hmb-company"></span></div>
+          <div class="hmb-company-row"><img class="hmb-flag" id="hmb-flag" alt=""><span id="hmb-company"></span></div>
           <div class="hmb-greeting" id="hmb-greeting"></div>
         </div>
         <button type="button" class="hmb-logout" onclick="logoutMember()" data-i18n="welcome.logout">Log out</button>
@@ -1725,6 +1725,7 @@ footer {
       'auth.companyPlaceholder': 'Your company name',
       'auth.errorEmailTaken': 'That email is already registered — try logging in instead.',
       'auth.errorInvalid': 'Incorrect email or password.',
+      'auth.errorDisabled': 'This account has been deactivated — contact Claire to reactivate it.',
       'auth.errorGeneric': 'Something went wrong — please try again.',
       'auth.continueWithoutLogin': 'Continue browsing without logging in',
       'welcome.eyebrow': 'Welcome back',
@@ -1851,6 +1852,7 @@ footer {
       'auth.companyPlaceholder': 'Nom de votre entreprise',
       'auth.errorEmailTaken': 'Cet e-mail est déjà enregistré — essayez de vous connecter.',
       'auth.errorInvalid': 'E-mail ou mot de passe incorrect.',
+      'auth.errorDisabled': 'Ce compte a été désactivé — contactez Claire pour le réactiver.',
       'auth.errorGeneric': "Une erreur s'est produite — veuillez réessayer.",
       'auth.continueWithoutLogin': 'Continuer sans se connecter',
       'welcome.eyebrow': 'Bon retour',
@@ -1978,9 +1980,9 @@ footer {
     catch (e) { return null; }
   }
 
-  function flagEmoji(cc) {
+  function flagImageUrl(cc) {
     if (!cc || cc.length !== 2) return '';
-    return String.fromCodePoint.apply(null, [cc.toUpperCase().charCodeAt(0) + 127397, cc.toUpperCase().charCodeAt(1) + 127397]);
+    return 'https://flagcdn.com/' + cc.toLowerCase() + '.svg';
   }
 
   function renderWelcome(data, lang) {
@@ -1995,13 +1997,14 @@ footer {
       logoEl.src = org.logoUrl || '';
       logoEl.alt = org.company || '';
       logoEl.style.display = org.logoUrl ? '' : 'none';
-      flagEl.textContent = flagEmoji(org.countryCode);
+      flagEl.src = flagImageUrl(org.countryCode);
+      flagEl.alt = org.countryCode || '';
       flagEl.style.display = org.countryCode ? '' : 'none';
     } else {
       document.getElementById('hero-sub').textContent = (I18N[lang]['hero.subGeneric'] || '').replace('{company}', companyName);
       logoEl.src = '';
       logoEl.style.display = 'none';
-      flagEl.textContent = '';
+      flagEl.src = '';
       flagEl.style.display = 'none';
     }
     document.getElementById('hmb-company').textContent = companyName;
@@ -2050,7 +2053,7 @@ footer {
     }).then(function (r) { return r.json(); }).then(function (d) {
       btn.disabled = false;
       if (!d.success) {
-        errEl.textContent = I18N[currentLang()]['auth.errorInvalid'];
+        errEl.textContent = (d.error === 'account_disabled') ? I18N[currentLang()]['auth.errorDisabled'] : I18N[currentLang()]['auth.errorInvalid'];
         return;
       }
       localStorage.setItem(PORTAL_USER_KEY, JSON.stringify(d));

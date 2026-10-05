@@ -708,7 +708,7 @@
         180
       ],
       "parameters": {
-        "jsCode": "const users = $input.all().map(i => i.json).filter(r => r.Email).map(r => ({\n  firstName: r['First Name'], lastName: r['Last Name'], email: r.Email,\n  company: r.Company, companySlug: r['Company Slug'],\n  createdAt: r['Created At'], lastLogin: r['Last Login']\n}));\nreturn [{ json: { success: true, users } }];"
+        "jsCode": "const users = $input.all().map(i => i.json).filter(r => r.Email).map(r => ({\n  firstName: r['First Name'], lastName: r['Last Name'], email: r.Email,\n  company: r.Company, companySlug: r['Company Slug'],\n  active: String(r.Active || 'true').toLowerCase() !== 'false',\n  createdAt: r['Created At'], lastLogin: r['Last Login']\n}));\nreturn [{ json: { success: true, users } }];"
       }
     },
     {
@@ -723,6 +723,188 @@
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "poa-050",
+      "name": "IF — Update User?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -20
+      ],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ ($json.body ?? $json).action }}",
+              "operation": "equal",
+              "value2": "update-user"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "poa-051",
+      "name": "Read Portal Users (Update)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1180,
+        -20
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Portal Users",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "poa-052",
+      "name": "Build Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        -20
+      ],
+      "parameters": {
+        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst originalEmail = String(body.originalEmail || '').trim().toLowerCase();\nconst newEmail = String(body.email || '').trim().toLowerCase();\nconst firstName = String(body.firstName || '').trim();\nconst lastName = String(body.lastName || '').trim();\nconst company = String(body.company || '').trim();\nconst newPasswordHash = body.newPasswordHash || '';\n\nfunction slugify(s) {\n  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n}\nfunction randomSalt() { let s = ''; for (let i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16); return s; }\n\nconst rows = $input.all().map(i => i.json);\nconst row = rows.find(r => String(r.Email || '').trim().toLowerCase() === originalEmail);\nif (!row) {\n  return [{ json: { blocked: true, reason: 'not_found' } }];\n}\nif (newEmail && newEmail !== originalEmail) {\n  const conflict = rows.some(r => String(r.Email || '').trim().toLowerCase() === newEmail);\n  if (conflict) return [{ json: { blocked: true, reason: 'email_taken' } }];\n}\n\nlet passwordHash = row['Password Hash'];\nif (newPasswordHash) {\n  const salt = randomSalt();\n  passwordHash = salt + ':' + sha256Hex(salt + newPasswordHash);\n}\n\nconst activeProvided = typeof body.active === 'boolean';\nconst active = activeProvided ? (body.active ? 'true' : 'false') : (row.Active || 'true');\n\nreturn [{ json: {\n  blocked: false,\n  row_number: row.row_number,\n  Email: newEmail || originalEmail,\n  Company: company || row.Company,\n  'Company Slug': company ? slugify(company) : row['Company Slug'],\n  'First Name': firstName || row['First Name'],\n  'Last Name': lastName || row['Last Name'],\n  Active: active,\n  'Password Hash': passwordHash\n} }];"
+      }
+    },
+    {
+      "id": "poa-053",
+      "name": "IF — Update Blocked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -20
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.blocked }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "poa-054",
+      "name": "Respond — Update Blocked",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        -100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.reason }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "poa-055",
+      "name": "Update Portal User Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1900,
+        -20
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Portal Users",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "row_number"
+          ],
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Email": "={{ $json.Email }}",
+            "Company": "={{ $json.Company }}",
+            "Company Slug": "={{ $json['Company Slug'] }}",
+            "First Name": "={{ $json['First Name'] }}",
+            "Last Name": "={{ $json['Last Name'] }}",
+            "Active": "={{ $json.Active }}",
+            "Password Hash": "={{ $json['Password Hash'] }}"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "poa-056",
+      "name": "Respond — Update Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        -20
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true }",
         "options": {
           "responseHeaders": {
             "entries": [
@@ -798,7 +980,7 @@
         500
       ],
       "parameters": {
-        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\nconst company = String(body.company || '').trim();\nconst lang = body.lang === 'fr' ? 'fr' : 'en';\nconst firstName = String(body.firstName || '').trim();\nconst lastName = String(body.lastName || '').trim();\n\nif (!email || !clientHash || !company || !firstName || !lastName) {\n  return [{ json: { blocked: true, reason: 'missing_fields' } }];\n}\n\nfunction slugify(s) {\n  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n}\nconst companySlug = slugify(company);\n\nconst existing = $input.all().map(i => i.json).find(r => String(r.Email || '').trim().toLowerCase() === email);\nif (existing) {\n  return [{ json: { blocked: true, reason: 'email_taken' } }];\n}\n\nfunction randomSalt() { let s = ''; for (let i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16); return s; }\nconst salt = randomSalt();\nconst hash = sha256Hex(salt + clientHash);\nconst now = new Date().toISOString();\n\nreturn [{ json: {\n  blocked: false,\n  Email: email,\n  'Password Hash': salt + ':' + hash,\n  Company: company,\n  'Company Slug': companySlug,\n  'Language Preference': lang,\n  'First Name': firstName,\n  'Last Name': lastName,\n  'Created At': now,\n  'Last Login': now\n} }];"
+        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\nconst company = String(body.company || '').trim();\nconst lang = body.lang === 'fr' ? 'fr' : 'en';\nconst firstName = String(body.firstName || '').trim();\nconst lastName = String(body.lastName || '').trim();\n\nif (!email || !clientHash || !company || !firstName || !lastName) {\n  return [{ json: { blocked: true, reason: 'missing_fields' } }];\n}\n\nfunction slugify(s) {\n  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n}\nconst companySlug = slugify(company);\n\nconst existing = $input.all().map(i => i.json).find(r => String(r.Email || '').trim().toLowerCase() === email);\nif (existing) {\n  return [{ json: { blocked: true, reason: 'email_taken' } }];\n}\n\nfunction randomSalt() { let s = ''; for (let i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16); return s; }\nconst salt = randomSalt();\nconst hash = sha256Hex(salt + clientHash);\nconst now = new Date().toISOString();\n\nreturn [{ json: {\n  blocked: false,\n  Email: email,\n  'Password Hash': salt + ':' + hash,\n  Company: company,\n  'Company Slug': companySlug,\n  'Language Preference': lang,\n  'First Name': firstName,\n  'Last Name': lastName,\n  Active: 'true',\n  'Created At': now,\n  'Last Login': now\n} }];"
       }
     },
     {
@@ -855,7 +1037,7 @@
         500
       ],
       "parameters": {
-        "jsCode": "const r = $json;\nreturn [{ json: {\n  Email: r.Email,\n  'Password Hash': r['Password Hash'],\n  Company: r.Company,\n  'Company Slug': r['Company Slug'],\n  'Language Preference': r['Language Preference'],\n  'First Name': r['First Name'],\n  'Last Name': r['Last Name'],\n  'Created At': r['Created At'],\n  'Last Login': r['Last Login']\n} }];"
+        "jsCode": "const r = $json;\nreturn [{ json: {\n  Email: r.Email,\n  'Password Hash': r['Password Hash'],\n  Company: r.Company,\n  'Company Slug': r['Company Slug'],\n  'Language Preference': r['Language Preference'],\n  'First Name': r['First Name'],\n  'Last Name': r['Last Name'],\n  Active: r.Active,\n  'Created At': r['Created At'],\n  'Last Login': r['Last Login']\n} }];"
       }
     },
     {
@@ -1005,7 +1187,7 @@
         760
       ],
       "parameters": {
-        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\n\nconst rows = $input.all().map(i => i.json);\nconst row = rows.find(r => String(r.Email || '').trim().toLowerCase() === email);\n\nif (!row || !email || !clientHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nconst stored = String(row['Password Hash'] || '');\nconst sep = stored.indexOf(':');\nif (sep < 0) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\nconst salt = stored.slice(0, sep);\nconst expectedHash = stored.slice(sep + 1);\nconst actualHash = sha256Hex(salt + clientHash);\n\nif (actualHash !== expectedHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nreturn [{ json: {\n  invalid: false,\n  Email: row.Email,\n  Company: row.Company,\n  'Company Slug': row['Company Slug'],\n  'Language Preference': row['Language Preference'],\n  'First Name': row['First Name'],\n  'Last Name': row['Last Name']\n} }];"
+        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\n\nconst rows = $input.all().map(i => i.json);\nconst row = rows.find(r => String(r.Email || '').trim().toLowerCase() === email);\n\nif (!row || !email || !clientHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nconst stored = String(row['Password Hash'] || '');\nconst sep = stored.indexOf(':');\nif (sep < 0) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\nconst salt = stored.slice(0, sep);\nconst expectedHash = stored.slice(sep + 1);\nconst actualHash = sha256Hex(salt + clientHash);\n\nif (actualHash !== expectedHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nif (String(row.Active || 'true').toLowerCase() === 'false') {\n  return [{ json: { invalid: true, reason: 'account_disabled' } }];\n}\n\nreturn [{ json: {\n  invalid: false,\n  Email: row.Email,\n  Company: row.Company,\n  'Company Slug': row['Company Slug'],\n  'Language Preference': row['Language Preference'],\n  'First Name': row['First Name'],\n  'Last Name': row['Last Name']\n} }];"
       }
     },
     {
@@ -1453,6 +1635,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "IF — Update User?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1472,6 +1661,68 @@
         [
           {
             "node": "Respond — List Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Update User?": {
+      "main": [
+        [
+          {
+            "node": "Read Portal Users (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Portal Users (Update)": {
+      "main": [
+        [
+          {
+            "node": "Build Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Update": {
+      "main": [
+        [
+          {
+            "node": "IF — Update Blocked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Update Blocked?": {
+      "main": [
+        [
+          {
+            "node": "Respond — Update Blocked",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Portal User Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Portal User Row": {
+      "main": [
+        [
+          {
+            "node": "Respond — Update Success",
             "type": "main",
             "index": 0
           }

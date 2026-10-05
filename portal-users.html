@@ -39,12 +39,35 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
 .ucard-company{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:rgba(217,18,65,.75);margin-bottom:4px}
 .ucard-dates{font-size:10.5px;color:rgba(255,255,255,.3);font-family:var(--mono)}
 
+.ucard-actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.ucard-edit-btn{flex-shrink:0;background:none;border:1px solid var(--border-hi);border-radius:7px;padding:7px 12px;font-family:var(--sans);font-size:11px;color:rgba(255,255,255,.6);cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap}
+.ucard-edit-btn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.ucard-active-btn.is-active{color:var(--green);border-color:rgba(80,200,120,.35)}
+.ucard-active-btn.is-inactive{color:rgba(255,255,255,.3)}
+
+.uedit{background:rgba(217,18,65,.04);border:1px solid rgba(217,18,65,.2);border-radius:10px;padding:16px 18px;margin:-4px 0 10px;display:none}
+.uedit.open{display:block}
+.uedit-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.uedit-field label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:5px}
+.uedit-field input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border-hi);border-radius:6px;padding:8px 10px;font-family:var(--sans);font-size:12.5px;color:#fff;outline:none;transition:border-color .15s}
+.uedit-field input:focus{border-color:var(--crimson)}
+.uedit-hint{font-size:10.5px;color:rgba(255,255,255,.3);margin-top:-6px;margin-bottom:12px}
+.uedit-error{font-size:11.5px;color:#ff8aa3;min-height:14px;margin-bottom:8px}
+.uedit-actions{display:flex;gap:10px}
+.uedit-btn{border:none;border-radius:7px;padding:9px 16px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,opacity .15s}
+.uedit-save{background:var(--crimson);color:#fff}
+.uedit-save:hover{background:#b80f35}
+.uedit-save:disabled{opacity:.5;cursor:default}
+.uedit-cancel{background:none;border:1px solid var(--border-hi);color:rgba(255,255,255,.6)}
+.uedit-cancel:hover{color:#fff}
+
 .state-msg{padding:40px 0;text-align:center;color:rgba(255,255,255,.35);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
 .count-chip{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:rgba(255,255,255,.4);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px;margin-bottom:24px}
 
 @media (max-width:560px){
   .ucard{flex-wrap:wrap}
   .ucard-meta{text-align:left;width:100%;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+  .uedit-row{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -54,7 +77,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opa
   <a href="claires-stuff.html" class="back-link">← Back to Claire's Stuff</a>
   <div class="page-eyebrow">TM Forum Member Portal</div>
   <div class="page-h">Registered Users</div>
-  <div class="page-sub">Everyone who has registered on clairewatson.vercel.app, read-only.</div>
+  <div class="page-sub">Everyone who has registered on clairewatson.vercel.app. Deactivate an account to block their access, reset a password, or edit their name/company/email.</div>
   <div id="count-chip" class="count-chip" style="display:none"></div>
   <div id="list"></div>
 </div>
@@ -65,6 +88,7 @@ if (localStorage.getItem('cwclaires-auth') !== '1') {
 }
 
 var USERS_WH = 'https://n8n.srv1739004.hstgr.cloud/webhook/tmf-portal-auth';
+var currentUsers = [];
 
 function esc(s) {
   var d = document.createElement('div');
@@ -80,25 +104,26 @@ function fmtDate(iso) {
   if (isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+async function adminSha256(msg) {
+  var buf = new TextEncoder().encode(msg);
+  var hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+}
 
 var listEl = document.getElementById('list');
 var chipEl = document.getElementById('count-chip');
-listEl.innerHTML = '<div class="state-msg">Loading…</div>';
 
-fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list-users' }) })
-  .then(function (r) { return r.json(); })
-  .then(function (d) {
-    if (!d.success || !d.users || !d.users.length) {
-      listEl.innerHTML = '<div class="state-msg">No registered users yet.</div>';
-      return;
-    }
-    var users = d.users.slice().sort(function (a, b) {
-      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-    });
-    chipEl.style.display = 'inline-block';
-    chipEl.textContent = users.length + (users.length === 1 ? ' user' : ' users');
-    listEl.innerHTML = users.map(function (u) {
-      return '<div class="ucard">' +
+function renderUsers() {
+  if (!currentUsers.length) {
+    listEl.innerHTML = '<div class="state-msg">No registered users yet.</div>';
+    chipEl.style.display = 'none';
+    return;
+  }
+  chipEl.style.display = 'inline-block';
+  chipEl.textContent = currentUsers.length + (currentUsers.length === 1 ? ' user' : ' users');
+  listEl.innerHTML = currentUsers.map(function (u, i) {
+    var active = u.active !== false;
+    return '<div class="ucard">' +
         '<div class="ucard-av">' + esc(initials(u.firstName, u.lastName)) + '</div>' +
         '<div class="ucard-main">' +
           '<div class="ucard-name">' + esc(u.firstName) + ' ' + esc(u.lastName) + '</div>' +
@@ -108,12 +133,99 @@ fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' 
           '<div class="ucard-company">' + esc(u.company || '—') + '</div>' +
           '<div class="ucard-dates">Joined ' + esc(fmtDate(u.createdAt)) + ' · Last in ' + esc(fmtDate(u.lastLogin)) + '</div>' +
         '</div>' +
+        '<div class="ucard-actions">' +
+          '<button type="button" class="ucard-edit-btn ucard-active-btn ' + (active ? 'is-active' : 'is-inactive') + '" onclick="toggleActive(' + i + ')">' + (active ? '🟢 Active' : '⚪ Deactivated') + '</button>' +
+          '<button type="button" class="ucard-edit-btn" onclick="resetPassword(' + i + ')">🔑 Reset password</button>' +
+          '<button type="button" class="ucard-edit-btn" onclick="toggleEdit(' + i + ')">Edit</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="uedit" id="uedit-' + i + '">' +
+        '<div class="uedit-row">' +
+          '<div class="uedit-field"><label>First Name</label><input type="text" id="uedit-first-' + i + '" value="' + esc(u.firstName) + '"></div>' +
+          '<div class="uedit-field"><label>Last Name</label><input type="text" id="uedit-last-' + i + '" value="' + esc(u.lastName) + '"></div>' +
+        '</div>' +
+        '<div class="uedit-row">' +
+          '<div class="uedit-field"><label>Email</label><input type="email" id="uedit-email-' + i + '" value="' + esc(u.email) + '"></div>' +
+          '<div class="uedit-field"><label>Company</label><input type="text" id="uedit-company-' + i + '" value="' + esc(u.company) + '"></div>' +
+        '</div>' +
+        '<div class="uedit-error" id="uedit-error-' + i + '"></div>' +
+        '<div class="uedit-actions">' +
+          '<button type="button" class="uedit-btn uedit-save" id="uedit-save-' + i + '" onclick="submitUpdate(' + i + ')">Save</button>' +
+          '<button type="button" class="uedit-btn uedit-cancel" onclick="toggleEdit(' + i + ')">Cancel</button>' +
+        '</div>' +
       '</div>';
-    }).join('');
-  })
-  .catch(function () {
-    listEl.innerHTML = '<div class="state-msg">Couldn’t load the user list — check the connection and try again.</div>';
-  });
+  }).join('');
+}
+
+function toggleActive(i) {
+  var u = currentUsers[i];
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', originalEmail: u.email, active: !(u.active !== false) }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { if (!d.success) alert(d.error || 'Could not update account'); loadUsers(); })
+    .catch(function () { alert('Could not reach the server.'); });
+}
+
+function resetPassword(i) {
+  var u = currentUsers[i];
+  var pw = prompt('Set a new password for ' + u.firstName + ' ' + u.lastName + ' (' + u.email + '):');
+  if (!pw) return;
+  adminSha256(pw).then(function (hash) {
+    return fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-user', originalEmail: u.email, newPasswordHash: hash }) });
+  }).then(function (r) { return r.json(); })
+    .then(function (d) { alert(d.success ? 'Password updated.' : (d.error || 'Could not update password')); })
+    .catch(function () { alert('Could not reach the server.'); });
+}
+
+function toggleEdit(i) {
+  var el = document.getElementById('uedit-' + i);
+  el.classList.toggle('open');
+}
+
+function submitUpdate(i) {
+  var u = currentUsers[i];
+  var firstName = document.getElementById('uedit-first-' + i).value.trim();
+  var lastName = document.getElementById('uedit-last-' + i).value.trim();
+  var email = document.getElementById('uedit-email-' + i).value.trim();
+  var company = document.getElementById('uedit-company-' + i).value.trim();
+  var errEl = document.getElementById('uedit-error-' + i);
+  var btn = document.getElementById('uedit-save-' + i);
+  errEl.textContent = '';
+  if (!firstName || !lastName || !email || !company) {
+    errEl.textContent = 'First name, last name, email, and company are all required.';
+    return;
+  }
+  btn.disabled = true;
+  var payload = { action: 'update-user', originalEmail: u.email, firstName: firstName, lastName: lastName, email: email, company: company };
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(function (r) { return r.json(); }).then(function (d) {
+      btn.disabled = false;
+      if (!d.success) {
+        errEl.textContent = (d.error === 'email_taken') ? 'That email is already used by another registered user.' : 'Something went wrong — please try again.';
+        return;
+      }
+      loadUsers();
+    }).catch(function () {
+      btn.disabled = false;
+      errEl.textContent = 'Something went wrong — please try again.';
+    });
+}
+
+function loadUsers() {
+  listEl.innerHTML = '<div class="state-msg">Loading…</div>';
+  fetch(USERS_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list-users' }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      currentUsers = (d.success && d.users) ? d.users.slice().sort(function (a, b) {
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      }) : [];
+      renderUsers();
+    })
+    .catch(function () {
+      listEl.innerHTML = '<div class="state-msg">Couldn’t load the user list — check the connection and try again.</div>';
+    });
+}
+
+loadUsers();
 </script>
 
 </body>
