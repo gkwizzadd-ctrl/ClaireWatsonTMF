@@ -1197,6 +1197,7 @@ footer {
         </div>
       </div>
     </li>
+    <li><button type="button" class="nav-hiw-btn" id="nav-logout-btn" onclick="logoutMember()" data-i18n="welcome.logout" style="display:none">Log out</button></li>
   </ul>
   <a href="#hero" class="nav-brand">
     <div class="nav-dot"></div>
@@ -1228,6 +1229,7 @@ footer {
   <a href="#" id="mobile-admin-btn" onclick="closeMobile(); openAdminPage(); return false;" data-i18n="nav.admin" style="display:none">⚙️ Admin</a>
   <a href="#" onclick="setLang('en'); closeMobile(); return false;">EN — English</a>
   <a href="#" onclick="setLang('fr'); closeMobile(); return false;">FR — Français</a>
+  <a href="#" id="mobile-logout-btn" onclick="closeMobile(); logoutMember(); return false;" data-i18n="welcome.logout" style="display:none">Log out</a>
 </div>
 
 <!-- How It Works modal -->
@@ -1303,6 +1305,10 @@ footer {
           <label data-i18n="auth.companyLabel">Company</label>
           <input type="text" id="register-company" required data-i18n-placeholder="auth.companyPlaceholder" placeholder="Your company name">
         </div>
+        <div class="auth-field">
+          <label data-i18n="auth.countryLabel">Country</label>
+          <select id="register-country" required></select>
+        </div>
         <div class="auth-error" id="register-error"></div>
         <button type="submit" class="auth-submit" id="register-submit" data-i18n="auth.registerSubmit">Create Account</button>
       </form>
@@ -1321,23 +1327,6 @@ footer {
           <div class="hmb-company-row"><img class="hmb-flag" id="hmb-flag" alt=""><span id="hmb-company"></span></div>
           <div class="hmb-greeting" id="hmb-greeting"></div>
         </div>
-        <button type="button" class="hmb-logout" onclick="logoutMember()" data-i18n="welcome.logout">Log out</button>
-      </div>
-      <div class="hero-badge r">
-        <svg class="hero-badge-mark" width="20" height="20" viewBox="0 0 30 30" fill="none">
-          <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-          <rect x="15" y="4" width="11" height="11" rx="3" fill="url(#heroBadgeGrad)"/>
-          <circle cx="20.5" cy="9.5" r="2" fill="rgba(255,255,255,0.55)"/>
-          <defs>
-            <linearGradient id="heroBadgeGrad" x1="15" y1="4" x2="26" y2="15" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#D91241"/><stop offset="1" stop-color="#0D0B4D"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <span class="hero-badge-text">
-          <span class="hero-badge-eyebrow" data-i18n="hero.badgeEyebrow">TM Forum program</span>
-          <span class="hero-badge-name">Lego Line</span>
-        </span>
       </div>
       <div class="hero-eye r d1" data-i18n="hero.eye">Open Architecture. Digital Transformation. Real Results.</div>
       <h1 class="hero-h1 r d2" data-i18n-html="hero.h1">
@@ -1681,6 +1670,44 @@ footer {
   var PORTAL_USER_KEY = 'cwportal-user';
   var PORTAL_LANG_KEY = 'cwportal-lang';
 
+  var COUNTRIES = [
+    ['AF','Afghanistan'],['AL','Albania'],['DZ','Algeria'],['AO','Angola'],['AR','Argentina'],
+    ['AM','Armenia'],['AU','Australia'],['AT','Austria'],['AZ','Azerbaijan'],['BH','Bahrain'],
+    ['BD','Bangladesh'],['BY','Belarus'],['BE','Belgium'],['BJ','Benin'],['BT','Bhutan'],
+    ['BO','Bolivia'],['BA','Bosnia and Herzegovina'],['BW','Botswana'],['BR','Brazil'],
+    ['BG','Bulgaria'],['BF','Burkina Faso'],['BI','Burundi'],['KH','Cambodia'],['CM','Cameroon'],
+    ['CA','Canada'],['CV','Cabo Verde'],['CF','Central African Republic'],['TD','Chad'],
+    ['CL','Chile'],['CN','China'],['CO','Colombia'],['KM','Comoros'],['CG','Congo'],
+    ['CD','Congo (DRC)'],['CR','Costa Rica'],['CI',"Côte d'Ivoire"],['HR','Croatia'],
+    ['CU','Cuba'],['CY','Cyprus'],['CZ','Czechia'],['DK','Denmark'],['DJ','Djibouti'],
+    ['DO','Dominican Republic'],['EC','Ecuador'],['EG','Egypt'],['SV','El Salvador'],
+    ['GQ','Equatorial Guinea'],['ER','Eritrea'],['EE','Estonia'],['SZ','Eswatini'],
+    ['ET','Ethiopia'],['FJ','Fiji'],['FI','Finland'],['FR','France'],['GA','Gabon'],
+    ['GM','Gambia'],['GE','Georgia'],['DE','Germany'],['GH','Ghana'],['GR','Greece'],
+    ['GT','Guatemala'],['GN','Guinea'],['GW','Guinea-Bissau'],['HT','Haiti'],['HN','Honduras'],
+    ['HK','Hong Kong'],['HU','Hungary'],['IS','Iceland'],['IN','India'],['ID','Indonesia'],
+    ['IR','Iran'],['IQ','Iraq'],['IE','Ireland'],['IL','Israel'],['IT','Italy'],
+    ['JM','Jamaica'],['JP','Japan'],['JO','Jordan'],['KZ','Kazakhstan'],['KE','Kenya'],
+    ['KW','Kuwait'],['KG','Kyrgyzstan'],['LA','Laos'],['LV','Latvia'],['LB','Lebanon'],
+    ['LS','Lesotho'],['LR','Liberia'],['LY','Libya'],['LT','Lithuania'],['LU','Luxembourg'],
+    ['MG','Madagascar'],['MW','Malawi'],['MY','Malaysia'],['ML','Mali'],['MT','Malta'],
+    ['MR','Mauritania'],['MU','Mauritius'],['MX','Mexico'],['MD','Moldova'],['MN','Mongolia'],
+    ['ME','Montenegro'],['MA','Morocco'],['MZ','Mozambique'],['MM','Myanmar'],['NA','Namibia'],
+    ['NP','Nepal'],['NL','Netherlands'],['NZ','New Zealand'],['NI','Nicaragua'],['NE','Niger'],
+    ['NG','Nigeria'],['MK','North Macedonia'],['NO','Norway'],['OM','Oman'],['PK','Pakistan'],
+    ['PA','Panama'],['PG','Papua New Guinea'],['PY','Paraguay'],['PE','Peru'],
+    ['PH','Philippines'],['PL','Poland'],['PT','Portugal'],['QA','Qatar'],['RO','Romania'],
+    ['RU','Russia'],['RW','Rwanda'],['SA','Saudi Arabia'],['SN','Senegal'],['RS','Serbia'],
+    ['SC','Seychelles'],['SL','Sierra Leone'],['SG','Singapore'],['SK','Slovakia'],
+    ['SI','Slovenia'],['SO','Somalia'],['ZA','South Africa'],['KR','South Korea'],
+    ['SS','South Sudan'],['ES','Spain'],['LK','Sri Lanka'],['SD','Sudan'],['SR','Suriname'],
+    ['SE','Sweden'],['CH','Switzerland'],['SY','Syria'],['TW','Taiwan'],['TJ','Tajikistan'],
+    ['TZ','Tanzania'],['TH','Thailand'],['TG','Togo'],['TN','Tunisia'],['TR','Turkey'],
+    ['TM','Turkmenistan'],['UG','Uganda'],['UA','Ukraine'],['AE','United Arab Emirates'],
+    ['GB','United Kingdom'],['US','United States'],['UY','Uruguay'],['UZ','Uzbekistan'],
+    ['VE','Venezuela'],['VN','Vietnam'],['YE','Yemen'],['ZM','Zambia'],['ZW','Zimbabwe']
+  ];
+
   async function portalSha256(msg) {
     var buf  = new TextEncoder().encode(msg);
     var hash = await crypto.subtle.digest('SHA-256', buf);
@@ -1720,6 +1747,8 @@ footer {
       'auth.companyLoading': 'Loading…',
       'auth.registerSubmit': 'Create Account',
       'auth.companyPlaceholder': 'Your company name',
+      'auth.countryLabel': 'Country',
+      'auth.countryPlaceholder': 'Select your country',
       'auth.errorEmailTaken': 'That email is already registered — try logging in instead.',
       'auth.errorInvalid': 'Incorrect email or password.',
       'auth.errorDisabled': 'This account has been deactivated — contact Claire to reactivate it.',
@@ -1847,6 +1876,8 @@ footer {
       'auth.companyLoading': 'Chargement…',
       'auth.registerSubmit': 'Créer un compte',
       'auth.companyPlaceholder': 'Nom de votre entreprise',
+      'auth.countryLabel': 'Pays',
+      'auth.countryPlaceholder': 'Sélectionnez votre pays',
       'auth.errorEmailTaken': 'Cet e-mail est déjà enregistré — essayez de vous connecter.',
       'auth.errorInvalid': 'E-mail ou mot de passe incorrect.',
       'auth.errorDisabled': 'Ce compte a été désactivé — contactez Claire pour le réactiver.',
@@ -2001,8 +2032,14 @@ footer {
       document.getElementById('hero-sub').textContent = (I18N[lang]['hero.subGeneric'] || '').replace('{company}', companyName);
       logoEl.src = '';
       logoEl.style.display = 'none';
-      flagEl.src = '';
-      flagEl.style.display = 'none';
+      if (user.countryCode) {
+        flagEl.src = flagImageUrl(user.countryCode);
+        flagEl.alt = user.countryCode;
+        flagEl.style.display = '';
+      } else {
+        flagEl.src = '';
+        flagEl.style.display = 'none';
+      }
     }
     document.getElementById('hmb-company').textContent = companyName;
     document.getElementById('hmb-greeting').textContent = (I18N[lang]['hero.memberGreeting'] || '').replace('{name}', user.firstName || '');
@@ -2013,6 +2050,10 @@ footer {
       loginBtn.onclick = function () { document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' }); };
     }
     updateAdminButton(!!user.isAdmin);
+    var logoutBtn = document.getElementById('nav-logout-btn');
+    if (logoutBtn) logoutBtn.style.display = '';
+    var mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+    if (mobileLogoutBtn) mobileLogoutBtn.style.display = '';
   }
 
   function updateAdminButton(isAdmin) {
@@ -2035,6 +2076,10 @@ footer {
     if (loginBtn) {
       loginBtn.onclick = openAuth;
     }
+    var logoutBtn = document.getElementById('nav-logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    var mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+    if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
     setLang(currentLang());
     // Every visitor must pass through the gate, with no exceptions for returning/admin
     // users — logging out re-opens it immediately rather than leaving the Hero page
@@ -2094,13 +2139,15 @@ footer {
     var email = document.getElementById('register-email').value.trim();
     var password = document.getElementById('register-password').value;
     var company = document.getElementById('register-company').value.trim();
+    var countryCode = document.getElementById('register-country').value;
+    var countryName = (COUNTRIES.find(function (c) { return c[0] === countryCode; }) || [])[1] || '';
     var errEl = document.getElementById('register-error');
     var btn = document.getElementById('register-submit');
     errEl.textContent = '';
-    if (!firstName || !lastName || !company) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
+    if (!firstName || !lastName || !company || !countryCode) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
     btn.disabled = true;
     portalSha256(password).then(function (hash) {
-      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, company: company, lang: currentLang(), firstName: firstName, lastName: lastName }) });
+      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, company: company, country: countryName, countryCode: countryCode, lang: currentLang(), firstName: firstName, lastName: lastName }) });
     }).then(function (r) { return r.json(); }).then(function (d) {
       btn.disabled = false;
       if (!d.success) {
@@ -2118,10 +2165,17 @@ footer {
     return false;
   }
 
+  (function () {
+    var sel = document.getElementById('register-country');
+    var opts = '<option value="" data-i18n="auth.countryPlaceholder">Select your country</option>';
+    COUNTRIES.forEach(function (c) { opts += '<option value="' + c[0] + '">' + c[1] + '</option>'; });
+    sel.innerHTML = opts;
+  })();
+
   setLang(currentLang());
   (function () {
     var saved = getStoredUser();
-    if (saved && saved.org) renderWelcome(saved, currentLang());
+    if (saved) renderWelcome(saved, currentLang());
     if (!saved) openAuth();
   })();
 
