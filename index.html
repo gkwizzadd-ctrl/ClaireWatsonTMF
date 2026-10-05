@@ -185,7 +185,7 @@ body::before {
   color: rgba(255,255,255,0.55); transition: background 0.18s, color 0.18s;
 }
 .auth-tab.active { background: var(--crimson); color: #fff; }
-.auth-tab:focus-visible, .auth-close:focus-visible, .auth-submit:focus-visible, .welcome-logout:focus-visible, .lang-trigger:focus-visible, #nav-login-btn:focus-visible {
+.auth-tab:focus-visible, .auth-close:focus-visible, .auth-submit:focus-visible, .hmb-logout:focus-visible, .lang-trigger:focus-visible, #nav-login-btn:focus-visible {
   outline: 2px solid var(--crimson); outline-offset: 2px;
 }
 .auth-body { padding: 0 28px 28px; }
@@ -195,6 +195,8 @@ body::before {
   display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 6px;
 }
+.auth-field-row { display: flex; gap: 14px; }
+.auth-field-row .auth-field { flex: 1; min-width: 0; }
 .auth-field input, .auth-field select {
   width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: 9px;
   padding: 11px 13px; font-family: var(--sans); font-size: 13.5px; color: #fff; transition: border-color 0.15s;
@@ -211,29 +213,33 @@ body::before {
 .auth-submit:disabled { opacity: 0.5; cursor: default; }
 .auth-error { font-size: 12px; color: #ff8aa3; min-height: 16px; }
 .auth-switch { font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; margin-top: 2px; }
-
-/* Welcome panel — dark banner shown inline between hero and Expertise after login/register */
-#member-welcome { display: none; background: var(--ink); padding: 30px 0; }
-#member-welcome.visible { display: block; }
-.welcome-card {
-  max-width: 820px; margin: 0 auto; padding: 0 32px;
-  display: flex; align-items: center; gap: 22px;
+.auth-skip {
+  display: block; text-align: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 11.5px; color: rgba(255,255,255,0.4); cursor: pointer; transition: color 0.15s;
 }
-.welcome-logo { width: 60px; height: 60px; border-radius: 12px; object-fit: contain; background: #fff; padding: 6px; flex-shrink: 0; }
-.welcome-text-wrap { flex: 1; }
-.welcome-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--crimson); margin-bottom: 4px; }
-.welcome-company { font-family: var(--serif); font-size: 19px; font-weight: 600; color: #fff; margin-bottom: 2px; }
-.welcome-country { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
-.welcome-paragraph { font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.78); }
-.welcome-logout {
-  flex-shrink: 0; align-self: flex-start; background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
-  padding: 6px 14px; font-family: var(--sans); font-size: 11px; color: rgba(255,255,255,0.6); cursor: pointer;
+.auth-skip:hover { color: rgba(255,255,255,0.7); }
+
+/* Hero member badge — logo/flag/company/greeting shown in the Hero once a member is logged in */
+.hero-member-badge {
+  display: none; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(217,18,65,0.25); border-radius: 12px;
+  padding: 9px 14px; margin-bottom: 18px; width: fit-content; max-width: 100%;
+}
+.hero-member-badge.visible { display: flex; }
+.hmb-logo { width: 34px; height: 34px; border-radius: 8px; object-fit: contain; background: #fff; padding: 3px; flex-shrink: 0; }
+.hmb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hmb-company-row { font-family: var(--serif); font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hmb-flag { margin-right: 5px; }
+.hmb-greeting { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+.hmb-logout {
+  margin-left: 4px; flex-shrink: 0; background: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
+  padding: 5px 12px; font-family: var(--sans); font-size: 10.5px; color: rgba(255,255,255,0.6); cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
-.welcome-logout:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+.hmb-logout:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 @media (max-width: 640px) {
-  .welcome-card { flex-direction: column; text-align: center; padding: 0 24px; }
-  .welcome-logout { align-self: center; }
+  .hero-member-badge { max-width: calc(100% - 4px); }
+  .hmb-company-row { white-space: normal; }
 }
 
 .nav-brand {
@@ -1255,32 +1261,32 @@ footer {
 <!-- Nav -->
 <nav id="nav">
   <ul class="nav-links">
-    <li><a href="#services">Expertise</a></li>
-    <li><a href="#about">About</a></li>
-    <li><a href="#testimonials-home">Testimonials</a></li>
-    <li><a href="#contact">Contact</a></li>
+    <li><a href="#services" data-i18n="nav.expertise">Expertise</a></li>
+    <li><a href="#about" data-i18n="nav.about">About</a></li>
+    <li><a href="#testimonials-home" data-i18n="nav.testimonials">Testimonials</a></li>
+    <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
     <li class="nav-dropdown">
-      <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">📄 Documents ▾</a>
+      <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;" data-i18n="nav.documentsTrigger">📄 Documents ▾</a>
       <div class="nav-dropdown-menu">
         <div class="nav-dropdown-menu-inner">
-          <a href="benefits-greg.html" target="_blank" rel="noopener">📄 Benefits</a>
-          <a href="roadmap-brief.html" target="_blank" rel="noopener">🗺 Roadmap</a>
-          <a href="https://tmf-case-studies.vercel.app/" target="_blank" rel="noopener">📚 Case Studies</a>
-          <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener">🍝 ODA Case Study</a>
-          <a href="https://signal-to-resolution.vercel.app" target="_blank" rel="noopener">📶 Signal to Resolution</a>
+          <a href="benefits-greg.html" target="_blank" rel="noopener" data-i18n="nav.documents.benefits">📄 Benefits</a>
+          <a href="roadmap-brief.html" target="_blank" rel="noopener" data-i18n="nav.documents.roadmap">🗺 Roadmap</a>
+          <a href="https://tmf-case-studies.vercel.app/" target="_blank" rel="noopener" data-i18n="nav.documents.caseStudies">📚 Case Studies</a>
+          <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener" data-i18n="nav.documents.odaCaseStudy">🍝 ODA Case Study</a>
+          <a href="https://signal-to-resolution.vercel.app" target="_blank" rel="noopener" data-i18n="nav.documents.signalToResolution">📶 Signal to Resolution</a>
         </div>
       </div>
     </li>
     <li class="nav-dropdown">
-      <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;">🎮 Games &amp; Quiz ▾</a>
+      <a href="#" class="nav-private nav-dropdown-trigger" onclick="return false;" data-i18n="nav.gamesTrigger">🎮 Games &amp; Quiz ▾</a>
       <div class="nav-dropdown-menu">
         <div class="nav-dropdown-menu-inner">
-          <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener">♟ ODA Chess</a>
-          <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener">🎓 TMF AI Quiz</a>
+          <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener" data-i18n="nav.games.odaChess">♟ ODA Chess</a>
+          <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener" data-i18n="nav.games.aiQuiz">🎓 TMF AI Quiz</a>
         </div>
       </div>
     </li>
-    <li><button type="button" class="nav-hiw-btn" onclick="openHiw()">❓ How It Works</button></li>
+    <li><button type="button" class="nav-hiw-btn" onclick="openHiw()" data-i18n="nav.hiw">❓ How It Works</button></li>
     <li><button type="button" class="nav-hiw-btn" id="nav-login-btn" onclick="openAuth()" data-i18n="nav.login">🔑 Member Login</button></li>
     <li class="nav-dropdown">
       <a href="#" class="nav-private nav-dropdown-trigger lang-trigger" id="lang-trigger" onclick="return false;">🌐 EN ▾</a>
@@ -1306,18 +1312,18 @@ footer {
 
 <!-- Mobile nav -->
 <div class="mobile-nav" id="mobile-nav">
-  <a href="#services"  onclick="closeMobile()">Expertise</a>
-  <a href="#about"     onclick="closeMobile()">About</a>
-  <a href="#testimonials-home" onclick="closeMobile()">Testimonials</a>
-  <a href="#contact"   onclick="closeMobile()">Contact</a>
-  <a href="https://tmf-case-studies.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📚 Case Studies</a>
-  <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🍝 ODA Case Study</a>
-  <a href="https://signal-to-resolution.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📶 Signal to Resolution</a>
-  <a href="benefits-greg.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">📄 Benefits</a>
-  <a href="roadmap-brief.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🗺 Roadmap</a>
-  <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">♟ ODA Chess</a>
-  <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()">🎓 TMF AI Quiz</a>
-  <a href="#" onclick="closeMobile(); openHiw(); return false;">❓ How It Works</a>
+  <a href="#services"  onclick="closeMobile()" data-i18n="nav.expertise">Expertise</a>
+  <a href="#about"     onclick="closeMobile()" data-i18n="nav.about">About</a>
+  <a href="#testimonials-home" onclick="closeMobile()" data-i18n="nav.testimonials">Testimonials</a>
+  <a href="#contact"   onclick="closeMobile()" data-i18n="nav.contact">Contact</a>
+  <a href="https://tmf-case-studies.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.documents.caseStudies">📚 Case Studies</a>
+  <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.documents.odaCaseStudy">🍝 ODA Case Study</a>
+  <a href="https://signal-to-resolution.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.documents.signalToResolution">📶 Signal to Resolution</a>
+  <a href="benefits-greg.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.documents.benefits">📄 Benefits</a>
+  <a href="roadmap-brief.html" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.documents.roadmap">🗺 Roadmap</a>
+  <a href="https://oda-chess.vercel.app/" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.games.odaChess">♟ ODA Chess</a>
+  <a href="https://ai-quiz-with-belts.vercel.app" target="_blank" rel="noopener" style="color:rgba(217,18,65,0.85)" onclick="closeMobile()" data-i18n="nav.games.aiQuiz">🎓 TMF AI Quiz</a>
+  <a href="#" onclick="closeMobile(); openHiw(); return false;" data-i18n="nav.hiw">❓ How It Works</a>
   <a href="#" onclick="closeMobile(); openAuth(); return false;" data-i18n="nav.login">🔑 Member Login</a>
   <a href="#" onclick="setLang('en'); closeMobile(); return false;">EN — English</a>
   <a href="#" onclick="setLang('fr'); closeMobile(); return false;">FR — Français</a>
@@ -1328,22 +1334,22 @@ footer {
   <div class="hiw-panel">
     <div class="hiw-head">
       <button type="button" class="hiw-close" onclick="closeHiw()" aria-label="Close">×</button>
-      <div class="hiw-eyebrow">How It Works</div>
-      <div class="hiw-title">Everything on this site, at a glance</div>
+      <div class="hiw-eyebrow" data-i18n="hiw.eyebrow">How It Works</div>
+      <div class="hiw-title" data-i18n="hiw.title">Everything on this site, at a glance</div>
     </div>
     <div class="hiw-body">
-      <p>This site is how Claire helps telecom and satellite operators navigate TM Forum's Open Digital Architecture (ODA) — here's what each part does.</p>
-      <div class="hiw-label">What each feature does</div>
+      <p data-i18n="hiw.intro">This site is how Claire helps telecom and satellite operators navigate TM Forum's Open Digital Architecture (ODA) — here's what each part does.</p>
+      <div class="hiw-label" data-i18n="hiw.label">What each feature does</div>
       <ol>
-        <li><strong>Expertise, About, Testimonials</strong> — jump straight to a section via the nav to see Claire's ODA specialisms, her background, and what other members say about working with her.</li>
-        <li><strong>Contact</strong> — a short form to get in touch directly. Submitting it can also unlock a personalised, downloadable Engagement Plan questionnaire tailored to your organisation.</li>
-        <li><strong>Ask Claire's Team</strong> (chat bubble, bottom corner) — a live chat that answers ODA questions and can hand you straight to the contact form when you're ready to talk.</li>
-        <li><strong>💡 Thought of the Month</strong> (bulb button) — a short video with Claire's current perspective on ODA transformation.</li>
-        <li><strong>📊 Case Studies</strong> — real TM Forum member training journeys, starting with Tata Communications Transformation Services (TCTS), including a self-assessment you can take against your own organisation.</li>
-        <li><strong>📄 Documents</strong> — the Benefits and Roadmap briefs, TM Forum's own member Case Studies, and an interactive ODA Case Study of our own: select a component from the real ODA canvas and watch it untangle a typical operator's legacy BSS/OSS stack.</li>
-        <li><strong>🎮 Games &amp; Quiz</strong> — ODA Chess and the TMF AI Quiz, two lighter ways to learn ODA concepts.</li>
+        <li data-i18n-html="hiw.item1"><strong>Expertise, About, Testimonials</strong> — jump straight to a section via the nav to see Claire's ODA specialisms, her background, and what other members say about working with her.</li>
+        <li data-i18n-html="hiw.item2"><strong>Contact</strong> — a short form to get in touch directly. Submitting it can also unlock a personalised, downloadable Engagement Plan questionnaire tailored to your organisation.</li>
+        <li data-i18n-html="hiw.item3"><strong>Ask Claire's Team</strong> (chat bubble, bottom corner) — a live chat that answers ODA questions and can hand you straight to the contact form when you're ready to talk.</li>
+        <li data-i18n-html="hiw.item4"><strong>💡 Thought of the Month</strong> (bulb button) — a short video with Claire's current perspective on ODA transformation.</li>
+        <li data-i18n-html="hiw.item5"><strong>📊 Case Studies</strong> — real TM Forum member training journeys, starting with Tata Communications Transformation Services (TCTS), including a self-assessment you can take against your own organisation.</li>
+        <li data-i18n-html="hiw.item6"><strong>📄 Documents</strong> — the Benefits and Roadmap briefs, TM Forum's own member Case Studies, and an interactive ODA Case Study of our own: select a component from the real ODA canvas and watch it untangle a typical operator's legacy BSS/OSS stack.</li>
+        <li data-i18n-html="hiw.item7"><strong>🎮 Games &amp; Quiz</strong> — ODA Chess and the TMF AI Quiz, two lighter ways to learn ODA concepts.</li>
       </ol>
-      <p>Everything here is free to explore.</p>
+      <p data-i18n="hiw.closing">Everything here is free to explore.</p>
     </div>
   </div>
 </div>
@@ -1374,6 +1380,16 @@ footer {
         <button type="submit" class="auth-submit" id="login-submit" data-i18n="auth.loginSubmit">Log In</button>
       </form>
       <form class="auth-form" id="auth-form-register" onsubmit="return submitRegister(event)">
+        <div class="auth-field-row">
+          <div class="auth-field">
+            <label data-i18n="auth.firstNameLabel">First Name</label>
+            <input type="text" id="register-firstname" required data-i18n-placeholder="auth.firstNamePlaceholder" placeholder="Jean">
+          </div>
+          <div class="auth-field">
+            <label data-i18n="auth.lastNameLabel">Last Name</label>
+            <input type="text" id="register-lastname" required data-i18n-placeholder="auth.lastNamePlaceholder" placeholder="Mballa">
+          </div>
+        </div>
         <div class="auth-field">
           <label data-i18n="auth.emailLabel">Email</label>
           <input type="email" id="register-email" required data-i18n-placeholder="auth.emailPlaceholder" placeholder="you@company.com">
@@ -1392,6 +1408,7 @@ footer {
         <button type="submit" class="auth-submit" id="register-submit" data-i18n="auth.registerSubmit">Create Account</button>
         <div class="auth-switch" data-i18n="auth.companyMissing">Don't see your company? Ask Claire to add it.</div>
       </form>
+      <a href="#" class="auth-skip" onclick="closeAuth(); return false;" data-i18n="auth.continueWithoutLogin">Continue browsing without logging in</a>
     </div>
   </div>
 </div>
@@ -1400,6 +1417,14 @@ footer {
 <section id="hero">
   <div class="container">
     <div class="hero-inner">
+      <div class="hero-member-badge" id="hero-member-badge">
+        <img class="hmb-logo" id="hmb-logo" src="" alt="">
+        <div class="hmb-text">
+          <div class="hmb-company-row"><span class="hmb-flag" id="hmb-flag"></span><span id="hmb-company"></span></div>
+          <div class="hmb-greeting" id="hmb-greeting"></div>
+        </div>
+        <button type="button" class="hmb-logout" onclick="logoutMember()" data-i18n="welcome.logout">Log out</button>
+      </div>
       <div class="hero-badge r">
         <svg class="hero-badge-mark" width="20" height="20" viewBox="0 0 30 30" fill="none">
           <path d="M4 15C4 8 9 4 15 4" stroke="#D91241" stroke-width="2.4" stroke-linecap="round" fill="none"/>
@@ -1412,22 +1437,22 @@ footer {
           </defs>
         </svg>
         <span class="hero-badge-text">
-          <span class="hero-badge-eyebrow">TM Forum program</span>
+          <span class="hero-badge-eyebrow" data-i18n="hero.badgeEyebrow">TM Forum program</span>
           <span class="hero-badge-name">Lego Line</span>
         </span>
       </div>
-      <div class="hero-eye r d1">Open Architecture. Digital Transformation. Real Results.</div>
-      <h1 class="hero-h1 r d2">
+      <div class="hero-eye r d1" data-i18n="hero.eye">Open Architecture. Digital Transformation. Real Results.</div>
+      <h1 class="hero-h1 r d2" data-i18n-html="hero.h1">
         Guiding telecoms<br>
         through the <em>ODA journey.</em>
       </h1>
-      <p class="hero-sub r d3">
+      <p class="hero-sub r d3" id="hero-sub" data-i18n="hero.sub">
         Claire Watson helps communication service providers unlock the full potential of the TM Forum Open Digital Architecture — translating complex standards into practical transformation roadmaps that simplify operations and accelerate growth.
       </p>
       <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;" class="r d4">
-        <a href="#services" class="hero-link">Explore ODA expertise <span class="arr">→</span></a>
-        <button onclick="ODAGame.open()" style="background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🎯 The ODA Game</button>
-        <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener" style="display:inline-block;background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🍝 ODA Case Study</a>
+        <a href="#services" class="hero-link" data-i18n-html="hero.ctaExplore">Explore ODA expertise <span class="arr">→</span></a>
+        <button onclick="ODAGame.open()" data-i18n="hero.ctaGame" style="background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🎯 The ODA Game</button>
+        <a href="https://spaghetti-to-oda.vercel.app" target="_blank" rel="noopener" data-i18n="hero.ctaCaseStudy" style="display:inline-block;background:transparent;border:1.5px solid rgba(217,18,65,0.5);color:rgba(255,255,255,0.7);padding:8px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer;border-radius:2px;transition:border-color .2s,color .2s,background .2s;" onmouseover="this.style.borderColor='#D91241';this.style.color='#fff';this.style.background='rgba(217,18,65,0.08)'" onmouseout="this.style.borderColor='rgba(217,18,65,0.5)';this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">🍝 ODA Case Study</a>
       </div>
     </div>
 
@@ -1443,12 +1468,12 @@ footer {
                 <polygon points="9,6.5 19,12 9,17.5" fill="rgba(255,255,255,0.92)"/>
               </svg>
             </div>
-            <span class="portrait-play-label">Watch intro</span>
+            <span class="portrait-play-label" data-i18n="hero.portraitWatchIntro">Watch intro</span>
           </div>
           <div class="portrait-end" id="portrait-end">
-            <span class="portrait-end-eyebrow">Watch again?</span>
-            <button class="portrait-end-btn" id="portrait-replay">↺ Replay</button>
-            <button class="portrait-end-btn portrait-end-btn--exit" id="portrait-exit">✕ Exit</button>
+            <span class="portrait-end-eyebrow" data-i18n="hero.portraitWatchAgain">Watch again?</span>
+            <button class="portrait-end-btn" id="portrait-replay" data-i18n="hero.portraitReplay">↺ Replay</button>
+            <button class="portrait-end-btn portrait-end-btn--exit" id="portrait-exit" data-i18n="hero.portraitExit">✕ Exit</button>
           </div>
           <div class="portrait-progress" id="portrait-progress"></div>
         </div>
@@ -1468,7 +1493,7 @@ footer {
           <!-- Filament -->
           <path d="M11 13 L12.5 10 L14 13 L15.5 10 L17 13" stroke="rgba(255,195,50,0.85)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <span class="bulb-label">Claire's Thought<br>of the Month</span>
+        <span class="bulb-label" data-i18n-html="hero.bulbLabel">Claire's Thought<br>of the Month</span>
       </button>
 
     </div>
@@ -1477,66 +1502,52 @@ footer {
 
   <div class="cred-strip">
     <div class="cred-inner">
-      <span class="cred-item">TM Forum Engagement Manager</span>
+      <span class="cred-item" data-i18n="hero.cred1">TM Forum Engagement Manager</span>
       <div class="cred-divider"></div>
-      <span class="cred-item">Open Digital Architecture</span>
+      <span class="cred-item" data-i18n="hero.cred2">Open Digital Architecture</span>
       <div class="cred-divider"></div>
-      <span class="cred-item">eTOM · SID · Open APIs</span>
+      <span class="cred-item" data-i18n="hero.cred3">eTOM · SID · Open APIs</span>
       <div class="cred-divider"></div>
-      <span class="cred-item">BSS / OSS Transformation</span>
+      <span class="cred-item" data-i18n="hero.cred4">BSS / OSS Transformation</span>
       <div class="cred-divider"></div>
-      <span class="cred-item">AI-Native Operations</span>
+      <span class="cred-item" data-i18n="hero.cred5">AI-Native Operations</span>
     </div>
-  </div>
-</section>
-
-<!-- Member welcome banner — shown after a successful login/register -->
-<section id="member-welcome">
-  <div class="welcome-card">
-    <img class="welcome-logo" id="welcome-logo" src="" alt="">
-    <div class="welcome-text-wrap">
-      <div class="welcome-eyebrow" data-i18n="welcome.eyebrow">Welcome back</div>
-      <div class="welcome-company" id="welcome-company"></div>
-      <div class="welcome-country" id="welcome-country"></div>
-      <p class="welcome-paragraph" id="welcome-paragraph"></p>
-    </div>
-    <button type="button" class="welcome-logout" onclick="logoutMember()" data-i18n="welcome.logout">Log out</button>
   </div>
 </section>
 
 <!-- Expertise -->
 <section class="sec" id="services">
   <div class="container">
-    <div class="sec-eye r">What I do</div>
-    <h2 class="sec-h2 r d1">ODA expertise across<br>the full transformation lifecycle.</h2>
+    <div class="sec-eye r" data-i18n="services.eye">What I do</div>
+    <h2 class="sec-h2 r d1" data-i18n-html="services.h2">ODA expertise across<br>the full transformation lifecycle.</h2>
     <div class="svc-grid">
 
       <a class="svc-card r" href="https://www.tmforum.org/open-digital-architecture/business-architecture-framework/" target="_blank" rel="noopener noreferrer">
         <button type="button" class="svc-info-btn" aria-label="See it animated" onclick="event.stopPropagation(); event.preventDefault(); openSvcx(0);">i</button>
         <div class="svc-num">01</div>
-        <h3 class="svc-title">Business Architecture & eTOM</h3>
-        <p class="svc-desc">Applying the TM Forum Business Process Framework (eTOM), capability framework, and value stream framework to align IT strategy with business outcomes and improve cross-team communication.</p>
+        <h3 class="svc-title" data-i18n="services.card1.title">Business Architecture & eTOM</h3>
+        <p class="svc-desc" data-i18n="services.card1.desc">Applying the TM Forum Business Process Framework (eTOM), capability framework, and value stream framework to align IT strategy with business outcomes and improve cross-team communication.</p>
       </a>
 
       <a class="svc-card r d1" href="https://www.tmforum.org/oda/about-oda" target="_blank" rel="noopener noreferrer">
         <button type="button" class="svc-info-btn" aria-label="See it animated" onclick="event.stopPropagation(); event.preventDefault(); openSvcx(1);">i</button>
         <div class="svc-num">02</div>
-        <h3 class="svc-title">ODA Transformation Strategy</h3>
-        <p class="svc-desc">Designing practical ODA adoption roadmaps — from maturity assessment and governance design to phased migration from legacy BSS/OSS architectures. Standards-led, business-grounded.</p>
+        <h3 class="svc-title" data-i18n="services.card2.title">ODA Transformation Strategy</h3>
+        <p class="svc-desc" data-i18n="services.card2.desc">Designing practical ODA adoption roadmaps — from maturity assessment and governance design to phased migration from legacy BSS/OSS architectures. Standards-led, business-grounded.</p>
       </a>
 
       <a class="svc-card r d2" href="https://www.tmforum.org/oda/open-apis" target="_blank" rel="noopener noreferrer">
         <button type="button" class="svc-info-btn" aria-label="See it animated" onclick="event.stopPropagation(); event.preventDefault(); openSvcx(2);">i</button>
         <div class="svc-num">03</div>
-        <h3 class="svc-title">Open API Strategy</h3>
-        <p class="svc-desc">Guiding CSPs through TM Forum Open API adoption to achieve zero-touch interoperability, reduce integration complexity, and build composable, future-proof IT ecosystems.</p>
+        <h3 class="svc-title" data-i18n="services.card3.title">Open API Strategy</h3>
+        <p class="svc-desc" data-i18n="services.card3.desc">Guiding CSPs through TM Forum Open API adoption to achieve zero-touch interoperability, reduce integration complexity, and build composable, future-proof IT ecosystems.</p>
       </a>
 
       <a class="svc-card r d3" href="https://www.tmforum.org/ai-operations/" target="_blank" rel="noopener noreferrer">
         <button type="button" class="svc-info-btn" aria-label="See it animated" onclick="event.stopPropagation(); event.preventDefault(); openSvcx(3);">i</button>
         <div class="svc-num">04</div>
-        <h3 class="svc-title">AI-Native Operations</h3>
-        <p class="svc-desc">Helping operators leverage the ODA Canvas and AI-native execution environment to enable autonomous networks, AI-orchestrated workflows, and zero-touch operations at scale.</p>
+        <h3 class="svc-title" data-i18n="services.card4.title">AI-Native Operations</h3>
+        <p class="svc-desc" data-i18n="services.card4.desc">Helping operators leverage the ODA Canvas and AI-native execution environment to enable autonomous networks, AI-orchestrated workflows, and zero-touch operations at scale.</p>
       </a>
 
       <div class="svc-card svc-featured r d4">
@@ -1545,9 +1556,9 @@ footer {
           <div class="svc-num">05</div>
         </div>
         <div>
-          <h3 class="svc-title">Standards Engagement & Member Value</h3>
-          <p class="svc-desc">Working directly with TM Forum members to maximise the value of their membership — connecting organisations to the right programmes, co-creation projects, and industry missions that drive composable IT, autonomous networks, and AI innovation.</p>
-          <span class="svc-featured-badge">TM Forum · Direct Access</span>
+          <h3 class="svc-title" data-i18n="services.card5.title">Standards Engagement & Member Value</h3>
+          <p class="svc-desc" data-i18n="services.card5.desc">Working directly with TM Forum members to maximise the value of their membership — connecting organisations to the right programmes, co-creation projects, and industry missions that drive composable IT, autonomous networks, and AI innovation.</p>
+          <span class="svc-featured-badge" data-i18n="services.card5.badge">TM Forum · Direct Access</span>
         </div>
       </div>
 
@@ -1563,12 +1574,12 @@ footer {
         <img src="images/ClaireWatson.jpg" alt="Claire Watson" class="about-img">
       </div>
       <div class="about-text">
-        <div class="sec-eye r">About Claire</div>
-        <h2 class="about-h2 r d1">Engagement Manager.<br>ODA advocate.<br>Industry connector.</h2>
-        <p class="about-body r d2">
+        <div class="sec-eye r" data-i18n="about.eye">About Claire</div>
+        <h2 class="about-h2 r d1" data-i18n-html="about.h2">Engagement Manager.<br>ODA advocate.<br>Industry connector.</h2>
+        <p class="about-body r d2" data-i18n="about.body1">
           As Engagement Manager at TM Forum, Claire Watson sits at the intersection of telecoms standards, digital transformation, and industry collaboration. She works with communications service providers around the world to help them understand, adopt, and derive real business value from the Open Digital Architecture.
         </p>
-        <p class="about-body r d3">
+        <p class="about-body r d3" data-i18n="about.body2">
           With deep expertise across the ODA framework — from eTOM process design and SID information modelling to Open API implementation and AI-native canvas deployment — Claire translates the complexity of industry standards into practical, achievable transformation programmes.
         </p>
         <div class="about-tags r d4">
@@ -1578,7 +1589,7 @@ footer {
           <span class="about-tag">Open APIs</span>
           <span class="about-tag">BSS/OSS</span>
           <span class="about-tag">AI-Native</span>
-          <span class="about-tag">Digital Transformation</span>
+          <span class="about-tag" data-i18n="about.tag7">Digital Transformation</span>
         </div>
       </div>
     </div>
@@ -1588,37 +1599,37 @@ footer {
 <!-- Testimonials -->
 <section class="sec" id="testimonials-home">
   <div class="container">
-    <div class="sec-eye r">What people say</div>
-    <h2 class="sec-h2 r d1">Trusted by leaders<br>across the telecoms industry.</h2>
+    <div class="sec-eye r" data-i18n="testimonials.eye">What people say</div>
+    <h2 class="sec-h2 r d1" data-i18n-html="testimonials.h2">Trusted by leaders<br>across the telecoms industry.</h2>
     <div class="test-grid">
 
       <div class="test-card r">
         <div class="test-mark">"</div>
-        <p class="test-quote">Claire has an exceptional ability to make complex ODA frameworks accessible and actionable. Her guidance helped us build a clear transformation roadmap that aligned our entire organisation.</p>
+        <p class="test-quote" data-i18n="testimonials.quote1">Claire has an exceptional ability to make complex ODA frameworks accessible and actionable. Her guidance helped us build a clear transformation roadmap that aligned our entire organisation.</p>
         <div class="test-rule"></div>
-        <div class="test-name">Senior Director, BSS Transformation</div>
-        <div class="test-role">Tier 1 European Operator</div>
+        <div class="test-name" data-i18n="testimonials.name1">Senior Director, BSS Transformation</div>
+        <div class="test-role" data-i18n="testimonials.role1">Tier 1 European Operator</div>
       </div>
 
       <div class="test-card r d1">
         <div class="test-mark">"</div>
-        <p class="test-quote">Working with Claire through TM Forum gave us direct access to ODA expertise that would have taken years to build internally. She connected the right people and accelerated our programme significantly.</p>
+        <p class="test-quote" data-i18n="testimonials.quote2">Working with Claire through TM Forum gave us direct access to ODA expertise that would have taken years to build internally. She connected the right people and accelerated our programme significantly.</p>
         <div class="test-rule"></div>
-        <div class="test-name">Head of Enterprise Architecture</div>
-        <div class="test-role">APAC Communications Service Provider</div>
+        <div class="test-name" data-i18n="testimonials.name2">Head of Enterprise Architecture</div>
+        <div class="test-role" data-i18n="testimonials.role2">APAC Communications Service Provider</div>
       </div>
 
       <div class="test-card r d2">
         <div class="test-mark">"</div>
-        <p class="test-quote">Claire's deep understanding of Open APIs and the ODA canvas was invaluable. She helped us move from fragmented integration to a composable, standards-based architecture in under 18 months.</p>
+        <p class="test-quote" data-i18n="testimonials.quote3">Claire's deep understanding of Open APIs and the ODA canvas was invaluable. She helped us move from fragmented integration to a composable, standards-based architecture in under 18 months.</p>
         <div class="test-rule"></div>
-        <div class="test-name">VP Technology & Innovation</div>
-        <div class="test-role">MENA Telecom Group</div>
+        <div class="test-name" data-i18n="testimonials.name3">VP Technology & Innovation</div>
+        <div class="test-role" data-i18n="testimonials.role3">MENA Telecom Group</div>
       </div>
 
     </div>
     <div class="test-more r d3">
-      <a href="#contact" class="hero-link" style="color: var(--ink); border-bottom-color: rgba(217,18,65,0.4);">Work with Claire <span class="arr">→</span></a>
+      <a href="#contact" class="hero-link" data-i18n-html="testimonials.moreLink" style="color: var(--ink); border-bottom-color: rgba(217,18,65,0.4);">Work with Claire <span class="arr">→</span></a>
     </div>
   </div>
 </section>
@@ -1626,11 +1637,11 @@ footer {
 <!-- Contact -->
 <section class="sec" id="contact">
   <div class="container">
-    <div class="sec-eye r">Get in touch</div>
-    <h2 class="sec-h2 r d1" style="color:var(--white)">Ready to explore<br>your ODA journey?</h2>
+    <div class="sec-eye r" data-i18n="contact.eye">Get in touch</div>
+    <h2 class="sec-h2 r d1" style="color:var(--white)" data-i18n-html="contact.h2">Ready to explore<br>your ODA journey?</h2>
     <div class="contact-grid">
       <div>
-        <p class="contact-intro r d2">
+        <p class="contact-intro r d2" data-i18n="contact.intro">
           Whether you're beginning your ODA assessment, planning a BSS/OSS migration, or looking to maximise your TM Forum membership — Claire would love to hear from you.
         </p>
         <div class="contact-details r d3">
@@ -1644,26 +1655,26 @@ footer {
           </div>
           <div class="contact-detail">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="rgba(255,255,255,0.4)"/></svg>
-            <span>TM Forum, Morristown NJ / Global</span>
+            <span data-i18n="contact.detailHq">TM Forum, Morristown NJ / Global</span>
           </div>
         </div>
       </div>
 
       <form class="contact-form r d2" id="contact-form" onsubmit="submitContact(event)">
-        <input class="cf-field" type="text"  id="cf-name"  placeholder="Your name" required>
-        <input class="cf-field" type="email" id="cf-email" placeholder="Email address" required>
-        <input class="cf-field" type="text"  id="cf-org"   placeholder="Organisation">
+        <input class="cf-field" type="text"  id="cf-name"  placeholder="Your name" required data-i18n-placeholder="contact.form.namePlaceholder">
+        <input class="cf-field" type="email" id="cf-email" placeholder="Email address" required data-i18n-placeholder="contact.form.emailPlaceholder">
+        <input class="cf-field" type="text"  id="cf-org"   placeholder="Organisation" data-i18n-placeholder="contact.form.orgPlaceholder">
         <div style="display:flex;gap:12px">
-          <input class="cf-field" type="text" id="cf-jobtitle" placeholder="Job title" required style="flex:1">
+          <input class="cf-field" type="text" id="cf-jobtitle" placeholder="Job title" required style="flex:1" data-i18n-placeholder="contact.form.jobtitlePlaceholder">
           <select class="cf-field" id="cf-type" required style="flex:1">
-            <option value="" disabled selected>Company type</option>
-            <option value="operator">Telecom Operator (CSP)</option>
-            <option value="vendor">Technology Vendor</option>
-            <option value="other">Other / Not sure</option>
+            <option value="" disabled selected data-i18n="contact.form.typeDefault">Company type</option>
+            <option value="operator" data-i18n="contact.form.typeOperator">Telecom Operator (CSP)</option>
+            <option value="vendor" data-i18n="contact.form.typeVendor">Technology Vendor</option>
+            <option value="other" data-i18n="contact.form.typeOther">Other / Not sure</option>
           </select>
         </div>
-        <textarea class="cf-field" id="cf-msg" rows="3" placeholder="How can I help you with your ODA journey?"></textarea>
-        <button class="cf-submit" type="submit">Send message →</button>
+        <textarea class="cf-field" id="cf-msg" rows="3" placeholder="How can I help you with your ODA journey?" data-i18n-placeholder="contact.form.msgPlaceholder"></textarea>
+        <button class="cf-submit" type="submit" data-i18n="contact.form.submit">Send message →</button>
         <div id="cf-status" style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;display:none"></div>
         <div id="cf-plan-prompt" style="display:none;margin-top:4px"></div>
       </form>
@@ -1674,8 +1685,8 @@ footer {
 <!-- Footer -->
 <footer>
   <div class="ft-brand">Claire Watson</div>
-  <div class="ft-copy">© 2026 Claire Watson · Open Architecture. Digital Transformation. Real Results.</div>
-  <div class="ft-tmf">Engagement Manager · TM Forum</div>
+  <div class="ft-copy" data-i18n="footer.copy">© 2026 Claire Watson · Open Architecture. Digital Transformation. Real Results.</div>
+  <div class="ft-tmf" data-i18n="footer.tmf">Engagement Manager · TM Forum</div>
 </footer>
 
 <!-- Demo button + modal -->
@@ -1685,7 +1696,7 @@ footer {
   </span>
   <span class="demo-label">
     <span class="demo-label-eye">TM Forum ODA</span>
-    <span class="demo-label-text">Applying the TM Forum's ODA is like turning spaghetti into Lego</span>
+    <span class="demo-label-text" data-i18n="demo.text">Applying the TM Forum's ODA is like turning spaghetti into Lego</span>
   </span>
 </button>
 
@@ -1710,7 +1721,7 @@ footer {
       <p class="bulb-caption-quote">
         "The <strong>WHOLE</strong> is far <strong>GREATER</strong> than the <strong>SUM</strong> of the Parts" — Aristotle
       </p>
-      <p class="bulb-caption-sub">The essence of the TM Forum — <em>"Collaboration"</em></p>
+      <p class="bulb-caption-sub" data-i18n-html="bulb.subCaption">The essence of the TM Forum — <em>"Collaboration"</em></p>
     </div>
   </div>
 </div>
@@ -1722,7 +1733,7 @@ footer {
     <div class="svcx-progress" id="svcx-progress"></div>
     <div class="svcx-body" id="svcx-body"></div>
     <div class="svcx-foot">
-      <button class="svcx-nav-btn" id="svcx-prev" onclick="svcxNav(-1)">&larr; Back</button>
+      <button class="svcx-nav-btn" id="svcx-prev" onclick="svcxNav(-1)" data-i18n="svcx.back">&larr; Back</button>
       <span class="svcx-count" id="svcx-count"></span>
       <button class="svcx-nav-btn" id="svcx-next" onclick="svcxNav(1)">Next &rarr;</button>
     </div>
@@ -1780,11 +1791,29 @@ footer {
 
   var I18N = {
     en: {
+      'nav.expertise': 'Expertise',
+      'nav.about': 'About',
+      'nav.testimonials': 'Testimonials',
+      'nav.contact': 'Contact',
+      'nav.documentsTrigger': '📄 Documents ▾',
+      'nav.documents.benefits': '📄 Benefits',
+      'nav.documents.roadmap': '🗺 Roadmap',
+      'nav.documents.caseStudies': '📚 Case Studies',
+      'nav.documents.odaCaseStudy': '🍝 ODA Case Study',
+      'nav.documents.signalToResolution': '📶 Signal to Resolution',
+      'nav.gamesTrigger': '🎮 Games & Quiz ▾',
+      'nav.games.odaChess': '♟ ODA Chess',
+      'nav.games.aiQuiz': '🎓 TMF AI Quiz',
+      'nav.hiw': '❓ How It Works',
       'nav.login': '🔑 Member Login',
       'auth.eyebrow': 'TM Forum Member Portal',
       'auth.title': 'Welcome',
       'auth.tabLogin': 'Log In',
       'auth.tabRegister': 'Register',
+      'auth.firstNameLabel': 'First Name',
+      'auth.lastNameLabel': 'Last Name',
+      'auth.firstNamePlaceholder': 'Jean',
+      'auth.lastNamePlaceholder': 'Mballa',
       'auth.emailLabel': 'Email',
       'auth.emailPlaceholder': 'you@company.com',
       'auth.passwordLabel': 'Password',
@@ -1796,15 +1825,120 @@ footer {
       'auth.errorEmailTaken': 'That email is already registered — try logging in instead.',
       'auth.errorInvalid': 'Incorrect email or password.',
       'auth.errorGeneric': 'Something went wrong — please try again.',
+      'auth.continueWithoutLogin': 'Continue browsing without logging in',
       'welcome.eyebrow': 'Welcome back',
-      'welcome.logout': 'Log out'
+      'welcome.logout': 'Log out',
+      'hero.badgeEyebrow': 'TM Forum program',
+      'hero.eye': 'Open Architecture. Digital Transformation. Real Results.',
+      'hero.h1': 'Guiding telecoms<br>\n        through the <em>ODA journey.</em>',
+      'hero.sub': "Claire Watson helps communication service providers unlock the full potential of the TM Forum Open Digital Architecture — translating complex standards into practical transformation roadmaps that simplify operations and accelerate growth.",
+      'hero.ctaExplore': 'Explore ODA expertise <span class="arr">→</span>',
+      'hero.ctaGame': '🎯 The ODA Game',
+      'hero.ctaCaseStudy': '🍝 ODA Case Study',
+      'hero.cred1': 'TM Forum Engagement Manager',
+      'hero.cred2': 'Open Digital Architecture',
+      'hero.cred3': 'eTOM · SID · Open APIs',
+      'hero.cred4': 'BSS / OSS Transformation',
+      'hero.cred5': 'AI-Native Operations',
+      'hero.portraitWatchIntro': 'Watch intro',
+      'hero.portraitWatchAgain': 'Watch again?',
+      'hero.portraitReplay': '↺ Replay',
+      'hero.portraitExit': '✕ Exit',
+      'hero.bulbLabel': "Claire's Thought<br>of the Month",
+      'hero.memberGreeting': 'Welcome, {name}',
+      'hiw.eyebrow': 'How It Works',
+      'hiw.title': 'Everything on this site, at a glance',
+      'hiw.intro': "This site is how Claire helps telecom and satellite operators navigate TM Forum's Open Digital Architecture (ODA) — here's what each part does.",
+      'hiw.label': 'What each feature does',
+      'hiw.item1': '<strong>Expertise, About, Testimonials</strong> — jump straight to a section via the nav to see Claire’s ODA specialisms, her background, and what other members say about working with her.',
+      'hiw.item2': '<strong>Contact</strong> — a short form to get in touch directly. Submitting it can also unlock a personalised, downloadable Engagement Plan questionnaire tailored to your organisation.',
+      'hiw.item3': '<strong>Ask Claire’s Team</strong> (chat bubble, bottom corner) — a live chat that answers ODA questions and can hand you straight to the contact form when you’re ready to talk.',
+      'hiw.item4': '<strong>💡 Thought of the Month</strong> (bulb button) — a short video with Claire’s current perspective on ODA transformation.',
+      'hiw.item5': '<strong>📊 Case Studies</strong> — real TM Forum member training journeys, starting with Tata Communications Transformation Services (TCTS), including a self-assessment you can take against your own organisation.',
+      'hiw.item6': '<strong>📄 Documents</strong> — the Benefits and Roadmap briefs, TM Forum’s own member Case Studies, and an interactive ODA Case Study of our own: select a component from the real ODA canvas and watch it untangle a typical operator’s legacy BSS/OSS stack.',
+      'hiw.item7': '<strong>🎮 Games &amp; Quiz</strong> — ODA Chess and the TMF AI Quiz, two lighter ways to learn ODA concepts.',
+      'hiw.closing': 'Everything here is free to explore.',
+      'services.eye': 'What I do',
+      'services.h2': 'ODA expertise across<br>the full transformation lifecycle.',
+      'services.card1.title': 'Business Architecture & eTOM',
+      'services.card1.desc': 'Applying the TM Forum Business Process Framework (eTOM), capability framework, and value stream framework to align IT strategy with business outcomes and improve cross-team communication.',
+      'services.card2.title': 'ODA Transformation Strategy',
+      'services.card2.desc': 'Designing practical ODA adoption roadmaps — from maturity assessment and governance design to phased migration from legacy BSS/OSS architectures. Standards-led, business-grounded.',
+      'services.card3.title': 'Open API Strategy',
+      'services.card3.desc': 'Guiding CSPs through TM Forum Open API adoption to achieve zero-touch interoperability, reduce integration complexity, and build composable, future-proof IT ecosystems.',
+      'services.card4.title': 'AI-Native Operations',
+      'services.card4.desc': 'Helping operators leverage the ODA Canvas and AI-native execution environment to enable autonomous networks, AI-orchestrated workflows, and zero-touch operations at scale.',
+      'services.card5.title': 'Standards Engagement & Member Value',
+      'services.card5.desc': 'Working directly with TM Forum members to maximise the value of their membership — connecting organisations to the right programmes, co-creation projects, and industry missions that drive composable IT, autonomous networks, and AI innovation.',
+      'services.card5.badge': 'TM Forum · Direct Access',
+      'about.eye': 'About Claire',
+      'about.h2': 'Engagement Manager.<br>ODA advocate.<br>Industry connector.',
+      'about.body1': 'As Engagement Manager at TM Forum, Claire Watson sits at the intersection of telecoms standards, digital transformation, and industry collaboration. She works with communications service providers around the world to help them understand, adopt, and derive real business value from the Open Digital Architecture.',
+      'about.body2': 'With deep expertise across the ODA framework — from eTOM process design and SID information modelling to Open API implementation and AI-native canvas deployment — Claire translates the complexity of industry standards into practical, achievable transformation programmes.',
+      'about.tag7': 'Digital Transformation',
+      'testimonials.eye': 'What people say',
+      'testimonials.h2': 'Trusted by leaders<br>across the telecoms industry.',
+      'testimonials.quote1': 'Claire has an exceptional ability to make complex ODA frameworks accessible and actionable. Her guidance helped us build a clear transformation roadmap that aligned our entire organisation.',
+      'testimonials.name1': 'Senior Director, BSS Transformation',
+      'testimonials.role1': 'Tier 1 European Operator',
+      'testimonials.quote2': 'Working with Claire through TM Forum gave us direct access to ODA expertise that would have taken years to build internally. She connected the right people and accelerated our programme significantly.',
+      'testimonials.name2': 'Head of Enterprise Architecture',
+      'testimonials.role2': 'APAC Communications Service Provider',
+      'testimonials.quote3': "Claire's deep understanding of Open APIs and the ODA canvas was invaluable. She helped us move from fragmented integration to a composable, standards-based architecture in under 18 months.",
+      'testimonials.name3': 'VP Technology & Innovation',
+      'testimonials.role3': 'MENA Telecom Group',
+      'testimonials.moreLink': 'Work with Claire <span class="arr">→</span>',
+      'contact.eye': 'Get in touch',
+      'contact.h2': 'Ready to explore<br>your ODA journey?',
+      'contact.intro': "Whether you're beginning your ODA assessment, planning a BSS/OSS migration, or looking to maximise your TM Forum membership — Claire would love to hear from you.",
+      'contact.detailHq': 'TM Forum, Morristown NJ / Global',
+      'contact.form.namePlaceholder': 'Your name',
+      'contact.form.emailPlaceholder': 'Email address',
+      'contact.form.orgPlaceholder': 'Organisation',
+      'contact.form.jobtitlePlaceholder': 'Job title',
+      'contact.form.msgPlaceholder': 'How can I help you with your ODA journey?',
+      'contact.form.typeDefault': 'Company type',
+      'contact.form.typeOperator': 'Telecom Operator (CSP)',
+      'contact.form.typeVendor': 'Technology Vendor',
+      'contact.form.typeOther': 'Other / Not sure',
+      'contact.form.submit': 'Send message →',
+      'contact.statusSending': 'Sending…',
+      'contact.statusOk': '✓ Message sent — Claire will be in touch shortly.',
+      'contact.statusError': 'Error sending. Please email directly.',
+      'contact.planPrompt.badge': 'New — Personalised for you',
+      'contact.planPrompt.text': 'Would you like a personal TM Forum Engagement Plan? Answer 7 quick questions and Claire will prepare your 6-month ODA roadmap.',
+      'footer.copy': '© 2026 Claire Watson · Open Architecture. Digital Transformation. Real Results.',
+      'footer.tmf': 'Engagement Manager · TM Forum',
+      'demo.text': "Applying the TM Forum's ODA is like turning spaghetti into Lego",
+      'bulb.subCaption': 'The essence of the TM Forum — <em>"Collaboration"</em>',
+      'svcx.back': '← Back',
+      'svcx.next': 'Next →',
+      'svcx.done': 'Done'
     },
     fr: {
+      'nav.expertise': 'Expertise',
+      'nav.about': 'À propos',
+      'nav.testimonials': 'Témoignages',
+      'nav.contact': 'Contact',
+      'nav.documentsTrigger': '📄 Documents ▾',
+      'nav.documents.benefits': '📄 Avantages',
+      'nav.documents.roadmap': '🗺 Feuille de route',
+      'nav.documents.caseStudies': '📚 Études de cas',
+      'nav.documents.odaCaseStudy': '🍝 Étude de cas ODA',
+      'nav.documents.signalToResolution': '📶 Signal to Resolution',
+      'nav.gamesTrigger': '🎮 Jeux & Quiz ▾',
+      'nav.games.odaChess': '♟ ODA Chess',
+      'nav.games.aiQuiz': '🎓 Quiz IA TMF',
+      'nav.hiw': '❓ Comment ça marche',
       'nav.login': '🔑 Espace Membre',
       'auth.eyebrow': 'Portail Membre TM Forum',
       'auth.title': 'Bienvenue',
       'auth.tabLogin': 'Connexion',
       'auth.tabRegister': 'Inscription',
+      'auth.firstNameLabel': 'Prénom',
+      'auth.lastNameLabel': 'Nom',
+      'auth.firstNamePlaceholder': 'Jean',
+      'auth.lastNamePlaceholder': 'Mballa',
       'auth.emailLabel': 'E-mail',
       'auth.emailPlaceholder': 'vous@entreprise.com',
       'auth.passwordLabel': 'Mot de passe',
@@ -1816,8 +1950,95 @@ footer {
       'auth.errorEmailTaken': 'Cet e-mail est déjà enregistré — essayez de vous connecter.',
       'auth.errorInvalid': 'E-mail ou mot de passe incorrect.',
       'auth.errorGeneric': "Une erreur s'est produite — veuillez réessayer.",
+      'auth.continueWithoutLogin': 'Continuer sans se connecter',
       'welcome.eyebrow': 'Bon retour',
-      'welcome.logout': 'Se déconnecter'
+      'welcome.logout': 'Se déconnecter',
+      'hero.badgeEyebrow': 'Programme TM Forum',
+      'hero.eye': 'Architecture Ouverte. Transformation Numérique. Résultats Réels.',
+      'hero.h1': 'Accompagner les télécoms<br>\n        dans leur <em>parcours ODA.</em>',
+      'hero.sub': "Claire Watson aide les fournisseurs de services de communication à exploiter pleinement le potentiel de l'Architecture Numérique Ouverte (ODA) du TM Forum — en traduisant des normes complexes en feuilles de route de transformation concrètes qui simplifient les opérations et accélèrent la croissance.",
+      'hero.ctaExplore': 'Découvrir l’expertise ODA <span class="arr">→</span>',
+      'hero.ctaGame': '🎯 Le jeu ODA',
+      'hero.ctaCaseStudy': '🍝 Étude de cas ODA',
+      'hero.cred1': 'Responsable Engagement TM Forum',
+      'hero.cred2': 'Architecture Numérique Ouverte',
+      'hero.cred3': 'eTOM · SID · Open APIs',
+      'hero.cred4': 'Transformation BSS / OSS',
+      'hero.cred5': 'Opérations Natives IA',
+      'hero.portraitWatchIntro': "Voir l'introduction",
+      'hero.portraitWatchAgain': 'Revoir ?',
+      'hero.portraitReplay': '↺ Revoir',
+      'hero.portraitExit': '✕ Fermer',
+      'hero.bulbLabel': "La pensée du mois<br>de Claire",
+      'hero.memberGreeting': 'Bienvenue, {name}',
+      'hiw.eyebrow': 'Comment ça marche',
+      'hiw.title': "Tout ce que propose ce site, en un coup d'œil",
+      'hiw.intro': "Ce site est la façon dont Claire aide les opérateurs télécoms et satellites à naviguer dans l'Architecture Numérique Ouverte (ODA) du TM Forum — voici ce que fait chaque partie.",
+      'hiw.label': 'Ce que fait chaque fonctionnalité',
+      'hiw.item1': '<strong>Expertise, À propos, Témoignages</strong> — accédez directement à une section via le menu pour découvrir les spécialités ODA de Claire, son parcours, et ce que disent d’elle d’autres membres.',
+      'hiw.item2': '<strong>Contact</strong> — un court formulaire pour entrer en contact directement. L’envoyer peut aussi débloquer un questionnaire de Plan d’Engagement personnalisé et téléchargeable, adapté à votre organisation.',
+      'hiw.item3': '<strong>Ask Claire’s Team</strong> (bulle de chat, en bas) — un chat en direct qui répond aux questions sur l’ODA et peut vous orienter directement vers le formulaire de contact quand vous êtes prêt à échanger.',
+      'hiw.item4': '<strong>💡 La pensée du mois</strong> (bouton ampoule) — une courte vidéo avec le point de vue actuel de Claire sur la transformation ODA.',
+      'hiw.item5': '<strong>📊 Études de cas</strong> — de véritables parcours de formation de membres du TM Forum, à commencer par Tata Communications Transformation Services (TCTS), avec une auto-évaluation à réaliser pour votre propre organisation.',
+      'hiw.item6': '<strong>📄 Documents</strong> — les briefs Avantages et Feuille de route, les propres études de cas membres du TM Forum, et une étude de cas ODA interactive de notre cru : sélectionnez un composant du canevas ODA réel et regardez-le démêler la pile BSS/OSS historique typique d’un opérateur.',
+      'hiw.item7': '<strong>🎮 Jeux &amp; Quiz</strong> — ODA Chess et le Quiz IA TMF, deux façons plus légères d’apprendre les concepts ODA.',
+      'hiw.closing': 'Tout est libre d’accès ici.',
+      'services.eye': 'Ce que je fais',
+      'services.h2': "L'expertise ODA sur<br>tout le cycle de transformation.",
+      'services.card1.title': 'Architecture Métier & eTOM',
+      'services.card1.desc': "Appliquer le Business Process Framework (eTOM), le référentiel de capacités et le value stream framework du TM Forum pour aligner la stratégie IT sur les résultats métier et améliorer la communication entre équipes.",
+      'services.card2.title': 'Stratégie de transformation ODA',
+      'services.card2.desc': "Concevoir des feuilles de route d'adoption ODA concrètes — de l'évaluation de maturité et de la conception de la gouvernance à la migration progressive depuis les architectures BSS/OSS historiques. Fondée sur les standards, ancrée dans le métier.",
+      'services.card3.title': 'Stratégie Open API',
+      'services.card3.desc': "Accompagner les CSP dans l'adoption des Open APIs du TM Forum pour atteindre l'interopérabilité zero-touch, réduire la complexité d'intégration et construire des écosystèmes IT composables et pérennes.",
+      'services.card4.title': 'Opérations natives IA',
+      'services.card4.desc': "Aider les opérateurs à exploiter l'ODA Canvas et un environnement d'exécution natif IA pour permettre des réseaux autonomes, des workflows orchestrés par IA et des opérations zero-touch à grande échelle.",
+      'services.card5.title': 'Engagement Standards & Valeur Membre',
+      'services.card5.desc': "Travailler directement avec les membres du TM Forum pour maximiser la valeur de leur adhésion — en connectant les organisations aux bons programmes, projets de co-création et missions sectorielles qui font progresser l'IT composable, les réseaux autonomes et l'innovation IA.",
+      'services.card5.badge': 'TM Forum · Accès direct',
+      'about.eye': 'À propos de Claire',
+      'about.h2': "Responsable Engagement.<br>Ambassadrice de l'ODA.<br>Connectrice du secteur.",
+      'about.body1': "En tant que Responsable Engagement au TM Forum, Claire Watson se situe au croisement des standards télécoms, de la transformation numérique et de la collaboration sectorielle. Elle travaille avec des fournisseurs de services de communication du monde entier pour les aider à comprendre, adopter et tirer une réelle valeur commerciale de l'Architecture Numérique Ouverte.",
+      'about.body2': "Avec une expertise approfondie de l'ensemble du référentiel ODA — de la conception de processus eTOM et de la modélisation d'information SID à la mise en œuvre des Open APIs et au déploiement du canevas natif IA — Claire traduit la complexité des standards sectoriels en programmes de transformation concrets et réalisables.",
+      'about.tag7': 'Transformation Numérique',
+      'testimonials.eye': 'Ce que l’on dit',
+      'testimonials.h2': "Plébiscitée par les dirigeants<br>du secteur des télécoms.",
+      'testimonials.quote1': "Claire a une capacité exceptionnelle à rendre les référentiels ODA complexes accessibles et exploitables. Ses conseils nous ont aidés à construire une feuille de route de transformation claire qui a fédéré toute notre organisation.",
+      'testimonials.name1': 'Directeur Senior, Transformation BSS',
+      'testimonials.role1': 'Opérateur européen de Tier 1',
+      'testimonials.quote2': "Travailler avec Claire via le TM Forum nous a donné un accès direct à une expertise ODA qu'il aurait fallu des années à construire en interne. Elle a mis en relation les bonnes personnes et accéléré considérablement notre programme.",
+      'testimonials.name2': "Responsable Architecture d'Entreprise",
+      'testimonials.role2': 'Fournisseur de services de communication APAC',
+      'testimonials.quote3': "La compréhension approfondie de Claire des Open APIs et du canevas ODA a été précieuse. Elle nous a aidés à passer d'une intégration fragmentée à une architecture composable fondée sur les standards en moins de 18 mois.",
+      'testimonials.name3': 'VP Technologie & Innovation',
+      'testimonials.role3': 'Groupe télécom MENA',
+      'testimonials.moreLink': 'Travailler avec Claire <span class="arr">→</span>',
+      'contact.eye': 'Entrer en contact',
+      'contact.h2': "Prêt à explorer<br>votre parcours ODA ?",
+      'contact.intro': "Que vous commenciez votre évaluation ODA, planifiiez une migration BSS/OSS, ou cherchiez à maximiser votre adhésion au TM Forum — Claire sera ravie d'échanger avec vous.",
+      'contact.detailHq': 'TM Forum, Morristown NJ / Monde entier',
+      'contact.form.namePlaceholder': 'Votre nom',
+      'contact.form.emailPlaceholder': 'Adresse e-mail',
+      'contact.form.orgPlaceholder': 'Organisation',
+      'contact.form.jobtitlePlaceholder': 'Intitulé du poste',
+      'contact.form.msgPlaceholder': 'Comment puis-je vous aider dans votre parcours ODA ?',
+      'contact.form.typeDefault': "Type d'entreprise",
+      'contact.form.typeOperator': 'Opérateur télécom (CSP)',
+      'contact.form.typeVendor': 'Fournisseur de technologie',
+      'contact.form.typeOther': 'Autre / Pas sûr',
+      'contact.form.submit': 'Envoyer le message →',
+      'contact.statusSending': 'Envoi en cours…',
+      'contact.statusOk': '✓ Message envoyé — Claire vous contactera sous peu.',
+      'contact.statusError': "Erreur d'envoi. Merci d'écrire directement par e-mail.",
+      'contact.planPrompt.badge': 'Nouveau — Personnalisé pour vous',
+      'contact.planPrompt.text': 'Souhaitez-vous un Plan d’Engagement TM Forum personnalisé ? Répondez à 7 questions rapides et Claire préparera votre feuille de route ODA sur 6 mois.',
+      'footer.copy': '© 2026 Claire Watson · Architecture Ouverte. Transformation Numérique. Résultats Réels.',
+      'footer.tmf': 'Responsable Engagement · TM Forum',
+      'demo.text': "Appliquer l'ODA du TM Forum, c'est comme transformer des spaghettis en Lego",
+      'bulb.subCaption': "L'essence du TM Forum — <em>« Collaboration »</em>",
+      'svcx.back': '← Retour',
+      'svcx.next': 'Suivant →',
+      'svcx.done': 'Terminé'
     }
   };
 
@@ -1835,11 +2056,18 @@ footer {
       var val = dict[el.getAttribute('data-i18n-placeholder')];
       if (val != null) el.placeholder = val;
     });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      var val = dict[el.getAttribute('data-i18n-html')];
+      if (val != null) el.innerHTML = val;
+    });
     var trigger = document.getElementById('lang-trigger');
     if (trigger) trigger.textContent = (lang === 'fr') ? '🌐 FR ▾' : '🌐 EN ▾';
 
     var saved = getStoredUser();
     if (saved && saved.org) renderWelcome(saved, lang);
+
+    var svcxModal = document.getElementById('svcx-modal');
+    if (svcxModal && svcxModal.classList.contains('open') && typeof svcxRender === 'function') svcxRender();
   }
 
   function getStoredUser() {
@@ -1847,30 +2075,37 @@ footer {
     catch (e) { return null; }
   }
 
+  function flagEmoji(cc) {
+    if (!cc || cc.length !== 2) return '';
+    return String.fromCodePoint.apply(null, [cc.toUpperCase().charCodeAt(0) + 127397, cc.toUpperCase().charCodeAt(1) + 127397]);
+  }
+
   function renderWelcome(data, lang) {
     var org = data.org;
+    var user = data.user || {};
     if (!org) return;
-    document.getElementById('welcome-logo').src = org.logoUrl || '';
-    document.getElementById('welcome-logo').alt = org.company || '';
-    document.getElementById('welcome-company').textContent = org.company || '';
-    document.getElementById('welcome-country').textContent = org.country || '';
-    document.getElementById('welcome-paragraph').textContent = (lang === 'fr') ? (org.welcomeFr || org.welcomeEn || '') : (org.welcomeEn || '');
-    document.getElementById('member-welcome').classList.add('visible');
+    document.getElementById('hero-sub').textContent = (lang === 'fr') ? (org.welcomeFr || org.welcomeEn || '') : (org.welcomeEn || '');
+    document.getElementById('hmb-logo').src = org.logoUrl || '';
+    document.getElementById('hmb-logo').alt = org.company || '';
+    document.getElementById('hmb-flag').textContent = flagEmoji(org.countryCode);
+    document.getElementById('hmb-company').textContent = org.company || '';
+    document.getElementById('hmb-greeting').textContent = (I18N[lang]['hero.memberGreeting'] || '').replace('{name}', user.firstName || '');
+    document.getElementById('hero-member-badge').classList.add('visible');
     var loginBtn = document.getElementById('nav-login-btn');
     if (loginBtn) {
       loginBtn.textContent = '👤 ' + org.company;
-      loginBtn.onclick = function () { document.getElementById('member-welcome').scrollIntoView({ behavior: 'smooth' }); };
+      loginBtn.onclick = function () { document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' }); };
     }
   }
 
   function logoutMember() {
     localStorage.removeItem(PORTAL_USER_KEY);
-    document.getElementById('member-welcome').classList.remove('visible');
+    document.getElementById('hero-member-badge').classList.remove('visible');
     var loginBtn = document.getElementById('nav-login-btn');
     if (loginBtn) {
       loginBtn.onclick = openAuth;
-      loginBtn.textContent = I18N[currentLang()]['nav.login'];
     }
+    setLang(currentLang());
   }
 
   function openAuth() {
@@ -1925,7 +2160,7 @@ footer {
       localStorage.setItem(PORTAL_USER_KEY, JSON.stringify(d));
       renderWelcome(d, currentLang());
       closeAuth();
-      document.getElementById('member-welcome').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' });
     }).catch(function () {
       btn.disabled = false;
       errEl.textContent = I18N[currentLang()]['auth.errorGeneric'];
@@ -1935,16 +2170,18 @@ footer {
 
   function submitRegister(evt) {
     evt.preventDefault();
+    var firstName = document.getElementById('register-firstname').value.trim();
+    var lastName = document.getElementById('register-lastname').value.trim();
     var email = document.getElementById('register-email').value.trim();
     var password = document.getElementById('register-password').value;
     var companySlug = document.getElementById('register-company').value;
     var errEl = document.getElementById('register-error');
     var btn = document.getElementById('register-submit');
     errEl.textContent = '';
-    if (!companySlug) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
+    if (!firstName || !lastName || !companySlug) { errEl.textContent = I18N[currentLang()]['auth.errorGeneric']; return false; }
     btn.disabled = true;
     portalSha256(password).then(function (hash) {
-      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, companySlug: companySlug, lang: currentLang() }) });
+      return fetch(AUTH_WH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register', email: email, passwordHash: hash, companySlug: companySlug, lang: currentLang(), firstName: firstName, lastName: lastName }) });
     }).then(function (r) { return r.json(); }).then(function (d) {
       btn.disabled = false;
       if (!d.success) {
@@ -1954,7 +2191,7 @@ footer {
       localStorage.setItem(PORTAL_USER_KEY, JSON.stringify(d));
       renderWelcome(d, currentLang());
       closeAuth();
-      document.getElementById('member-welcome').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('hero-member-badge').scrollIntoView({ behavior: 'smooth' });
     }).catch(function () {
       btn.disabled = false;
       errEl.textContent = I18N[currentLang()]['auth.errorGeneric'];
@@ -1966,6 +2203,7 @@ footer {
   (function () {
     var saved = getStoredUser();
     if (saved && saved.org) renderWelcome(saved, currentLang());
+    if (!saved) openAuth();
   })();
 
   /* Bulb / Thought of the Month modal */
@@ -1995,6 +2233,13 @@ footer {
         'The Value Stream Framework ties both back to customer and business outcomes, so every architecture decision connects to a value delivered, not just a process followed.',
       ],
       source: "Based on TM Forum's Business Process Framework (eTOM), Capability Framework and Value Stream Framework — tmforum.org/open-digital-architecture/business-architecture-framework",
+      headline_fr: 'Architecture Métier & eTOM',
+      summary_fr: "Aligner la stratégie IT sur les résultats métier grâce aux propres référentiels de processus, de capacités et de value streams du TM Forum — pas une méthodologie sur mesure inventée de toutes pièces.",
+      points_fr: [
+        "L'eTOM (Business Process Framework) cartographie les processus d'un opérateur de bout en bout — Strategy, Infrastructure & Product ; Operations ; Enterprise Management — donnant au métier et à l'IT un vocabulaire commun.",
+        "Le Capability Framework décompose ces processus en capacités précises dont un opérateur a besoin pour les exécuter, ce qui permet d'identifier les lacunes avec précision plutôt que de les décrire vaguement.",
+        "Le Value Stream Framework relie les deux aux résultats clients et métier, de sorte que chaque décision d'architecture se rattache à une valeur délivrée, et non à un simple processus suivi.",
+      ],
     },
     {
       kicker: 'Service 02', headline: 'ODA Transformation Strategy',
@@ -2005,6 +2250,13 @@ footer {
         'Migration is phased deliberately — legacy BSS/OSS architectures are replaced in stages the business can absorb, not as a single high-risk cutover.',
       ],
       source: "Based on TM Forum's Open Digital Architecture — tmforum.org/oda/about-oda",
+      headline_fr: 'Stratégie de transformation ODA',
+      summary_fr: "Une feuille de route progressive et concrète du BSS/OSS historique vers le natif ODA — fondée sur les standards, pas un remplacement brutal.",
+      points_fr: [
+        "Commence par une évaluation de maturité au regard du propre modèle de maturité ODA du TM Forum, afin que la feuille de route reflète la situation réelle de l'opérateur, pas un modèle générique.",
+        "La conception de la gouvernance suit : qui possède quel domaine ODA, comment les changements sont approuvés, comment les composants historiques et natifs ODA coexistent pendant la transition.",
+        "La migration est volontairement progressive — les architectures BSS/OSS historiques sont remplacées par étapes que l'entreprise peut absorber, et non lors d'une bascule unique à haut risque.",
+      ],
     },
     {
       kicker: 'Service 03', headline: 'Open API Strategy',
@@ -2015,6 +2267,13 @@ footer {
         'The result is "zero-touch interoperability" — systems compose together without bespoke integration work, and the IT ecosystem stays future-proof as new components are added.',
       ],
       source: "Based on TM Forum's Open API programme — tmforum.org/oda/open-apis",
+      headline_fr: 'Stratégie Open API',
+      summary_fr: "Remplacer le chaos de l'intégration point à point par les Open APIs standardisées du TM Forum — moins de connexions, chacune réutilisable.",
+      points_fr: [
+        "L'intégration historique est généralement point à point : chaque paire de systèmes a son propre connecteur sur mesure, et chaque nouveau système multiplie le travail d'intégration.",
+        "Les Open APIs du TM Forum donnent à chaque système la même interface standard, si bien que les nouveaux systèmes se connectent une seule fois, et non une fois par système existant.",
+        "Le résultat est une « interopérabilité zero-touch » — les systèmes se composent sans travail d'intégration sur mesure, et l'écosystème IT reste pérenne à mesure que de nouveaux composants s'ajoutent.",
+      ],
     },
     {
       kicker: 'Service 04', headline: 'AI-Native Operations',
@@ -2025,6 +2284,13 @@ footer {
         "Zero-touch operations at scale means growth doesn't require proportional headcount growth — the architecture is what makes that possible, not the AI alone.",
       ],
       source: "Based on TM Forum's AI-native operations work — tmforum.org/ai-operations/",
+      headline_fr: 'Opérations natives IA',
+      summary_fr: "L'ODA Canvas comme environnement d'exécution pour des opérations orchestrées par IA et zero-touch — pas de l'IA greffée sur des processus historiques.",
+      points_fr: [
+        "L'ODA Canvas donne aux agents IA une surface opérationnelle standardisée et componentisée sur laquelle agir — les mêmes composants déjà standardisés par les travaux d'architecture et d'API.",
+        "Les workflows orchestrés par IA permettent aux réseaux autonomes de détecter, diagnostiquer et résoudre les incidents de bout en bout, les humains conservant la supervision plutôt que d'exécuter chaque étape.",
+        "Des opérations zero-touch à grande échelle signifient que la croissance n'exige pas une croissance proportionnelle des effectifs — c'est l'architecture qui le permet, pas l'IA seule.",
+      ],
     },
     {
       kicker: 'Service 05', headline: 'Standards Engagement & Member Value',
@@ -2035,6 +2301,13 @@ footer {
         'The value compounds: a member engaged in the right Catalyst or mission gets influence over the standards it will later have to implement — not just early access to the finished result.',
       ],
       source: "Based on TM Forum's own membership and mission structure — tmforum.org/about/membership",
+      headline_fr: 'Engagement Standards & Valeur Membre',
+      summary_fr: "Connecter directement les organisations aux propres programmes, projets de co-création et missions sectorielles du TM Forum — pour que l'adhésion devienne une action, pas seulement un logo sur une page.",
+      points_fr: [
+        "Travaille directement avec les membres du TM Forum pour maximiser la valeur de leur adhésion — un accès direct aux structures propres du Forum, pas des conseils venus de l'extérieur.",
+        "Connecte les organisations aux bons programmes : preuves de concept Catalyst, co-création d'Open APIs, l'ODA Canvas, et les missions sectorielles du TM Forum (IT composable & écosystèmes, réseaux autonomes, IA & données de confiance).",
+        "La valeur se cumule : un membre engagé dans le bon Catalyst ou la bonne mission influence les standards qu'il devra ensuite mettre en œuvre — pas seulement un accès anticipé au résultat final.",
+      ],
     },
   ];
 
@@ -2137,24 +2410,29 @@ footer {
   var SVCX_SCENES = [svcxSceneEtom, svcxSceneOda, svcxSceneOpenApi, svcxSceneAi, svcxSceneMembership];
   var svcxIndex = null;
 
+  function svcxT(s, lang, key) {
+    return (lang === 'fr' && s[key + '_fr']) ? s[key + '_fr'] : s[key];
+  }
   function svcxRender() {
+    var lang = currentLang();
     var s = SVCX_STORIES[svcxIndex];
+    var points = svcxT(s, lang, 'points') || s.points;
     document.getElementById('svcx-progress').innerHTML = SVCX_STORIES.map(function (_, i) {
       return '<span class="svcx-dot' + (i === svcxIndex ? ' is-on' : i < svcxIndex ? ' is-done' : '') + '"></span>';
     }).join('');
     document.getElementById('svcx-body').innerHTML =
       '<div class="svcx-scene">' + SVCX_SCENES[svcxIndex]() + '</div>' +
       '<div class="svcx-text">' +
-        '<p class="svcx-kicker">' + s.kicker + '</p>' +
-        '<h3 class="svcx-headline">' + s.headline + '</h3>' +
-        '<p class="svcx-summary">' + s.summary + '</p>' +
-        '<ul class="svcx-points">' + s.points.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul>' +
+        '<p class="svcx-kicker">' + svcxT(s, lang, 'kicker') + '</p>' +
+        '<h3 class="svcx-headline">' + svcxT(s, lang, 'headline') + '</h3>' +
+        '<p class="svcx-summary">' + svcxT(s, lang, 'summary') + '</p>' +
+        '<ul class="svcx-points">' + points.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul>' +
         '<p class="bulb-caption-sub" style="color:rgba(255,255,255,0.35)">' + s.source + '</p>' +
       '</div>';
     document.getElementById('svcx-count').textContent = (svcxIndex + 1) + ' / ' + SVCX_STORIES.length;
     document.getElementById('svcx-prev').disabled = svcxIndex === 0;
     var nextBtn = document.getElementById('svcx-next');
-    nextBtn.textContent = svcxIndex === SVCX_STORIES.length - 1 ? 'Done' : 'Next →';
+    nextBtn.textContent = svcxIndex === SVCX_STORIES.length - 1 ? I18N[lang]['svcx.done'] : I18N[lang]['svcx.next'];
   }
   function openSvcx(i) {
     svcxIndex = i;
@@ -2207,14 +2485,14 @@ footer {
     const msg     = document.getElementById('cf-msg').value.trim();
 
     status.style.display = 'block';
-    status.textContent = 'Sending…';
+    status.textContent = I18N[currentLang()]['contact.statusSending'];
     try {
       await fetch('https://n8n.srv1739004.hstgr.cloud/webhook/custom-contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, organisation: org, jobTitle: jobtitle, companyType: type, message: msg, source: 'ClaireWatsonTMF' })
       });
-      status.textContent = '✓ Message sent — Claire will be in touch shortly.';
+      status.textContent = I18N[currentLang()]['contact.statusOk'];
 
       /* Store form data for engagement plan */
       const now = new Date();
@@ -2229,14 +2507,14 @@ footer {
         <button class="plan-prompt-btn" onclick="openPlanModal()">
           <span class="plan-prompt-icon">📋</span>
           <span class="plan-prompt-text">
-            <div class="plan-prompt-head">New — Personalised for you</div>
-            <div class="plan-prompt-sub">Would you like a personal TM Forum Engagement Plan? Answer 7 quick questions and Claire will prepare your 6-month ODA roadmap.</div>
+            <div class="plan-prompt-head">${I18N[currentLang()]['contact.planPrompt.badge']}</div>
+            <div class="plan-prompt-sub">${I18N[currentLang()]['contact.planPrompt.text']}</div>
           </span>
           <span class="plan-prompt-arrow">›</span>
         </button>`;
       prompt.style.display = 'block';
     } catch {
-      status.textContent = 'Error sending. Please email directly.';
+      status.textContent = I18N[currentLang()]['contact.statusError'];
     }
   }
 

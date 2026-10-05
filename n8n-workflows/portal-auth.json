@@ -76,7 +76,7 @@
         100
       ],
       "parameters": {
-        "jsCode": "return [{ json: {\n  Slug: 'camtel', Company: 'Camtel', Country: 'Cameroon',\n  'Logo URL': \"https://camtel.cm/images/logo.png\",\n  'Welcome EN': \"Welcome, Camtel team. As Cameroon's national telecom and ICT operator, you're joining a growing community of TM Forum members using Open Digital Architecture to modernise operations and accelerate digital transformation. Claire is here to support your ODA journey every step of the way.\",\n  'Welcome FR': \"Bienvenue, équipe Camtel. En tant qu'opérateur national des télécommunications et des TIC du Cameroun, vous rejoignez une communauté grandissante de membres du TM Forum qui utilisent l'Architecture Numérique Ouverte (ODA) pour moderniser leurs opérations et accélérer leur transformation numérique. Claire est là pour vous accompagner à chaque étape de votre parcours ODA.\"\n} }];"
+        "jsCode": "return [{ json: {\n  Slug: 'camtel', Company: 'Camtel', Country: 'Cameroon',\n  'Country Code': \"CM\",\n  'Logo URL': \"https://camtel.cm/images/logo.png\",\n  'Welcome EN': \"Welcome, Camtel team. As Cameroon's national telecom and ICT operator, you're joining a growing community of TM Forum members using Open Digital Architecture to modernise operations and accelerate digital transformation. Claire is here to support your ODA journey every step of the way.\",\n  'Welcome FR': \"Bienvenue, équipe Camtel. En tant qu'opérateur national des télécommunications et des TIC du Cameroun, vous rejoignez une communauté grandissante de membres du TM Forum qui utilisent l'Architecture Numérique Ouverte (ODA) pour moderniser leurs opérations et accélérer leur transformation numérique. Claire est là pour vous accompagner à chaque étape de votre parcours ODA.\"\n} }];"
       }
     },
     {
@@ -196,7 +196,7 @@
         260
       ],
       "parameters": {
-        "jsCode": "return [{ json: {\n  Slug: 'camtel', Company: 'Camtel', Country: 'Cameroon',\n  'Logo URL': \"https://camtel.cm/images/logo.png\",\n  'Welcome EN': \"Welcome, Camtel team. As Cameroon's national telecom and ICT operator, you're joining a growing community of TM Forum members using Open Digital Architecture to modernise operations and accelerate digital transformation. Claire is here to support your ODA journey every step of the way.\",\n  'Welcome FR': \"Bienvenue, équipe Camtel. En tant qu'opérateur national des télécommunications et des TIC du Cameroun, vous rejoignez une communauté grandissante de membres du TM Forum qui utilisent l'Architecture Numérique Ouverte (ODA) pour moderniser leurs opérations et accélérer leur transformation numérique. Claire est là pour vous accompagner à chaque étape de votre parcours ODA.\"\n} }];"
+        "jsCode": "return [{ json: {\n  Slug: 'camtel', Company: 'Camtel', Country: 'Cameroon',\n  'Country Code': \"CM\",\n  'Logo URL': \"https://camtel.cm/images/logo.png\",\n  'Welcome EN': \"Welcome, Camtel team. As Cameroon's national telecom and ICT operator, you're joining a growing community of TM Forum members using Open Digital Architecture to modernise operations and accelerate digital transformation. Claire is here to support your ODA journey every step of the way.\",\n  'Welcome FR': \"Bienvenue, équipe Camtel. En tant qu'opérateur national des télécommunications et des TIC du Cameroun, vous rejoignez une communauté grandissante de membres du TM Forum qui utilisent l'Architecture Numérique Ouverte (ODA) pour moderniser leurs opérations et accélérer leur transformation numérique. Claire est là pour vous accompagner à chaque étape de votre parcours ODA.\"\n} }];"
       }
     },
     {
@@ -389,8 +389,8 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": 1983308945,
-          "mode": "id"
+          "value": "Member Orgs",
+          "mode": "name"
         }
       },
       "credentials": {
@@ -436,7 +436,7 @@
         -300
       ],
       "parameters": {
-        "jsCode": "return [{ json: {\n  Slug: 'camtel', Company: 'Camtel', Country: 'Cameroon',\n  'Logo URL': \"https://camtel.cm/images/logo.png\",\n  'Welcome EN': \"Welcome, Camtel team. As Cameroon's national telecom and ICT operator, you're joining a growing community of TM Forum members using Open Digital Architecture to modernise operations and accelerate digital transformation. Claire is here to support your ODA journey every step of the way.\",\n  'Welcome FR': \"Bienvenue, équipe Camtel. En tant qu'opérateur national des télécommunications et des TIC du Cameroun, vous rejoignez une communauté grandissante de membres du TM Forum qui utilisent l'Architecture Numérique Ouverte (ODA) pour moderniser leurs opérations et accélérer leur transformation numérique. Claire est là pour vous accompagner à chaque étape de votre parcours ODA.\"\n} }];"
+        "jsCode": "return [{ json: {\n  Slug: 'camtel', Company: 'Camtel', Country: 'Cameroon',\n  'Country Code': \"CM\",\n  'Logo URL': \"https://camtel.cm/images/logo.png\",\n  'Welcome EN': \"Welcome, Camtel team. As Cameroon's national telecom and ICT operator, you're joining a growing community of TM Forum members using Open Digital Architecture to modernise operations and accelerate digital transformation. Claire is here to support your ODA journey every step of the way.\",\n  'Welcome FR': \"Bienvenue, équipe Camtel. En tant qu'opérateur national des télécommunications et des TIC du Cameroun, vous rejoignez une communauté grandissante de membres du TM Forum qui utilisent l'Architecture Numérique Ouverte (ODA) pour moderniser leurs opérations et accélérer leur transformation numérique. Claire est là pour vous accompagner à chaque étape de votre parcours ODA.\"\n} }];"
       }
     },
     {
@@ -476,12 +476,68 @@
       }
     },
     {
+      "id": "poa-044",
+      "name": "Remove Portal Users Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1900,
+        -300
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "remove",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Portal Users",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "poa-045",
+      "name": "Recreate Portal Users Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        2140,
+        -300
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c",
+          "mode": "id"
+        },
+        "title": "Portal Users"
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "px1tTo9pu93jnFpq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
       "id": "poa-043",
       "name": "Respond — Wipe",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1900,
+        2380,
         -300
       ],
       "parameters": {
@@ -652,7 +708,7 @@
         500
       ],
       "parameters": {
-        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\nconst companySlug = String(body.companySlug || '').trim().toLowerCase();\nconst lang = body.lang === 'fr' ? 'fr' : 'en';\n\nif (!email || !clientHash || !companySlug) {\n  return [{ json: { blocked: true, reason: 'missing_fields' } }];\n}\n\nconst existing = $input.all().map(i => i.json).find(r => String(r.Email || '').trim().toLowerCase() === email);\nif (existing) {\n  return [{ json: { blocked: true, reason: 'email_taken' } }];\n}\n\nfunction randomSalt() { let s = ''; for (let i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16); return s; }\nconst salt = randomSalt();\nconst hash = sha256Hex(salt + clientHash);\nconst now = new Date().toISOString();\n\nreturn [{ json: {\n  blocked: false,\n  Email: email,\n  'Password Hash': salt + ':' + hash,\n  'Company Slug': companySlug,\n  'Language Preference': lang,\n  'Created At': now,\n  'Last Login': now\n} }];"
+        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\nconst companySlug = String(body.companySlug || '').trim().toLowerCase();\nconst lang = body.lang === 'fr' ? 'fr' : 'en';\nconst firstName = String(body.firstName || '').trim();\nconst lastName = String(body.lastName || '').trim();\n\nif (!email || !clientHash || !companySlug || !firstName || !lastName) {\n  return [{ json: { blocked: true, reason: 'missing_fields' } }];\n}\n\nconst existing = $input.all().map(i => i.json).find(r => String(r.Email || '').trim().toLowerCase() === email);\nif (existing) {\n  return [{ json: { blocked: true, reason: 'email_taken' } }];\n}\n\nfunction randomSalt() { let s = ''; for (let i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16); return s; }\nconst salt = randomSalt();\nconst hash = sha256Hex(salt + clientHash);\nconst now = new Date().toISOString();\n\nreturn [{ json: {\n  blocked: false,\n  Email: email,\n  'Password Hash': salt + ':' + hash,\n  'Company Slug': companySlug,\n  'Language Preference': lang,\n  'First Name': firstName,\n  'Last Name': lastName,\n  'Created At': now,\n  'Last Login': now\n} }];"
       }
     },
     {
@@ -709,7 +765,7 @@
         500
       ],
       "parameters": {
-        "jsCode": "const r = $json;\nreturn [{ json: {\n  Email: r.Email,\n  'Password Hash': r['Password Hash'],\n  'Company Slug': r['Company Slug'],\n  'Language Preference': r['Language Preference'],\n  'Created At': r['Created At'],\n  'Last Login': r['Last Login']\n} }];"
+        "jsCode": "const r = $json;\nreturn [{ json: {\n  Email: r.Email,\n  'Password Hash': r['Password Hash'],\n  'Company Slug': r['Company Slug'],\n  'Language Preference': r['Language Preference'],\n  'First Name': r['First Name'],\n  'Last Name': r['Last Name'],\n  'Created At': r['Created At'],\n  'Last Login': r['Last Login']\n} }];"
       }
     },
     {
@@ -790,7 +846,7 @@
         580
       ],
       "parameters": {
-        "jsCode": "const reg = $('Hash Password').first().json;\nconst orgs = $input.all().map(i => i.json);\nconst org = orgs.find(o => String(o.Slug || '').trim().toLowerCase() === String(reg['Company Slug'] || '').trim().toLowerCase());\n\nreturn [{ json: {\n  success: true,\n  user: { email: reg.Email, companySlug: reg['Company Slug'], lang: reg['Language Preference'] },\n  org: org ? { company: org.Company, country: org.Country, logoUrl: org['Logo URL'], welcomeEn: org['Welcome EN'], welcomeFr: org['Welcome FR'] } : null\n} }];"
+        "jsCode": "const reg = $('Hash Password').first().json;\nconst orgs = $input.all().map(i => i.json);\nconst org = orgs.find(o => String(o.Slug || '').trim().toLowerCase() === String(reg['Company Slug'] || '').trim().toLowerCase());\n\nreturn [{ json: {\n  success: true,\n  user: { email: reg.Email, companySlug: reg['Company Slug'], lang: reg['Language Preference'], firstName: reg['First Name'], lastName: reg['Last Name'] },\n  org: org ? { company: org.Company, country: org.Country, countryCode: org['Country Code'], logoUrl: org['Logo URL'], welcomeEn: org['Welcome EN'], welcomeFr: org['Welcome FR'] } : null\n} }];"
       }
     },
     {
@@ -859,7 +915,7 @@
         760
       ],
       "parameters": {
-        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\n\nconst rows = $input.all().map(i => i.json);\nconst row = rows.find(r => String(r.Email || '').trim().toLowerCase() === email);\n\nif (!row || !email || !clientHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nconst stored = String(row['Password Hash'] || '');\nconst sep = stored.indexOf(':');\nif (sep < 0) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\nconst salt = stored.slice(0, sep);\nconst expectedHash = stored.slice(sep + 1);\nconst actualHash = sha256Hex(salt + clientHash);\n\nif (actualHash !== expectedHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nreturn [{ json: {\n  invalid: false,\n  Email: row.Email,\n  'Company Slug': row['Company Slug'],\n  'Language Preference': row['Language Preference']\n} }];"
+        "jsCode": "function sha256Hex(ascii) {\n  function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }\n  var mathPow = Math.pow, maxWord = mathPow(2, 32), lengthProperty = 'length';\n  var i, j, result = '';\n  var words = [];\n  var asciiBitLength = ascii[lengthProperty] * 8;\n  var hash = sha256Hex.h = sha256Hex.h || [];\n  var k = sha256Hex.k = sha256Hex.k || [];\n  var primeCounter = k[lengthProperty];\n  var isComposite = {};\n  for (var candidate = 2; primeCounter < 64; candidate++) {\n    if (!isComposite[candidate]) {\n      for (i = 0; i < 313; i += candidate) { isComposite[i] = candidate; }\n      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  ascii += '\\x80';\n  while (ascii[lengthProperty] % 64 - 56) ascii += '\\x00';\n  for (i = 0; i < ascii[lengthProperty]; i++) {\n    j = ascii.charCodeAt(i);\n    if (j >> 8) return;\n    words[i >> 2] |= j << ((3 - i) % 4) * 8;\n  }\n  words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);\n  words[words[lengthProperty]] = (asciiBitLength);\n  for (j = 0; j < words[lengthProperty];) {\n    var w = words.slice(j, j += 16);\n    var oldHash = hash;\n    hash = hash.slice(0, 8);\n    for (i = 0; i < 64; i++) {\n      var w15 = w[i - 15], w2 = w[i - 2];\n      var a = hash[0], e = hash[4];\n      var temp1 = hash[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & hash[5]) ^ ((~e) & hash[6]))\n        + k[i]\n        + (w[i] = (i < 16) ? w[i] : (\n            w[i - 16]\n            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n            + w[i - 7]\n            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n          ) | 0\n        );\n      var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));\n      hash = [(temp1 + temp2) | 0].concat(hash);\n      hash[4] = (hash[4] + temp1) | 0;\n    }\n    for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }\n  }\n  for (i = 0; i < 8; i++) {\n    for (j = 3; j + 1; j--) {\n      var b = (hash[i] >> (j * 8)) & 255;\n      result += ((b < 16) ? '0' : '') + b.toString(16);\n    }\n  }\n  return result;\n}\n\nconst body = $('Webhook — Portal Auth').first().json.body ?? $('Webhook — Portal Auth').first().json;\nconst email = String(body.email || '').trim().toLowerCase();\nconst clientHash = body.passwordHash || '';\n\nconst rows = $input.all().map(i => i.json);\nconst row = rows.find(r => String(r.Email || '').trim().toLowerCase() === email);\n\nif (!row || !email || !clientHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nconst stored = String(row['Password Hash'] || '');\nconst sep = stored.indexOf(':');\nif (sep < 0) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\nconst salt = stored.slice(0, sep);\nconst expectedHash = stored.slice(sep + 1);\nconst actualHash = sha256Hex(salt + clientHash);\n\nif (actualHash !== expectedHash) {\n  return [{ json: { invalid: true, reason: 'invalid_credentials' } }];\n}\n\nreturn [{ json: {\n  invalid: false,\n  Email: row.Email,\n  'Company Slug': row['Company Slug'],\n  'Language Preference': row['Language Preference'],\n  'First Name': row['First Name'],\n  'Last Name': row['Last Name']\n} }];"
       }
     },
     {
@@ -990,7 +1046,7 @@
         840
       ],
       "parameters": {
-        "jsCode": "const auth = $('Verify Password').first().json;\nconst orgs = $input.all().map(i => i.json);\nconst org = orgs.find(o => String(o.Slug || '').trim().toLowerCase() === String(auth['Company Slug'] || '').trim().toLowerCase());\n\nreturn [{ json: {\n  success: true,\n  user: { email: auth.Email, companySlug: auth['Company Slug'], lang: auth['Language Preference'] },\n  org: org ? { company: org.Company, country: org.Country, logoUrl: org['Logo URL'], welcomeEn: org['Welcome EN'], welcomeFr: org['Welcome FR'] } : null\n} }];"
+        "jsCode": "const auth = $('Verify Password').first().json;\nconst orgs = $input.all().map(i => i.json);\nconst org = orgs.find(o => String(o.Slug || '').trim().toLowerCase() === String(auth['Company Slug'] || '').trim().toLowerCase());\n\nreturn [{ json: {\n  success: true,\n  user: { email: auth.Email, companySlug: auth['Company Slug'], lang: auth['Language Preference'], firstName: auth['First Name'], lastName: auth['Last Name'] },\n  org: org ? { company: org.Company, country: org.Country, countryCode: org['Country Code'], logoUrl: org['Logo URL'], welcomeEn: org['Welcome EN'], welcomeFr: org['Welcome FR'] } : null\n} }];"
       }
     },
     {
@@ -1222,6 +1278,28 @@
       ]
     },
     "Reseed Camtel Row (Wipe)": {
+      "main": [
+        [
+          {
+            "node": "Remove Portal Users Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Portal Users Sheet": {
+      "main": [
+        [
+          {
+            "node": "Recreate Portal Users Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recreate Portal Users Sheet": {
       "main": [
         [
           {
