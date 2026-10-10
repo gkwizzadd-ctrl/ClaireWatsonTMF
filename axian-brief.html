@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axian Group — Briefing for Nik Willetts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --tmf-blue:  #003087;
+  --tmf-mid:   #0060B8;
+  --tmf-light: #0080CC;
+  --tmf-cyan:  #00B8D9;
+  --claire:    #D91241;
+  --ink:       #0D0B4D;
+  --body:      #2C3148;
+  --muted:     #6B7280;
+  --rule:      #E2E6F0;
+  --bg:        #F7F9FC;
+  --white:     #FFFFFF;
+  --oda1:      #003087;
+  --oda2:      #0080CC;
+  --oda3:      #D91241;
+  --serif:     'Cormorant Garamond', Georgia, serif;
+  --sans:      'DM Sans', 'Segoe UI', sans-serif;
+  --mono:      'DM Mono', 'Courier New', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body { background: #C8CDD8; font-family: var(--sans); color: var(--body); }
+
+#actions {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: var(--tmf-blue); display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 54px; box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+#actions .atitle { color: rgba(255,255,255,0.85); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+#actions .abtns { display: flex; gap: 10px; }
+#actions a.abtn, #actions button {
+  background: var(--claire); border: 1px solid var(--claire);
+  color: #fff; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 7px 18px; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; transition: background 0.18s;
+}
+#actions a.abtn:hover, #actions button:hover { background: #b80f35; }
+#actions button.ghost { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.22); }
+#actions button.ghost:hover { background: rgba(255,255,255,0.2); }
+
+#root { padding: 70px 0 40px; }
+.page {
+  width: 210mm; min-height: 297mm; background: var(--white); margin: 0 auto 20px;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.18); display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+
+/* COVER */
+.cover-banner { width: 100%; display: block; }
+.cover-fill { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+.cover-content { padding: 0 44px; }
+.cover-right { flex: 1; }
+.cover-tag { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--claire); margin-bottom: 10px; }
+.cover-title { font-family: var(--serif); font-size: 40px; font-weight: 500; line-height: 1.06; color: var(--tmf-blue); letter-spacing: -0.02em; margin-bottom: 6px; }
+.cover-title2 { font-family: var(--serif); font-size: 15px; font-style: italic; font-weight: 500; color: var(--claire); margin-bottom: 16px; line-height: 1.4; }
+.cover-subtitle { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin-bottom: 18px; max-width: 560px; }
+.cover-pullquote { border-left: 3px solid var(--tmf-blue); padding: 12px 16px; font-family: var(--serif); font-size: 15px; font-style: italic; color: var(--body); line-height: 1.6; background: var(--bg); margin-bottom: 8px; max-width: 560px; }
+.cover-by { font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.cover-member-block { margin: 0 44px; background: var(--tmf-blue); padding: 20px 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; }
+.cover-field label { display: block; font-family: var(--mono); font-size: 7px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 3px; }
+.cover-field span { font-family: var(--sans); font-size: 12.5px; color: #fff; font-weight: 500; }
+.cover-stats { margin: 0 44px; display: flex; }
+.cover-stat { flex: 1; text-align: center; padding: 14px 8px; border: 1px solid var(--rule); border-right: none; }
+.cover-stat:last-child { border-right: 1px solid var(--rule); }
+.cover-stat-n { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--tmf-blue); line-height: 1; }
+.cover-stat-l { font-family: var(--mono); font-size: 7px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+/* SECTION HEADER */
+.sec-header { background: linear-gradient(135deg, var(--tmf-blue) 0%, var(--tmf-mid) 100%); padding: 24px 44px 18px; }
+.sec-eye { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 7px; }
+.sec-header h2 { font-family: var(--serif); font-size: 25px; font-weight: 500; color: #fff; letter-spacing: -0.01em; }
+.sec-header p { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 7px; line-height: 1.6; max-width: 560px; }
+
+/* PAGE 2: exec view + challenges */
+.p2-body { padding: 20px 44px 16px; flex: 1; display: flex; flex-direction: column; }
+.exec-block { margin-bottom: 18px; }
+.exec-block h3 { font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--tmf-blue); margin-bottom: 6px; }
+.exec-block p { font-size: 11.5px; line-height: 1.65; color: var(--body); }
+.market-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.market-tag { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.04em; background: var(--bg); border: 1px solid var(--rule); color: var(--tmf-blue); padding: 4px 10px; border-radius: 100px; }
+
+.chal-eye { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--claire); margin: 14px 0 10px; font-weight: 600; }
+.chal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.chal-card { border: 1px solid var(--rule); border-top: 3px solid var(--tmf-blue); padding: 14px 16px; }
+.chal-card.tomorrow { border-top-color: var(--claire); }
+.chal-num { font-family: var(--mono); font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.chal-title { font-family: var(--serif); font-size: 14.5px; font-weight: 500; color: var(--ink); line-height: 1.3; margin-bottom: 6px; }
+.chal-text { font-size: 10.7px; line-height: 1.55; color: var(--body); }
+
+/* PAGE 3: vision + ODA infographic + closing */
+.p3-body { padding: 20px 44px; flex: 1; display: flex; flex-direction: column; }
+.vision-quote { border-left: 3px solid var(--claire); padding: 12px 16px; background: var(--bg); font-family: var(--serif); font-size: 13px; font-style: italic; color: var(--body); line-height: 1.6; margin-bottom: 10px; }
+.vision-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.vision-list li { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; line-height: 1.55; color: var(--body); }
+.vision-list li::before { content: '▸'; color: var(--claire); flex-shrink: 0; margin-top: 1px; font-size: 9px; }
+
+.oda-eye { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tmf-blue); margin: 16px 0 4px; font-weight: 600; }
+.oda-h { font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--ink); margin-bottom: 12px; }
+.oda-row { display: flex; gap: 12px; margin-bottom: 12px; }
+.oda-card { flex: 1; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 14px 12px; position: relative; }
+.oda-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px; color: #fff; }
+.oda-tag { font-family: var(--mono); font-size: 7px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.oda-title { font-family: var(--serif); font-size: 12.5px; font-weight: 500; color: var(--ink); line-height: 1.25; margin-bottom: 6px; }
+.oda-text { font-size: 9.7px; line-height: 1.5; color: var(--body); }
+.oda-link { display: flex; align-items: center; justify-content: center; width: 20px; }
+.oda-link::before { content: '→'; color: var(--rule); font-size: 16px; }
+
+.final-quote { margin-top: auto; background: var(--ink); padding: 24px 32px; position: relative; }
+.final-quote::before { content: '"'; position: absolute; top: -6px; left: 18px; font-family: var(--serif); font-size: 76px; color: rgba(217,18,65,0.35); line-height: 1; }
+.final-quote p { font-family: var(--serif); font-size: 15.5px; font-style: italic; font-weight: 500; color: #fff; line-height: 1.5; position: relative; z-index: 1; }
+.final-quote p strong { color: var(--claire); font-style: normal; }
+
+.sig-bar { border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 18px; display: flex; align-items: center; gap: 12px; }
+.sig-avt { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1.5px solid var(--tmf-blue); }
+.sig-avt img { width: 100%; height: 100%; object-fit: cover; object-position: center 8%; }
+.sig-name { font-family: var(--serif); font-size: 14px; font-weight: 500; color: var(--tmf-blue); }
+.sig-title { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+
+.pg-footer { padding: 9px 44px; border-top: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.pg-footer span { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.07em; color: var(--muted); }
+
+* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+@media print {
+  body { background: white; }
+  #actions { display: none !important; }
+  #root { padding-top: 0; }
+  .page { box-shadow: none; margin: 0; width: 100%; min-height: 0; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+}
+</style>
+</head>
+<body>
+
+<div id="actions">
+  <span class="atitle">TM Forum · Axian Group Briefing — for Nik Willetts</span>
+  <div class="abtns">
+    <a class="abtn" href="Axian-Group-Briefing-Nik-Willetts.pdf" download>⬇ Download PDF</a>
+    <a class="abtn" href="Axian-Group-Briefing-Nik-Willetts.docx" download>⬇ Download Word</a>
+    <button class="ghost" onclick="window.close()">✕ Close</button>
+  </div>
+</div>
+
+<div id="root">
+
+  <!-- Page 1: Cover -->
+  <div class="page">
+    <img class="cover-banner" src="images/TMF axian banner.jpg" alt="TM Forum — Axian: Partnership for Digital Transformation">
+    <div class="cover-fill">
+    <div class="cover-content">
+      <div class="cover-right">
+        <div class="cover-tag">Prepared Exclusively For</div>
+        <div class="cover-title">Nik Willetts</div>
+        <div class="cover-title2">CEO, TM Forum — ahead of your meeting with Hassan Jaber, CEO of Axian Telecom</div>
+        <div class="cover-subtitle">A short briefing on Axian Group — its markets, its challenges today and tomorrow, and where TM Forum's Open Digital Architecture can help — to support the conversation about extending TM Forum membership from Axian Group to its individual OpCos.</div>
+        <div class="cover-pullquote">&ldquo;No single player can drive Africa's digital future alone.&rdquo;<br><span style="font-size:11px;font-style:normal;color:var(--muted);">— Hassan Jaber, CEO, Axian Telecom</span></div>
+        <div class="cover-by">Claire Watson &middot; Engagement Manager &middot; TM Forum</div>
+      </div>
+    </div>
+    <div class="cover-member-block">
+      <div class="cover-field"><label>Prepared for</label><span>Nik Willetts, CEO, TM Forum</span></div>
+      <div class="cover-field"><label>Meeting with</label><span>Hassan Jaber, CEO, Axian Telecom</span></div>
+      <div class="cover-field"><label>Subject</label><span>Axian Group — Growing OpCo Membership</span></div>
+      <div class="cover-field"><label>Prepared by</label><span>Claire Watson, Engagement Manager</span></div>
+    </div>
+    <div class="cover-stats">
+      <div class="cover-stat"><div class="cover-stat-n">11</div><div class="cover-stat-l">Markets Across Africa<br>&amp; The Indian Ocean</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">5</div><div class="cover-stat-l">Sectors — Telecom, Fintech,<br>Energy, Property, Digibank</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">1 of 11</div><div class="cover-stat-l">OpCos Currently a<br>TM Forum Member</div></div>
+      <div class="cover-stat"><div class="cover-stat-n">30</div><div class="cover-stat-l">Years Hassan's Telecom<br>&amp; Digital Leadership</div></div>
+    </div>
+    </div>
+    <div class="pg-footer"><span>TM Forum &middot; Axian Group Briefing &middot; Prepared for Nik Willetts</span><span>Page 1 of 3</span></div>
+  </div>
+
+  <!-- Page 2: Exec view + challenges -->
+  <div class="page">
+    <div class="sec-header">
+      <div class="sec-eye">The Exec View</div>
+      <h2>Who Axian Is, And Where It Operates</h2>
+      <p>A diversified pan-African group where telecom is the anchor — not the whole story.</p>
+    </div>
+    <div class="p2-body">
+      <div class="exec-block">
+        <h3>A diversified group, not just an operator</h3>
+        <p>Axian Group is a pan-African investment group founded in 2016, active across five sectors: Telecom, Financial Services &amp; Digibank/Fintech, Energy, Properties, and (newest) a 2026 venture arm, "VIA". Its telecom arm — rebranded <strong>Yas</strong> in 2024 across several markets — operates in 11 countries: Madagascar, Tanzania, Togo, Uganda, Senegal, Comoros, DRC, Kenya, Malawi, Réunion and Mayotte.</p>
+        <div class="market-tags">
+          <span class="market-tag">Madagascar</span><span class="market-tag">Tanzania</span><span class="market-tag">Togo</span>
+          <span class="market-tag">Uganda</span><span class="market-tag">Senegal</span><span class="market-tag">Comoros</span>
+          <span class="market-tag">DRC</span><span class="market-tag">Kenya</span><span class="market-tag">Malawi</span>
+          <span class="market-tag">Réunion</span><span class="market-tag">Mayotte</span>
+        </div>
+      </div>
+      <div class="exec-block">
+        <h3>Fintech is a genuine second engine, not a side project</h3>
+        <p>MVola, launched in Madagascar in 2010, was the country's first mobile money service and became its first licensed digital bank in 2021. That model — rebranded <strong>Mixx</strong> in Senegal, Togo and Tanzania — is now expanding: Axian secured a licence for a decentralised digital financial institution from the Central Bank of Comoros in February 2026, with digitised credit products already live there and more markets flagged to follow.</p>
+      </div>
+
+      <div class="chal-eye">Key Challenges — Today</div>
+      <div class="chal-grid">
+        <div class="chal-card">
+          <div class="chal-num">Challenge 01</div>
+          <div class="chal-title">Affordability against low ARPU</div>
+          <div class="chal-text">Hassan has been explicit that laying down 4G/5G infrastructure is "only half the battle" — the other half is making access affordable in underserved and rural markets where ARPU trails other continents, while still funding the rollout.</div>
+        </div>
+        <div class="chal-card">
+          <div class="chal-num">Challenge 02</div>
+          <div class="chal-title">11 markets, 11 regulators</div>
+          <div class="chal-text">Hassan has publicly pushed for fair competition — running a consistent telecom and fintech proposition across 11 different regulatory regimes is a structural drag on speed and consistency.</div>
+        </div>
+        <div class="chal-card">
+          <div class="chal-num">Challenge 03</div>
+          <div class="chal-title">Duplicated effort across OpCos</div>
+          <div class="chal-text">Each rebrand and each new fintech licence (Yas, Mixx, MVola, the new Comoros digital institution) risks being built and integrated separately per country, rather than once and reused.</div>
+        </div>
+        <div class="chal-card tomorrow">
+          <div class="chal-num">Challenge 04</div>
+          <div class="chal-title">Scaling the MVola model everywhere</div>
+          <div class="chal-text">Madagascar and Comoros are proof points; the real prize is making digital banking and credit a consistent, interoperable product across all 11 OpCos — not a series of one-off market launches.</div>
+        </div>
+      </div>
+      <div class="chal-eye" style="margin-top:14px">Key Challenges — Tomorrow</div>
+      <div class="chal-grid">
+        <div class="chal-card tomorrow">
+          <div class="chal-num">Challenge 05</div>
+          <div class="chal-title">Building for African-made AI</div>
+          <div class="chal-text">Hassan's stated ambition is data centres, fibre and subsea cable robust enough that Africa hosts and builds its own AI applications — not just imports them.</div>
+        </div>
+        <div class="chal-card tomorrow">
+          <div class="chal-num">Challenge 06</div>
+          <div class="chal-title">Partnership, not a solo effort</div>
+          <div class="chal-text">Hassan's own words: "no single player can drive Africa's digital future alone." That's precisely the case for standards-based, member-driven collaboration — not a bespoke build per OpCo.</div>
+        </div>
+      </div>
+    </div>
+    <div class="pg-footer"><span>TM Forum &middot; Axian Group Briefing &middot; Prepared for Nik Willetts</span><span>Page 2 of 3</span></div>
+  </div>
+
+  <!-- Page 3: Hassan's vision + ODA infographic + closing -->
+  <div class="page">
+    <div class="sec-header">
+      <div class="sec-eye">Hassan's Vision — Short to Medium Term</div>
+      <h2>Leapfrogging Africa's Digital Divide</h2>
+      <p>Three pillars, in Hassan's own framing: connectivity, financing, and innovation.</p>
+    </div>
+    <div class="p3-body">
+      <div class="vision-quote">&ldquo;Helping the continent leapfrog decades of digital underdevelopment — building a future where public institutions, businesses, and citizens are linked in a resilient, tech-driven ecosystem.&rdquo;</div>
+      <ul class="vision-list">
+        <li><strong>Connectivity:</strong> extend and modernise network infrastructure (5G, fibre, subsea) across all 11 markets, anchored by strategic infrastructure partnerships.</li>
+        <li><strong>Financing:</strong> scale the MVola/Mixx digital banking and credit model from proof points (Madagascar, Comoros) into a group-wide proposition.</li>
+        <li><strong>Innovation:</strong> build the data centre and connectivity foundation for "made-in-Africa" AI, not imported AI.</li>
+        <li>Publicly advocates for fair competition and for public–private partnership as the only realistic path to this vision.</li>
+      </ul>
+
+      <div class="oda-eye">Where TM Forum's ODA Can Help</div>
+      <div class="oda-h">Mapped directly to the challenges above — not a generic pitch</div>
+      <div class="oda-row">
+        <div class="oda-card">
+          <div class="oda-icon" style="background:var(--oda1)">🧩</div>
+          <div class="oda-tag">For Challenge 03 &amp; 04</div>
+          <div class="oda-title">One architecture, built once, reused across all 11 OpCos</div>
+          <div class="oda-text">ODA's Component Directory and TM Forum Open APIs give every OpCo a shared blueprint for telecom and fintech services — ending the need to design and integrate each market from scratch.</div>
+        </div>
+        <div class="oda-card">
+          <div class="oda-icon" style="background:var(--oda2)">⚡</div>
+          <div class="oda-tag">For Challenge 01 &amp; 04</div>
+          <div class="oda-title">Faster, cheaper time-to-market for new digital services</div>
+          <div class="oda-text">Standards-based interfaces cut integration cost and time — directly easing the affordability pressure Hassan has flagged, and speeding up scaling MVola/Mixx into new markets.</div>
+        </div>
+        <div class="oda-card">
+          <div class="oda-icon" style="background:var(--oda3)">🌐</div>
+          <div class="oda-tag">For Challenge 06</div>
+          <div class="oda-title">A ready-made partner network, not a solo build</div>
+          <div class="oda-text">TM Forum's member community and Catalyst programme are exactly the "no single player can do this alone" model Hassan has already called for publicly — peers, not vendors, solving the same problems.</div>
+        </div>
+      </div>
+      <p style="font-size:10.3px;color:var(--muted);line-height:1.6;margin-top:2px">Today, TM Forum membership sits at Axian Group level — none of the 11 OpCos are members individually. Each one re-solves the same integration and interoperability problems alone. The conversation with Hassan is the opening to change that.</p>
+
+      <div class="final-quote">
+        <p>Axian doesn't need convincing that partnership is the answer — <strong>Hassan has said as much publicly</strong>. This conversation is about making TM Forum membership, and ODA, the concrete form that partnership takes for every one of Axian's 11 OpCos, not just the Group.</p>
+      </div>
+      <div class="sig-bar">
+        <div class="sig-avt"><img src="images/ClaireWatson.jpg" alt="Claire Watson"></div>
+        <div>
+          <div class="sig-name">Claire Watson</div>
+          <div class="sig-title">Engagement Manager &middot; TM Forum &middot; Prepared ahead of your meeting with Hassan Jaber</div>
+        </div>
+      </div>
+    </div>
+    <div class="pg-footer"><span>TM Forum &middot; Axian Group Briefing &middot; Prepared for Nik Willetts</span><span>Page 3 of 3</span></div>
+  </div>
+
+</div>
+</body>
+</html>
