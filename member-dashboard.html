@@ -37,12 +37,24 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .msearch:focus{border-color:rgba(130,180,255,.35);width:160px}
 .msearch::placeholder{color:rgba(255,255,255,.22)}
 .picker-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);white-space:nowrap}
-.picker{position:relative;display:flex;align-items:center}
-.picker select{appearance:none;-webkit-appearance:none;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:100px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 38px 7px 16px;cursor:pointer;outline:none;min-width:220px;transition:border-color .2s,background .2s}
-.picker select:hover{border-color:var(--accent);background:rgba(217,18,65,.18)}
-.picker select:focus{border-color:var(--accent);background:rgba(217,18,65,.18)}
-.picker select option{background:#0D0B4D;color:var(--white)}
-.picker::after{content:'▾';position:absolute;right:14px;pointer-events:none;color:var(--accent);font-size:12px}
+/* Custom member picker — replaces a native <select> because the OS-rendered open
+   options list cannot be styled (no border-radius, no theme colors) no matter what
+   CSS is applied to the closed control. Same pattern as the Jump-to menus in the
+   TM Forum portal projects. */
+.mpicker-wrap{position:relative}
+.mpicker-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:100px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 16px;cursor:pointer;outline:none;min-width:220px;transition:border-color .2s,background .2s}
+.mpicker-btn:hover{border-color:var(--accent);background:rgba(217,18,65,.18)}
+.mpicker-wrap.open .mpicker-btn{border-color:var(--accent);background:rgba(217,18,65,.18)}
+.mpicker-btn:disabled{opacity:.5;cursor:not-allowed}
+.mpicker-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mpicker-chev{flex-shrink:0;color:var(--accent);transition:transform .15s}
+.mpicker-wrap.open .mpicker-chev{transform:rotate(180deg)}
+.mpicker-list{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:260px;max-height:320px;overflow-y:auto;background:#0D0B4D;border:1px solid var(--accent-border);border-radius:16px;padding:6px;box-shadow:0 24px 60px rgba(0,0,0,.55);z-index:60;opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity .15s,transform .15s}
+.mpicker-wrap.open .mpicker-list{opacity:1;pointer-events:all;transform:translateY(0)}
+.mpicker-item{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:10px;background:transparent;border:none;color:rgba(255,255,255,.75);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:background .12s,color .12s}
+.mpicker-item:hover{background:rgba(217,18,65,.14);color:#fff}
+.mpicker-item.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.mpicker-empty{padding:10px 12px;font-size:12px;color:rgba(255,255,255,.35);font-family:'DM Mono',monospace}
 /* Load New Members */
 .load-new-btn{display:flex;align-items:center;gap:6px;background:rgba(80,200,120,.08);border:1px solid rgba(80,200,120,.25);border-radius:8px;color:rgba(80,200,120,.8);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:background .2s,border-color .2s,color .2s;white-space:nowrap}
 .load-new-btn:hover{background:rgba(80,200,120,.15);border-color:rgba(80,200,120,.5);color:rgba(80,200,120,1)}
@@ -267,7 +279,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .crud-save:disabled{opacity:.4;cursor:not-allowed}
 
 @media(max-width:960px){.stats{grid-template-columns:repeat(3,1fr)}.grid2,.grid-equal{grid-template-columns:1fr}}
-@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}.mname{font-size:26px}.topbar{flex-direction:column;align-items:flex-start}.picker select{width:100%}.picker-wrap{width:100%}}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}.mname{font-size:26px}.topbar{flex-direction:column;align-items:flex-start}.mpicker-btn{width:100%}.picker-wrap{width:100%}}
 </style>
 </head>
 <body>
@@ -283,8 +295,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="tb-right">
       <div class="picker-wrap">
         <span class="picker-label">Member</span>
-        <input id="msearch" class="msearch" type="text" placeholder="Search…" oninput="filterMembers(this.value)" autocomplete="off">
-        <div class="picker"><select id="picker" onchange="selectMember(this.value)" disabled></select></div>
+        <input id="msearch" class="msearch" type="text" placeholder="Search…" oninput="filterMembers(this.value)" onfocus="toggleMemberPicker(true)" autocomplete="off">
+        <div class="mpicker-wrap" id="mpicker-wrap">
+          <button type="button" class="mpicker-btn" id="mpicker-btn" onclick="toggleMemberPicker()" disabled>
+            <span class="mpicker-label" id="mpicker-label">Loading…</span>
+            <svg class="mpicker-chev" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="mpicker-list" id="mpicker-list"></div>
+        </div>
         <div class="mdel-wrap">
           <button class="mdel-btn" id="mdel-btn" onclick="toggleDeleteMemberConfirm()" title="Delete this member" aria-label="Delete this member">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
@@ -583,19 +601,50 @@ function selectMember(id){
 var _allMemberOpts=[];
 
 function buildPicker(){
-  const sel=document.getElementById('picker');
   _allMemberOpts=Object.values(MEMBERS).map(m=>({id:m.id,text:`${m.id} — ${m.name}`}));
-  sel.innerHTML=_allMemberOpts.map(o=>`<option value="${o.id}">${o.text}</option>`).join('');
-  sel.disabled=false;
+  document.getElementById('mpicker-btn').disabled=false;
+  renderPickerList(_allMemberOpts);
+  updatePickerLabel();
 }
 
+function updatePickerLabel(){
+  const o=_allMemberOpts.find(o=>o.id===currentId);
+  document.getElementById('mpicker-label').textContent=o?o.text:'Select a member…';
+}
+
+function renderPickerList(opts){
+  const list=document.getElementById('mpicker-list');
+  list.innerHTML=opts.length
+    ?opts.map(o=>`<button type="button" class="mpicker-item${o.id===currentId?' active':''}" onclick="pickMember('${o.id}')">${esc(o.text)}</button>`).join('')
+    :'<div class="mpicker-empty">No results</div>';
+}
+
+function pickMember(id){
+  toggleMemberPicker(false);
+  selectMember(id);
+  updatePickerLabel();
+}
+
+function toggleMemberPicker(show){
+  const wrap=document.getElementById('mpicker-wrap');
+  if(!wrap||wrap.querySelector('.mpicker-btn').disabled)return;
+  const open=show===undefined?!wrap.classList.contains('open'):show;
+  wrap.classList.toggle('open',open);
+}
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('mpicker-wrap');
+  if(wrap&&!wrap.contains(e.target))toggleMemberPicker(false);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){toggleMemberPicker(false);toggleDeleteMemberConfirm(false);}
+});
+
 function filterMembers(q){
-  const sel=document.getElementById('picker');
   const lq=q.trim().toLowerCase();
   const opts=lq?_allMemberOpts.filter(o=>o.text.toLowerCase().includes(lq)):_allMemberOpts;
-  sel.innerHTML=opts.map(o=>`<option value="${o.id}"${o.id===currentId?' selected':''}>${o.text}</option>`).join('')
-    ||'<option disabled>No results</option>';
-  if(opts.length===1&&opts[0].id!==currentId)selectMember(opts[0].id);
+  renderPickerList(opts);
+  toggleMemberPicker(true);
+  if(opts.length===1&&opts[0].id!==currentId){selectMember(opts[0].id);updatePickerLabel();}
 }
 
 // ─── DELETE MEMBER ──────────────────────────────────────────────────
@@ -630,8 +679,9 @@ async function doDeleteMember(){
     if(!remaining.length){
       document.getElementById('main-content').innerHTML=
         '<div class="state-overlay"><div class="state-label">No members remaining</div></div>';
-      document.getElementById('picker').innerHTML='';
-      document.getElementById('picker').disabled=true;
+      document.getElementById('mpicker-list').innerHTML='';
+      document.getElementById('mpicker-label').textContent='No members';
+      document.getElementById('mpicker-btn').disabled=true;
       currentId=null;
       return;
     }
