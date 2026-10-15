@@ -1,0 +1,56 @@
+{
+  "name": "TMF — Member Write (Delete)",
+  "nodes": [
+    {
+      "id": "mw-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 360],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tmf-member-write",
+        "responseMode": "responseNode",
+        "options": { "allowedOrigins": "*" }
+      }
+    },
+    {
+      "id": "mw-002",
+      "name": "Soft Delete Member",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 360],
+      "parameters": {
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": { "__rl": true, "value": "1B3yztUrFa8b0H1vx7Jt6qywccwEHNo7rJ9HBUeG602c", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Members", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["Member ID"],
+          "value": {
+            "Member ID": "={{ ($json.body ?? $json).member['Member ID'] }}",
+            "Deleted":   "true"
+          },
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": { "googleSheetsOAuth2Api": { "id": "", "name": "Google Sheets account" } }
+    },
+    {
+      "id": "mw-003",
+      "name": "Respond — Delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 360],
+      "parameters": { "respondWith": "json", "responseBody": "={ \"success\": true, \"action\": \"delete\" }", "options": { "responseHeaders": { "entries": [{ "name": "Access-Control-Allow-Origin", "value": "*" }] } } }
+    }
+  ],
+  "connections": {
+    "Webhook":              { "main": [[{ "node": "Soft Delete Member", "type": "main", "index": 0 }]] },
+    "Soft Delete Member":   { "main": [[{ "node": "Respond — Delete",   "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

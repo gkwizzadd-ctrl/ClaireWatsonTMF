@@ -38,15 +38,31 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .msearch::placeholder{color:rgba(255,255,255,.22)}
 .picker-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);white-space:nowrap}
 .picker{position:relative;display:flex;align-items:center}
-.picker select{appearance:none;-webkit-appearance:none;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 36px 7px 14px;cursor:pointer;outline:none;min-width:220px;transition:border-color .2s}
-.picker select:hover{border-color:rgba(255,255,255,.2)}
-.picker select:focus{border-color:var(--accent)}
+.picker select{appearance:none;-webkit-appearance:none;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:100px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:7px 38px 7px 16px;cursor:pointer;outline:none;min-width:220px;transition:border-color .2s,background .2s}
+.picker select:hover{border-color:var(--accent);background:rgba(217,18,65,.18)}
+.picker select:focus{border-color:var(--accent);background:rgba(217,18,65,.18)}
 .picker select option{background:#0D0B4D;color:var(--white)}
-.picker::after{content:'▾';position:absolute;right:12px;pointer-events:none;color:var(--g500);font-size:12px}
+.picker::after{content:'▾';position:absolute;right:14px;pointer-events:none;color:var(--accent);font-size:12px}
 /* Load New Members */
 .load-new-btn{display:flex;align-items:center;gap:6px;background:rgba(80,200,120,.08);border:1px solid rgba(80,200,120,.25);border-radius:8px;color:rgba(80,200,120,.8);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;cursor:pointer;transition:background .2s,border-color .2s,color .2s;white-space:nowrap}
 .load-new-btn:hover{background:rgba(80,200,120,.15);border-color:rgba(80,200,120,.5);color:rgba(80,200,120,1)}
 .load-new-btn svg{flex-shrink:0}
+/* Delete Member */
+.mdel-wrap{position:relative}
+.mdel-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(217,18,65,.06);border:1px solid rgba(217,18,65,.2);color:rgba(217,18,65,.6);cursor:pointer;transition:background .15s,color .15s,border-color .15s;flex-shrink:0}
+.mdel-btn:hover{background:rgba(217,18,65,.15);border-color:rgba(217,18,65,.45);color:#f87171}
+.mdel-btn:disabled{opacity:.35;cursor:not-allowed}
+.mdel-confirm{position:absolute;top:calc(100% + 9px);right:0;width:230px;background:#0D0B4D;border:1px solid rgba(217,18,65,.3);border-radius:12px;padding:14px;box-shadow:0 24px 60px rgba(0,0,0,.55);z-index:50;opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity .15s,transform .15s}
+.mdel-confirm.open{opacity:1;pointer-events:all;transform:translateY(0)}
+.mdel-confirm-text{font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;margin-bottom:12px}
+.mdel-confirm-text b{color:#fff;font-weight:600}
+.mdel-confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+.mdel-confirm button{padding:4px 12px;border-radius:5px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;border:1px solid;transition:background .15s}
+.mdel-confirm .conf-yes{background:rgba(217,18,65,.12);border-color:rgba(217,18,65,.3);color:#f87171}
+.mdel-confirm .conf-yes:hover{background:rgba(217,18,65,.2)}
+.mdel-confirm .conf-yes:disabled{opacity:.4;cursor:not-allowed}
+.mdel-confirm .conf-no{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.mdel-confirm .conf-no:hover{background:rgba(255,255,255,.1)}
 /* Load modal overlay */
 #lnm-modal{position:fixed;inset:0;background:rgba(5,3,20,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
 #lnm-modal.open{opacity:1;pointer-events:all}
@@ -269,6 +285,18 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <span class="picker-label">Member</span>
         <input id="msearch" class="msearch" type="text" placeholder="Search…" oninput="filterMembers(this.value)" autocomplete="off">
         <div class="picker"><select id="picker" onchange="selectMember(this.value)" disabled></select></div>
+        <div class="mdel-wrap">
+          <button class="mdel-btn" id="mdel-btn" onclick="toggleDeleteMemberConfirm()" title="Delete this member" aria-label="Delete this member">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+          </button>
+          <div class="mdel-confirm" id="mdel-confirm">
+            <div class="mdel-confirm-text">Delete <b id="mdel-name"></b> and all their data? This can't be undone from here.</div>
+            <div class="mdel-confirm-actions">
+              <button class="conf-no" onclick="toggleDeleteMemberConfirm(false)">Cancel</button>
+              <button class="conf-yes" id="mdel-confirm-btn" onclick="doDeleteMember()">Delete</button>
+            </div>
+          </div>
+        </div>
         <button class="load-new-btn" onclick="loadNewMembers()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
           Load New Members
@@ -390,7 +418,7 @@ function applyData(data){
 function buildMembers(data){
   return data['Members'].map((row,idx)=>{
     const id=row['Member ID'];
-    if(!id)return null;
+    if(!id||row['Deleted']==='true')return null;
     const accent=ACCENTS[idx%ACCENTS.length];
     const filter=tab=>data[tab].filter(r=>r['Member ID']===id);
     const contacts=filter('Contacts');
@@ -570,6 +598,53 @@ function filterMembers(q){
   if(opts.length===1&&opts[0].id!==currentId)selectMember(opts[0].id);
 }
 
+// ─── DELETE MEMBER ──────────────────────────────────────────────────
+function toggleDeleteMemberConfirm(show){
+  const el=document.getElementById('mdel-confirm');
+  if(!el)return;
+  const open=show===undefined?!el.classList.contains('open'):show;
+  if(open){
+    const m=MEMBERS[currentId];
+    if(!m)return;
+    document.getElementById('mdel-name').textContent=m.name;
+  }
+  el.classList.toggle('open',open);
+}
+document.addEventListener('click',e=>{
+  const wrap=document.querySelector('.mdel-wrap');
+  if(wrap&&!wrap.contains(e.target))toggleDeleteMemberConfirm(false);
+});
+
+async function doDeleteMember(){
+  const m=MEMBERS[currentId];
+  if(!m)return;
+  const btn=document.getElementById('mdel-confirm-btn');
+  btn.disabled=true;
+  try{
+    await fetch(MEMBER_WRITE_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'delete',member:{'Member ID':m.id}})});
+    toggleDeleteMemberConfirm(false);
+    delete MEMBERS[m.id];
+    const remaining=Object.keys(MEMBERS);
+    showToast(`${m.name} deleted`,'ok');
+    if(!remaining.length){
+      document.getElementById('main-content').innerHTML=
+        '<div class="state-overlay"><div class="state-label">No members remaining</div></div>';
+      document.getElementById('picker').innerHTML='';
+      document.getElementById('picker').disabled=true;
+      currentId=null;
+      return;
+    }
+    currentId=null;
+    buildPicker();
+    selectMember(remaining[0]);
+  }catch(e){
+    showToast('Delete failed: '+e.message,'err');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
 // ─── RADAR ───────────────────────────────────────────────────────────
 function buildRadar(maturity,accentColor){
   const svg=document.getElementById('radar');
@@ -681,6 +756,7 @@ const SESSION_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-session-
 const CATALYST_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-catalyst-write';
 const PIPELINE_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-pipeline-write';
 const EVENT_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-event-write';
+const MEMBER_WRITE_URL='https://n8n.srv1739004.hstgr.cloud/webhook/tmf-member-write';
 const PAGE=8; // items shown before "show more" in each section
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
