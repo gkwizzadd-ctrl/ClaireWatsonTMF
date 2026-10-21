@@ -11,6 +11,7 @@
   --white:#fff;--g200:#d8d8e8;--g500:#888899;
   --surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);
   --c-an:#3b82f6;--c-it:#06b6d4;--c-ba:#ec4899;--c-oda:#f59e0b;--c-etom:#10b981;--c-data:#8b5cf6;--c-fin:#14b8a6;
+  --c-gov:#6b7280;--c-odaapi:#fb923c;--c-eco:#0ea5e9;--c-cx:#fb7185;--c-anops:#4f46e5;--c-taid:#a855f7;--c-cult:#84cc16;--c-mat:#eab308;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--navy);color:var(--white);font-family:'DM Sans',system-ui,sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
@@ -178,6 +179,14 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .cc-sat  {border-left-color:#94a3b8}        .cc-sat   .scat{color:#94a3b8}
 .cc-oda  {border-left-color:var(--c-oda)}   .cc-oda   .scat{color:var(--c-oda)}
 .cc-fin  {border-left-color:var(--c-fin)}   .cc-fin   .scat{color:var(--c-fin)}
+.cc-gov    {border-left-color:var(--c-gov)}    .cc-gov    .scat{color:var(--c-gov)}
+.cc-odaapi {border-left-color:var(--c-odaapi)} .cc-odaapi .scat{color:var(--c-odaapi)}
+.cc-eco    {border-left-color:var(--c-eco)}    .cc-eco    .scat{color:var(--c-eco)}
+.cc-cx     {border-left-color:var(--c-cx)}     .cc-cx     .scat{color:var(--c-cx)}
+.cc-anops  {border-left-color:var(--c-anops)}  .cc-anops  .scat{color:var(--c-anops)}
+.cc-taid   {border-left-color:var(--c-taid)}   .cc-taid   .scat{color:var(--c-taid)}
+.cc-cult   {border-left-color:var(--c-cult)}   .cc-cult   .scat{color:var(--c-cult)}
+.cc-mat    {border-left-color:var(--c-mat)}    .cc-mat    .scat{color:var(--c-mat)}
 
 .sess-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .sess-filter-select,.sess-filter-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;color:var(--g200);font-family:'DM Mono',monospace;font-size:10px;padding:7px 10px;outline:none}
@@ -365,7 +374,10 @@ const DMU_CLS = {
 const SESSION_CAT = {
   'Autonomous Networks':'cc-an','AI & Data':'cc-data','Business Process':'cc-etom',
   'Business Assurance':'cc-ba','Composable IT':'cc-it','Strategy':'cc-strat',
-  'C-Suite Event':'cc-csuit','Satellite':'cc-sat','ODA':'cc-oda','Fintech':'cc-fin'
+  'C-Suite Event':'cc-csuit','Satellite':'cc-sat','ODA':'cc-oda','Fintech':'cc-fin',
+  'Governance':'cc-gov','ODA and Open APIs':'cc-odaapi','Digital Ecosystems':'cc-eco',
+  'Customer Experience':'cc-cx','Autonomous Networks & Operations':'cc-anops',
+  'Trustworthy AI & Data':'cc-taid','Culture':'cc-cult','Maturity Models':'cc-mat'
 };
 const DOMAIN_KEYS = {
   autonomous:'#3b82f6',composable:'#06b6d4','business assurance':'#ec4899',
@@ -403,6 +415,8 @@ function getDomainColor(d){
 }
 function getSessionCat(cat){
   if(!cat) return 'cc-strat';
+  if(SESSION_CAT[cat]) return SESSION_CAT[cat]; // exact match first — avoids e.g. "Autonomous
+  // Networks & Operations" being swallowed by the shorter "Autonomous Networks" substring key below
   for(const[k,v] of Object.entries(SESSION_CAT)) if(cat.includes(k)) return v;
   return 'cc-strat';
 }
@@ -1342,7 +1356,7 @@ const CRUD_CONFIG={
     title_add:'Add Session',title_edit:'Edit Session',
     fields:[
       {id:'ss-date',label:'Date',type:'input',inputtype:'date',required:true},
-      {id:'ss-category',label:'Category',type:'select',options:['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite','ODA','Fintech']},
+      {id:'ss-category',label:'Category',type:'select',options:['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite','ODA','Fintech','Governance','ODA and Open APIs','Digital Ecosystems','Customer Experience','Autonomous Networks & Operations','Trustworthy AI & Data','Culture','Maturity Models']},
       {id:'ss-title',label:'Topic / Title',type:'input',required:true,placeholder:'Session topic or title'},
       {id:'ss-attendees',label:'Attendees',type:'input',placeholder:'Axian attendees present'},
       {id:'ss-outcome',label:'Outcome / Notes',type:'textarea',placeholder:'Key outcomes and notes…'},
