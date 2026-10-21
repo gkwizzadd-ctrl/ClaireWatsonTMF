@@ -10,7 +10,7 @@
   --navy:#0D0B4D;--accent:#D91241;--accent-dim:rgba(217,18,65,.12);--accent-border:rgba(217,18,65,.3);
   --white:#fff;--g200:#d8d8e8;--g500:#888899;
   --surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);
-  --c-an:#3b82f6;--c-it:#06b6d4;--c-ba:#ec4899;--c-oda:#f59e0b;--c-etom:#10b981;--c-data:#8b5cf6;
+  --c-an:#3b82f6;--c-it:#06b6d4;--c-ba:#ec4899;--c-oda:#f59e0b;--c-etom:#10b981;--c-data:#8b5cf6;--c-fin:#14b8a6;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--navy);color:var(--white);font-family:'DM Sans',system-ui,sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
@@ -176,6 +176,15 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .cc-strat{border-left-color:var(--accent)}  .cc-strat .scat{color:var(--accent)}
 .cc-csuit{border-left-color:#C9A84C}        .cc-csuit .scat{color:#C9A84C}
 .cc-sat  {border-left-color:#94a3b8}        .cc-sat   .scat{color:#94a3b8}
+.cc-oda  {border-left-color:var(--c-oda)}   .cc-oda   .scat{color:var(--c-oda)}
+.cc-fin  {border-left-color:var(--c-fin)}   .cc-fin   .scat{color:var(--c-fin)}
+
+.sess-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sess-filter-select,.sess-filter-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;color:var(--g200);font-family:'DM Mono',monospace;font-size:10px;padding:7px 10px;outline:none}
+.sess-filter-input{flex:1;min-width:160px}
+.sess-filter-select:focus,.sess-filter-input:focus{border-color:var(--accent)}
+.sess-filter-clear{padding:7px 12px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--g500);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.sess-filter-clear:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:var(--white)}
 
 /* Catalysts */
 .cl{display:flex;flex-direction:column;gap:7px}
@@ -345,6 +354,7 @@ const DATA_URL = 'https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrF
 // Must be declared before init() runs: the cached-data path in init() calls
 // renderMember() synchronously (no await), which reads _exp immediately.
 const _exp={sessions:false,catalysts:false,pipeline:false,events:false};
+let _sessFilter={cat:'',q:''};
 const ACCENTS = ['#D91241','#10b981','#3b82f6','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#22d3ee','#a78bfa'];
 
 // ─── LOOKUP MAPS ─────────────────────────────────────────────────────
@@ -355,7 +365,7 @@ const DMU_CLS = {
 const SESSION_CAT = {
   'Autonomous Networks':'cc-an','AI & Data':'cc-data','Business Process':'cc-etom',
   'Business Assurance':'cc-ba','Composable IT':'cc-it','Strategy':'cc-strat',
-  'C-Suite Event':'cc-csuit','Satellite':'cc-sat'
+  'C-Suite Event':'cc-csuit','Satellite':'cc-sat','ODA':'cc-oda','Fintech':'cc-fin'
 };
 const DOMAIN_KEYS = {
   autonomous:'#3b82f6',composable:'#06b6d4','business assurance':'#ec4899',
@@ -551,6 +561,7 @@ function buildDashboardHTML(){
 function renderMember(m){
   // Reset all section expand states when switching members
   _exp.sessions=false;_exp.catalysts=false;_exp.pipeline=false;_exp.events=false;
+  _sessFilter={cat:'',q:''};
   document.documentElement.style.setProperty('--accent',m.accent);
   document.documentElement.style.setProperty('--accent-dim',m.accentDim);
   document.documentElement.style.setProperty('--accent-border',m.accentBorder);
@@ -931,6 +942,27 @@ function refreshSessionStats(m){
   ).join('');
 }
 
+function sessionMatchesFilter(s){
+  if(_sessFilter.cat && (s['Category']||'')!==_sessFilter.cat) return false;
+  if(_sessFilter.q){
+    const q=_sessFilter.q.toLowerCase();
+    const hay=[s['Category'],s['Topic / Title']||s['Title'],s['Axian Attendees']||s['Attendees'],
+      s['Outcome / Status']||s['Key Notes']||s['Outcome']].filter(Boolean).join(' ').toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  return true;
+}
+function setSessCat(v){_sessFilter.cat=v;renderSessions(MEMBERS[currentId]);}
+function setSessQuery(v){
+  _sessFilter.q=v;
+  const input=document.querySelector('.sess-filter-input');
+  const cursor=input?input.selectionStart:null;
+  renderSessions(MEMBERS[currentId]);
+  const newInput=document.querySelector('.sess-filter-input');
+  if(newInput&&cursor!=null){ newInput.focus(); newInput.setSelectionRange(cursor,cursor); }
+}
+function clearSessFilter(){_sessFilter={cat:'',q:''};renderSessions(MEMBERS[currentId]);}
+
 function renderSessions(m){
   const live=(m.rawSessions||[]).filter(s=>s['Deleted']!=='true');
   const lbl=document.getElementById('sessions-lbl');
@@ -943,16 +975,37 @@ function renderSessions(m){
     el.innerHTML='<div style="padding:18px 0;opacity:.55;font-size:13px">No sessions yet — click "+ Add Session" to add one.</div>';
     return;
   }
-  const show=_exp.sessions?live:live.slice(0,PAGE);
-  el.innerHTML=show.map((s,i)=>{
+  // Category options: every canonical SESSION_CAT key, plus any raw category values actually
+  // present in this member's data (covers ad-hoc values like "Satellite / Broadband" that only
+  // substring-match a canonical key rather than equal it).
+  const catSet=new Set(Object.keys(SESSION_CAT));
+  live.forEach(s=>{ if(s['Category']) catSet.add(s['Category']); });
+  const catOptions=Array.from(catSet).sort((a,b)=>a.localeCompare(b));
+  const filterBar=`<div class="sess-filter-bar">
+    <select class="sess-filter-select" onchange="setSessCat(this.value)">
+      <option value="">All categories</option>
+      ${catOptions.map(c=>`<option value="${esc(c)}"${_sessFilter.cat===c?' selected':''}>${esc(c)}</option>`).join('')}
+    </select>
+    <input class="sess-filter-input" type="text" placeholder="Search sessions…" value="${esc(_sessFilter.q)}" oninput="setSessQuery(this.value)">
+    ${(_sessFilter.cat||_sessFilter.q)?'<button type="button" class="sess-filter-clear" onclick="clearSessFilter()">Clear</button>':''}
+  </div>`;
+
+  const filtered=live.filter(sessionMatchesFilter);
+  if(!filtered.length){
+    el.innerHTML=filterBar+'<div style="padding:18px 0;opacity:.55;font-size:13px">No sessions match this filter.</div>';
+    return;
+  }
+  const show=_exp.sessions?filtered:filtered.slice(0,PAGE);
+  el.innerHTML=filterBar+show.map((s)=>{
+    const liveIdx=live.indexOf(s);
     const cat=getSessionCat(s['Category']);
     const title=s['Topic / Title']||s['Title']||'';
     const who=s['Axian Attendees']||s['Attendees']||'';
     const out=s['Outcome / Status']||s['Key Notes']||s['Outcome']||'';
-    return `<div class="scard ${cat}" style="position:relative">
+    return `<div class="scard ${cat}" data-liveidx="${liveIdx}" style="position:relative">
       <div class="ccard-actions">
-        <button class="crd-btn crd-edit" onclick="openCrud('session',${i})">Edit</button>
-        <button class="crd-btn crd-del" onclick="confirmDeleteSession(${i})">Delete</button>
+        <button class="crd-btn crd-edit" onclick="openCrud('session',${liveIdx})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeleteSession(${liveIdx})">Delete</button>
       </div>
       <div class="stop"><span class="scat">${esc(s['Category']||'')}</span><span class="sdate">${esc(fmtDate(s['Date'])||'')}</span></div>
       <div class="stitle">${esc(title)}</div>
@@ -960,8 +1013,8 @@ function renderSessions(m){
       ${out?`<div class="sout">${esc(out)}</div>`:''}
     </div>`;
   }).join('');
-  if(live.length>PAGE){
-    const more=live.length-PAGE;
+  if(filtered.length>PAGE){
+    const more=filtered.length-PAGE;
     el.innerHTML+=`<div class="more-row">${_exp.sessions
       ?`<button class="more-btn" onclick="_exp.sessions=false;renderSessions(MEMBERS[currentId])">Show less</button>`
       :`<button class="more-btn" onclick="_exp.sessions=true;renderSessions(MEMBERS[currentId])">+ ${more} more</button>`
@@ -970,8 +1023,7 @@ function renderSessions(m){
 }
 
 function confirmDeleteSession(i){
-  const cards=document.querySelectorAll('#sessions .scard');
-  const card=cards[i];
+  const card=document.querySelector(`#sessions .scard[data-liveidx="${i}"]`);
   if(!card)return;
   const d=document.createElement('div');
   d.className='ccard-confirm';
@@ -1290,7 +1342,7 @@ const CRUD_CONFIG={
     title_add:'Add Session',title_edit:'Edit Session',
     fields:[
       {id:'ss-date',label:'Date',type:'input',inputtype:'date',required:true},
-      {id:'ss-category',label:'Category',type:'select',options:['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite']},
+      {id:'ss-category',label:'Category',type:'select',options:['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite','ODA','Fintech']},
       {id:'ss-title',label:'Topic / Title',type:'input',required:true,placeholder:'Session topic or title'},
       {id:'ss-attendees',label:'Attendees',type:'input',placeholder:'Axian attendees present'},
       {id:'ss-outcome',label:'Outcome / Notes',type:'textarea',placeholder:'Key outcomes and notes…'},
