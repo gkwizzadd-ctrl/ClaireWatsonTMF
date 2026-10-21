@@ -364,6 +364,10 @@ const DATA_URL = 'https://script.google.com/macros/s/AKfycbxYJokB6e7Z_5GNajVZWrF
 // renderMember() synchronously (no await), which reads _exp immediately.
 const _exp={sessions:false,catalysts:false,pipeline:false,events:false};
 let _sessFilter={cat:'',q:''};
+let _contactFilter={cat:'',mission:'',q:''};
+const CATEGORY_OPTIONS=['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite','ODA','Fintech','Governance','ODA and Open APIs','Digital Ecosystems','Customer Experience','Autonomous Networks & Operations','Trustworthy AI & Data','Culture','Maturity Models'];
+const CONTACT_MISSIONS=['Composable IT & Ecosystems','Autonomous Networks','Trustworthy AI & Data'];
+const MISSION_CLR={'Composable IT & Ecosystems':'#6A3E86','Autonomous Networks':'#0A8298','Trustworthy AI & Data':'#A9720A'};
 const ACCENTS = ['#D91241','#10b981','#3b82f6','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#f97316','#22d3ee','#a78bfa'];
 
 // ─── LOOKUP MAPS ─────────────────────────────────────────────────────
@@ -576,6 +580,7 @@ function renderMember(m){
   // Reset all section expand states when switching members
   _exp.sessions=false;_exp.catalysts=false;_exp.pipeline=false;_exp.events=false;
   _sessFilter={cat:'',q:''};
+  _contactFilter={cat:'',mission:'',q:''};
   document.documentElement.style.setProperty('--accent',m.accent);
   document.documentElement.style.setProperty('--accent-dim',m.accentDim);
   document.documentElement.style.setProperty('--accent-border',m.accentBorder);
@@ -860,8 +865,34 @@ function showToast(msg,type){
 
 // ─── CONTACTS RENDER ──────────────────────────────────────────────────
 const CONTACT_LIMIT=4;
+let _contactShowAll=false;
+
+function contactMatchesFilter(c){
+  if(_contactFilter.cat && (c['Category']||'')!==_contactFilter.cat) return false;
+  if(_contactFilter.mission && (c['Mission']||'')!==_contactFilter.mission) return false;
+  if(_contactFilter.q){
+    const q=_contactFilter.q.toLowerCase();
+    const hay=[c['Name']||c['Contact Name']||c['Full Name']||c['Person']||c['Person(s)'],
+      c['Job Title']||c['Title']||c['Position']||c['Role']||c['DMU Role'],
+      c['Category'],c['Mission'],c['Notes']||c['Note']].filter(Boolean).join(' ').toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  return true;
+}
+function setContactCat(v){_contactFilter.cat=v;renderContacts(MEMBERS[currentId],_contactShowAll);}
+function setContactMission(v){_contactFilter.mission=v;renderContacts(MEMBERS[currentId],_contactShowAll);}
+function setContactQuery(v){
+  _contactFilter.q=v;
+  const input=document.querySelector('.contact-filter-input');
+  const cursor=input?input.selectionStart:null;
+  renderContacts(MEMBERS[currentId],_contactShowAll);
+  const newInput=document.querySelector('.contact-filter-input');
+  if(newInput&&cursor!=null){ newInput.focus(); newInput.setSelectionRange(cursor,cursor); }
+}
+function clearContactFilter(){_contactFilter={cat:'',mission:'',q:''};renderContacts(MEMBERS[currentId],_contactShowAll);}
 
 function renderContacts(m,showAll){
+  _contactShowAll=!!showAll;
   const live=(m.contacts||[]).filter(c=>c['Deleted']!=='true');
   const el=document.getElementById('contacts-list');
   if(!el)return;
@@ -869,27 +900,57 @@ function renderContacts(m,showAll){
     el.innerHTML='<div class="no-records">No contacts yet — click "+ Add Contact" to add one</div>';
     return;
   }
-  const showing=showAll?live:live.slice(0,CONTACT_LIMIT);
-  const hidden=live.length-showing.length;
-  el.innerHTML=showing.map((c,i)=>{
+  const catSet=new Set(CATEGORY_OPTIONS);
+  live.forEach(c=>{ if(c['Category']) catSet.add(c['Category']); });
+  const catOptions=Array.from(catSet).sort((a,b)=>a.localeCompare(b));
+  const filterBar=`<div class="sess-filter-bar" style="grid-column:1/-1">
+    <select class="sess-filter-select" onchange="setContactCat(this.value)">
+      <option value="">All categories</option>
+      ${catOptions.map(c=>`<option value="${esc(c)}"${_contactFilter.cat===c?' selected':''}>${esc(c)}</option>`).join('')}
+    </select>
+    <select class="sess-filter-select" onchange="setContactMission(this.value)">
+      <option value="">All missions</option>
+      ${CONTACT_MISSIONS.map(ms=>`<option value="${esc(ms)}"${_contactFilter.mission===ms?' selected':''}>${esc(ms)}</option>`).join('')}
+    </select>
+    <input class="sess-filter-input contact-filter-input" type="text" placeholder="Search contacts…" value="${esc(_contactFilter.q)}" oninput="setContactQuery(this.value)">
+    ${(_contactFilter.cat||_contactFilter.mission||_contactFilter.q)?'<button type="button" class="sess-filter-clear" onclick="clearContactFilter()">Clear</button>':''}
+  </div>`;
+
+  const filtered=live.filter(contactMatchesFilter);
+  if(!filtered.length){
+    el.innerHTML=filterBar+'<div class="no-records" style="grid-column:1/-1">No contacts match this filter.</div>';
+    return;
+  }
+  const showing=showAll?filtered:filtered.slice(0,CONTACT_LIMIT);
+  const hidden=filtered.length-showing.length;
+  el.innerHTML=filterBar+showing.map((c)=>{
+    const liveIdx=live.indexOf(c);
     const name=c['Name']||c['Contact Name']||c['Full Name']||c['Person']||c['Person(s)']||'';
     const title=c['Job Title']||c['Title']||c['Position']||c['Role']||c['DMU Role']||'';
     const email=c['Email']||c['Email Address']||'';
     const phone=c['Phone']||c['Mobile']||c['Telephone']||'';
+    const category=c['Category']||'';
+    const mission=c['Mission']||'';
     const notes=c['Notes']||c['Note']||'';
     const init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?';
-    return `<div class="ccard" id="ccard-${i}">
+    const catCls=category?getSessionCat(category):'';
+    const catClr=category?(getComputedStyle(document.documentElement).getPropertyValue('--'+catCls.replace('cc-','c-'))||'').trim():'';
+    return `<div class="ccard" data-liveidx="${liveIdx}">
       <div class="ccard-av">${esc(init)}</div>
       <div style="flex:1;min-width:0">
         <div class="ccard-name">${esc(name)||'<span style="opacity:.35">Unnamed</span>'}</div>
         ${title?`<div class="ccard-jobtitle">${esc(title)}</div>`:''}
         ${email?`<div class="ccard-email"><a href="mailto:${esc(email)}">${esc(email)}</a></div>`:''}
         ${phone?`<div class="ccard-phone">${esc(phone)}</div>`:''}
+        ${(category||mission)?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          ${category?`<span class="mpill" style="${catClr?`color:${catClr};border-color:${catClr}55`:''}">${esc(category)}</span>`:''}
+          ${mission?`<span class="mpill" style="color:${MISSION_CLR[mission]||'#fff'};border-color:${MISSION_CLR[mission]||'#fff'}55">${esc(mission)}</span>`:''}
+        </div>`:''}
         ${notes?`<div class="ccard-notes">${esc(notes)}</div>`:''}
       </div>
       <div class="ccard-actions">
-        <button class="crd-btn crd-edit" onclick="openCrud('contact',${i})">Edit</button>
-        <button class="crd-btn crd-del" onclick="confirmDeleteContact(${i})">Delete</button>
+        <button class="crd-btn crd-edit" onclick="openCrud('contact',${liveIdx})">Edit</button>
+        <button class="crd-btn crd-del" onclick="confirmDeleteContact(${liveIdx})">Delete</button>
       </div>
     </div>`;
   }).join('');
@@ -900,7 +961,7 @@ function renderContacts(m,showAll){
       </button>
     </div>`;
   }
-  if(showAll&&live.length>CONTACT_LIMIT){
+  if(showAll&&filtered.length>CONTACT_LIMIT){
     el.innerHTML+=`<div style="grid-column:1/-1;text-align:center;padding:6px 0 2px">
       <button class="add-row-btn" onclick="renderContacts(MEMBERS[currentId],false)">Show fewer</button>
     </div>`;
@@ -908,7 +969,7 @@ function renderContacts(m,showAll){
 }
 
 function confirmDeleteContact(i){
-  const card=document.getElementById('ccard-'+i);
+  const card=document.querySelector(`#contacts-list .ccard[data-liveidx="${i}"]`);
   if(!card)return;
   // Inline confirm strip
   const d=document.createElement('div');
@@ -1300,6 +1361,8 @@ const CRUD_CONFIG={
       {id:'cf-jobtitle',label:'Job Title',type:'input',placeholder:'e.g. Chief Technology Officer'},
       {id:'cf-email',label:'Email',type:'input',inputtype:'email',placeholder:'name@company.com'},
       {id:'cf-phone',label:'Phone',type:'input',placeholder:'+44 7700 900000'},
+      {id:'cf-category',label:'Category',type:'select',options:CATEGORY_OPTIONS,allowBlank:true},
+      {id:'cf-mission',label:'TM Forum Mission',type:'select',options:CONTACT_MISSIONS,allowBlank:true},
       {id:'cf-notes',label:'Notes',type:'textarea',placeholder:'Relationship notes…'},
     ],
     getRow(i){
@@ -1312,6 +1375,8 @@ const CRUD_CONFIG={
       document.getElementById('cf-jobtitle').value=r?r['Job Title']||r['Title']||r['Position']||r['Role']||r['DMU Role']||'':'';
       document.getElementById('cf-email').value=r?r['Email']||r['Email Address']||'':'';
       document.getElementById('cf-phone').value=r?r['Phone']||r['Mobile']||r['Telephone']||'':'';
+      document.getElementById('cf-category').value=r?r['Category']||'':'';
+      document.getElementById('cf-mission').value=r?r['Mission']||'':'';
       document.getElementById('cf-notes').value=r?r['Notes']||r['Note']||'':'';
     },
     buildPayload(m,existing){
@@ -1322,6 +1387,8 @@ const CRUD_CONFIG={
         'Job Title':document.getElementById('cf-jobtitle').value.trim(),
         'Email':document.getElementById('cf-email').value.trim(),
         'Phone':document.getElementById('cf-phone').value.trim(),
+        'Category':document.getElementById('cf-category').value,
+        'Mission':document.getElementById('cf-mission').value,
         'Notes':document.getElementById('cf-notes').value.trim(),
         'Record ID':recordId,'Deleted':''
       };
@@ -1356,7 +1423,7 @@ const CRUD_CONFIG={
     title_add:'Add Session',title_edit:'Edit Session',
     fields:[
       {id:'ss-date',label:'Date',type:'input',inputtype:'date',required:true},
-      {id:'ss-category',label:'Category',type:'select',options:['Autonomous Networks','AI & Data','Business Process','Business Assurance','Composable IT','Strategy','C-Suite Event','Satellite','ODA','Fintech','Governance','ODA and Open APIs','Digital Ecosystems','Customer Experience','Autonomous Networks & Operations','Trustworthy AI & Data','Culture','Maturity Models']},
+      {id:'ss-category',label:'Category',type:'select',options:CATEGORY_OPTIONS},
       {id:'ss-title',label:'Topic / Title',type:'input',required:true,placeholder:'Session topic or title'},
       {id:'ss-attendees',label:'Attendees',type:'input',placeholder:'Axian attendees present'},
       {id:'ss-outcome',label:'Outcome / Notes',type:'textarea',placeholder:'Key outcomes and notes…'},
@@ -1588,7 +1655,8 @@ function buildCrudField(f){
   const req=f.required?` <span style="color:var(--accent)">*</span>`:'';
   const lbl=`<label>${f.label}${req}</label>`;
   if(f.type==='select'){
-    const opts=(f.options||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+    const blank=f.allowBlank?`<option value="">— None —</option>`:'';
+    const opts=blank+(f.options||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
     return `<div class="cfield">${lbl}<select id="${f.id}">${opts}</select></div>`;
   }
   if(f.type==='textarea')
